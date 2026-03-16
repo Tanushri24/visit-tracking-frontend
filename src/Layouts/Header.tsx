@@ -11,7 +11,7 @@ interface HeaderProps {
   role: string;
 }
 
-// Theme colors mapping
+// Theme colors mapping - All Purple
 const themeColors = {
   purple: {
     primary: 'purple',
@@ -23,31 +23,31 @@ const themeColors = {
     gradient: 'from-purple-600 to-indigo-600'
   },
   blue: {
-    primary: 'blue',
-    light: 'blue-100',
-    lightBg: 'blue-50',
-    text: 'blue-900',
-    textLight: 'blue-500',
-    shadow: 'blue-200/20',
-    gradient: 'from-blue-600 to-cyan-600'
+    primary: 'purple',
+    light: 'purple-100',
+    lightBg: 'purple-50',
+    text: 'purple-900',
+    textLight: 'purple-500',
+    shadow: 'purple-200/20',
+    gradient: 'from-purple-600 to-indigo-600'
   },
   orange: {
-    primary: 'orange',
-    light: 'orange-100',
-    lightBg: 'orange-50',
-    text: 'orange-900',
-    textLight: 'orange-500',
-    shadow: 'orange-200/20',
-    gradient: 'from-orange-500 to-amber-500'
+    primary: 'purple',
+    light: 'purple-100',
+    lightBg: 'purple-50',
+    text: 'purple-900',
+    textLight: 'purple-500',
+    shadow: 'purple-200/20',
+    gradient: 'from-purple-600 to-indigo-600'
   },
   green: {
-    primary: 'emerald',
-    light: 'emerald-100',
-    lightBg: 'emerald-50',
-    text: 'emerald-900',
-    textLight: 'emerald-500',
-    shadow: 'emerald-200/20',
-    gradient: 'from-emerald-600 to-green-600'
+    primary: 'purple',
+    light: 'purple-100',
+    lightBg: 'purple-50',
+    text: 'purple-900',
+    textLight: 'purple-500',
+    shadow: 'purple-200/20',
+    gradient: 'from-purple-600 to-indigo-600'
   }
 };
 
