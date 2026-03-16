@@ -1,260 +1,331 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { 
+  Mail, Lock, Eye, EyeOff, ArrowRight, 
+  ChevronLeft, Shield, User, Key, LogIn, Crown, Users, Briefcase, BarChart3
+} from 'lucide-react';
+
+type UserRole = 'super-admin' | 'admin' | 'manager' | 'employee' | 'management';
 
 const Login = () => {
-  const navigate = useNavigate()
-  const [showPassword, setShowPassword] = useState(false)
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const roleFromUrl = searchParams.get('role') as UserRole || 'employee';
+  
+  const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [selectedRole, setSelectedRole] = useState<UserRole>(roleFromUrl);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
     rememberMe: false
-  })
+  });
+
+  // Update selected role when URL changes
+  useEffect(() => {
+    if (roleFromUrl) {
+      setSelectedRole(roleFromUrl);
+    }
+  }, [roleFromUrl]);
+
+  // Role-based configurations
+  const roleConfig = {
+    'super-admin': {
+      icon: Crown,
+      label: 'Super Admin',
+      gradient: 'from-purple-600 to-indigo-600',
+      light: 'purple-100',
+      text: 'text-purple-600',
+      bg: 'bg-purple-50',
+      border: 'border-purple-200',
+      shadow: 'shadow-purple-500/30'
+    },
+    'admin': {
+      icon: Shield,
+      label: 'Admin',
+      gradient: 'from-blue-600 to-cyan-600',
+      light: 'blue-100',
+      text: 'text-blue-600',
+      bg: 'bg-blue-50',
+      border: 'border-blue-200',
+      shadow: 'shadow-blue-500/30'
+    },
+    'manager': {
+      icon: Users,
+      label: 'Manager',
+      gradient: 'from-orange-500 to-amber-500',
+      light: 'orange-100',
+      text: 'text-orange-600',
+      bg: 'bg-orange-50',
+      border: 'border-orange-200',
+      shadow: 'shadow-orange-500/30'
+    },
+    'employee': {
+      icon: Briefcase,
+      label: 'Employee',
+      gradient: 'from-emerald-600 to-green-600',
+      light: 'emerald-100',
+      text: 'text-emerald-600',
+      bg: 'bg-emerald-50',
+      border: 'border-emerald-200',
+      shadow: 'shadow-emerald-500/30'
+    },
+    'management': {
+      icon: BarChart3,
+      label: 'Management',
+      gradient: 'from-purple-500 to-pink-500',
+      light: 'purple-100',
+      text: 'text-purple-600',
+      bg: 'bg-purple-50',
+      border: 'border-purple-200',
+      shadow: 'shadow-purple-500/30'
+    }
+  };
+
+  const currentRole = roleConfig[selectedRole];
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value, type, checked } = e.target
+    const { name, value, type, checked } = e.target;
     setFormData(prev => ({
       ...prev,
       [name]: type === 'checkbox' ? checked : value
-    }))
-  }
+    }));
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    // Navigate to employee dashboard on login
-    navigate('/employee/dashboard')
-  }
+    e.preventDefault();
+    setIsLoading(true);
+    
+    // Simulate API call
+    setTimeout(() => {
+      // Store auth data with selected role
+      const userNames = {
+        'super-admin': 'Super Admin',
+        'admin': 'Admin User',
+        'manager': 'Manager User',
+        'employee': 'John Employee',
+        'management': 'Management User'
+      };
 
-  const handleDemoLogin = (role: string) => {
-    switch(role) {
-      case 'employee':
-        navigate('/employee/dashboard')
-        break
-      case 'manager':
-        navigate('/manager/dashboard')
-        break
-      case 'admin':
-        navigate('/admin/dashboard')
-        break
-      case 'management':
-        navigate('/management/dashboard')
-        break
-      case 'super-admin':
-        navigate('/super-admin/dashboard')
-        break
-      default:
-        navigate('/employee/dashboard')
-    }
-  }
+      localStorage.setItem('auth', JSON.stringify({
+        isAuthenticated: true,
+        userRole: selectedRole,
+        user: { 
+          name: userNames[selectedRole], 
+          email: formData.email, 
+          role: selectedRole 
+        }
+      }));
+      
+      // Navigate to respective dashboard
+      const dashboardPaths = {
+        'super-admin': '/super-admin/dashboard',
+        'admin': '/admin/dashboard',
+        'manager': '/manager/dashboard',
+        'employee': '/employee/dashboard',
+        'management': '/management/dashboard'
+      };
+      
+      navigate(dashboardPaths[selectedRole]);
+      setIsLoading(false);
+    }, 1500);
+  };
+
+  // Quick role selector (small dots)
+  const handleRoleSelect = (role: UserRole) => {
+    setSelectedRole(role);
+    // Update URL without reload
+    navigate(`/login?role=${role}`, { replace: true });
+  };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 py-12 px-4 sm:px-6 lg:px-8">
-      {/* Animated Background Elements */}
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-purple-50 flex items-center justify-center p-4 relative overflow-hidden">
+      
+      {/* Animated Floating Orbs */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-yellow-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
-        <div className="absolute top-40 left-40 w-80 h-80 bg-pink-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
+        <div className="absolute top-20 left-10 w-96 h-96 bg-purple-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-float-slow"></div>
+        <div className="absolute top-40 right-20 w-80 h-80 bg-purple-300 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-float-slower"></div>
+        <div className="absolute bottom-20 left-1/3 w-72 h-72 bg-purple-100 rounded-full mix-blend-multiply filter blur-3xl opacity-40 animate-float"></div>
+        
+        {/* Small decorative elements */}
+        {[...Array(15)].map((_, i) => (
+          <div
+            key={i}
+            className="absolute w-1 h-1 bg-purple-400 rounded-full animate-pulse"
+            style={{
+              top: `${Math.random() * 100}%`,
+              left: `${Math.random() * 100}%`,
+              animationDelay: `${Math.random() * 3}s`,
+              opacity: 0.2
+            }}
+          />
+        ))}
       </div>
 
-      {/* Login Container */}
-      <div className="max-w-md w-full space-y-8 relative z-10">
-        {/* Logo and Header */}
-        <div className="text-center">
-          <div className="flex justify-center">
-            <div className="h-20 w-20 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg transform rotate-3 hover:rotate-0 transition-transform duration-300">
-              <svg className="h-12 w-12 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-              </svg>
+      {/* Back Button */}
+      <button
+        onClick={() => navigate('/')}
+        className="absolute top-8 left-8 flex items-center gap-2 text-purple-600 hover:text-purple-800 transition-colors z-10 bg-white/80 backdrop-blur-sm px-4 py-2 rounded-full shadow-sm border border-purple-100"
+      >
+        <ChevronLeft className="w-4 h-4" />
+        <span>Back</span>
+      </button>
+
+      {/* Main Card */}
+      <div className="relative w-full max-w-md">
+        {/* Decorative elements with role color */}
+        <div className={`absolute -top-6 -right-6 w-32 h-32 bg-gradient-to-br ${currentRole.gradient} rounded-2xl rotate-12 opacity-20 blur-xl`}></div>
+        <div className={`absolute -bottom-6 -left-6 w-32 h-32 bg-gradient-to-tr ${currentRole.gradient} rounded-2xl -rotate-12 opacity-20 blur-xl`}></div>
+        
+        <div className="bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl border border-purple-100 p-8 relative">
+          {/* Gradient accent based on role */}
+          <div className={`absolute top-0 left-0 right-0 h-2 bg-gradient-to-r ${currentRole.gradient} rounded-t-3xl`}></div>
+          
+          {/* Icon with role color */}
+          <div className="flex justify-center mb-6">
+            <div className={`w-20 h-20 bg-gradient-to-br ${currentRole.gradient} rounded-2xl flex items-center justify-center shadow-lg transform hover:rotate-6 transition-transform`}>
+              {currentRole.icon && <currentRole.icon className="w-10 h-10 text-white" />}
             </div>
           </div>
-          <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
-            Visit Tracking System
-          </h2>
-          <p className="mt-2 text-sm text-gray-600">
-            Sign in to access your dashboard
-          </p>
-        </div>
 
-        {/* Login Form */}
-        <div className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-xl p-8 space-y-6 border border-white/20">
-          <form className="space-y-6" onSubmit={handleSubmit}>
-            {/* Email Field */}
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                Email Address
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                  </svg>
-                </div>
+          {/* Title with role */}
+          <h2 className="text-3xl font-light text-center text-gray-800 mb-2">
+            Welcome Back
+          </h2>
+          <p className="text-center mb-4">
+            <span className={`inline-block px-4 py-1 bg-gradient-to-r ${currentRole.gradient} text-white text-sm font-medium rounded-full shadow-sm`}>
+              {currentRole.label}
+            </span>
+          </p>
+
+          {/* Quick role selector */}
+          <div className="flex justify-center gap-2 mt-2 mb-6">
+            {Object.entries(roleConfig).map(([key, config]) => (
+              <button
+                key={key}
+                onClick={() => handleRoleSelect(key as UserRole)}
+                className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                  selectedRole === key 
+                    ? `bg-gradient-to-r ${config.gradient} w-6` 
+                    : 'bg-purple-200 hover:bg-purple-400'
+                }`}
+                title={config.label}
+              />
+            ))}
+          </div>
+
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700 ml-1">Email</label>
+              <div className="relative group">
+                <Mail className={`absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-${currentRole.text} group-focus-within:text-${currentRole.text} transition-colors`} />
                 <input
-                  id="email"
-                  name="email"
                   type="email"
-                  autoComplete="email"
-                  required
+                  name="email"
                   value={formData.email}
                   onChange={handleChange}
-                  className="pl-10 w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 bg-white/50"
-                  placeholder="Enter your email"
+                  className={`w-full pl-10 pr-4 py-3 ${currentRole.bg} border ${currentRole.border} rounded-xl focus:outline-none focus:ring-2 focus:ring-${currentRole.text} focus:border-transparent transition-all`}
+                  placeholder="your@email.com"
+                  required
                 />
               </div>
             </div>
 
-            {/* Password Field */}
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-                Password
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                  </svg>
-                </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700 ml-1">Password</label>
+              <div className="relative group">
+                <Lock className={`absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-${currentRole.text} group-focus-within:text-${currentRole.text} transition-colors`} />
                 <input
-                  id="password"
+                  type={showPassword ? 'text' : 'password'}
                   name="password"
-                  type={showPassword ? "text" : "password"}
-                  autoComplete="current-password"
-                  required
                   value={formData.password}
                   onChange={handleChange}
-                  className="pl-10 w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 bg-white/50"
-                  placeholder="Enter your password"
+                  className={`w-full pl-10 pr-12 py-3 ${currentRole.bg} border ${currentRole.border} rounded-xl focus:outline-none focus:ring-2 focus:ring-${currentRole.text} focus:border-transparent transition-all`}
+                  placeholder="••••••••"
+                  required
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-purple-400 hover:text-purple-600 transition-colors"
                 >
-                  {showPassword ? (
-                    <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                    </svg>
-                  ) : (
-                    <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
-                    </svg>
-                  )}
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
               </div>
             </div>
 
-            {/* Remember Me & Forgot Password */}
             <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <input
-                  id="rememberMe"
+              <label className="flex items-center gap-2 cursor-pointer group">
+                <input 
+                  type="checkbox" 
                   name="rememberMe"
-                  type="checkbox"
+                  className={`w-4 h-4 text-${currentRole.text} bg-${currentRole.light} border-${currentRole.border} rounded focus:ring-${currentRole.text}`}
                   checked={formData.rememberMe}
                   onChange={handleChange}
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                 />
-                <label htmlFor="rememberMe" className="ml-2 block text-sm text-gray-700">
-                  Remember me
-                </label>
-              </div>
-
-              <div className="text-sm">
-                <a href="#" className="font-medium text-blue-600 hover:text-blue-500 transition duration-200">
-                  Forgot password?
-                </a>
-              </div>
+                <span className="text-sm text-gray-600 group-hover:text-purple-600 transition-colors">Remember me</span>
+              </label>
+              <button className={`text-sm ${currentRole.text} hover:${currentRole.text} transition-colors`}>
+                Forgot password?
+              </button>
             </div>
 
-            {/* Submit Button */}
             <button
               type="submit"
-              className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-lg font-semibold hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-200 transform hover:scale-[1.02] shadow-lg"
+              disabled={isLoading}
+              className={`w-full bg-gradient-to-r ${currentRole.gradient} text-white py-3 rounded-xl font-medium hover:shadow-lg ${currentRole.shadow} transition-all transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 group relative overflow-hidden`}
             >
-              Sign In
+              <span className="absolute inset-0 bg-white/20 transform -translate-x-full group-hover:translate-x-0 transition-transform duration-300"></span>
+              {isLoading ? (
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <>
+                  <span>Sign In as {currentRole.label}</span>
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </>
+              )}
             </button>
           </form>
 
-          {/* Demo Accounts Section */}
-          <div className="mt-8">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300"></div>
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-4 bg-white/80 text-gray-500">Demo Accounts</span>
-              </div>
-            </div>
-
-            <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-              <button
-                onClick={() => handleDemoLogin('employee')}
-                className="inline-flex justify-center items-center px-3 py-2 border border-gray-300 shadow-sm text-xs font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-200"
-              >
-                👤 Employee
-              </button>
-              <button
-                onClick={() => handleDemoLogin('manager')}
-                className="inline-flex justify-center items-center px-3 py-2 border border-gray-300 shadow-sm text-xs font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-200"
-              >
-                👥 Manager
-              </button>
-              <button
-                onClick={() => handleDemoLogin('admin')}
-                className="inline-flex justify-center items-center px-3 py-2 border border-gray-300 shadow-sm text-xs font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-200"
-              >
-                ⚙️ Admin
-              </button>
-              <button
-                onClick={() => handleDemoLogin('management')}
-                className="inline-flex justify-center items-center px-3 py-2 border border-gray-300 shadow-sm text-xs font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-200"
-              >
-                📊 Management
-              </button>
-              <button
-                onClick={() => handleDemoLogin('super-admin')}
-                className="inline-flex justify-center items-center px-3 py-2 border border-gray-300 shadow-sm text-xs font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-200"
-              >
-                🔧 Super Admin
-              </button>
-            </div>
-          </div>
-
-          {/* Sign Up Link */}
-          <p className="text-center text-sm text-gray-600">
+          {/* Contact Admin */}
+          <p className="text-center text-sm text-gray-500 mt-6">
             Don't have an account?{' '}
-            <a href="#" className="font-medium text-blue-600 hover:text-blue-500 transition duration-200">
+            <button className={`font-medium ${currentRole.text} hover:${currentRole.text} transition-colors`}>
               Contact Administrator
-            </a>
+            </button>
           </p>
         </div>
-
-        {/* Footer */}
-        <p className="text-center text-xs text-gray-500">
-          © 2024 Visit Tracking System. All rights reserved.
-        </p>
       </div>
 
-      {/* Add custom animation styles */}
       <style>{`
-        @keyframes blob {
-          0% { transform: translate(0px, 0px) scale(1); }
-          33% { transform: translate(30px, -50px) scale(1.1); }
+        @keyframes float-slow {
+          0%, 100% { transform: translate(0px, 0px) scale(1); }
+          33% { transform: translate(30px, -30px) scale(1.1); }
           66% { transform: translate(-20px, 20px) scale(0.9); }
-          100% { transform: translate(0px, 0px) scale(1); }
         }
-        .animate-blob {
-          animation: blob 7s infinite;
+        @keyframes float-slower {
+          0%, 100% { transform: translate(0px, 0px) scale(1); }
+          33% { transform: translate(-30px, 20px) scale(1.1); }
+          66% { transform: translate(20px, -30px) scale(0.9); }
         }
-        .animation-delay-2000 {
-          animation-delay: 2s;
+        @keyframes float {
+          0%, 100% { transform: translate(0px, 0px) scale(1); }
+          33% { transform: translate(20px, -20px) scale(1.1); }
+          66% { transform: translate(-20px, 20px) scale(0.9); }
         }
-        .animation-delay-4000 {
-          animation-delay: 4s;
+        .animate-float-slow {
+          animation: float-slow 8s ease-in-out infinite;
+        }
+        .animate-float-slower {
+          animation: float-slower 10s ease-in-out infinite;
+        }
+        .animate-float {
+          animation: float 6s ease-in-out infinite;
         }
       `}</style>
     </div>
-  )
-}
+  );
+};
 
-export default Login
+export default Login;
