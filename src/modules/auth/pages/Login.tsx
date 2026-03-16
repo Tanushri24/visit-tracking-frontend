@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { 
   Mail, Lock, Eye, EyeOff, ArrowRight, 
-  ChevronLeft, Shield, User, Key, LogIn, Crown, Users, Briefcase, BarChart3
+  ChevronLeft, Shield, Crown, Users, Briefcase, BarChart3
 } from 'lucide-react';
 
 type UserRole = 'super-admin' | 'admin' | 'manager' | 'employee' | 'management';
@@ -139,7 +139,7 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-purple-50 flex items-center justify-center p-4 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-purple-50 flex flex-col items-center justify-center p-4 relative overflow-hidden">
       
       {/* Animated Floating Orbs */}
       <div className="absolute inset-0 overflow-hidden">
@@ -162,51 +162,53 @@ const Login = () => {
         ))}
       </div>
 
-      {/* Back Button */}
-      <button
-        onClick={() => navigate('/')}
-        className="absolute top-8 left-8 flex items-center gap-2 text-purple-600 hover:text-purple-800 transition-colors z-10 bg-white/80 backdrop-blur-sm px-4 py-2 rounded-full shadow-sm border border-purple-100"
-      >
-        <ChevronLeft className="w-4 h-4" />
-        <span>Back</span>
-      </button>
+      {/* Back Button - Left aligned on desktop, centered on mobile */}
+      <div className="w-full max-w-sm mb-4 relative z-10 flex justify-center sm:justify-start">
+        <button
+          onClick={() => navigate('/')}
+          className="inline-flex items-center gap-2 text-purple-600 hover:text-purple-800 transition-colors bg-white/80 backdrop-blur-sm px-4 py-2 rounded-full shadow-sm border border-purple-100 text-sm"
+        >
+          <ChevronLeft className="w-4 h-4" />
+          <span>Back </span>
+        </button>
+      </div>
 
       {/* Main Card */}
-      <div className="relative w-full max-w-md">
+      <div className="relative w-full max-w-sm">
         {/* Decorative elements with role color */}
-        <div className={`absolute -top-6 -right-6 w-32 h-32 bg-gradient-to-br ${currentRole.gradient} rounded-2xl rotate-12 opacity-20 blur-xl`}></div>
-        <div className={`absolute -bottom-6 -left-6 w-32 h-32 bg-gradient-to-tr ${currentRole.gradient} rounded-2xl -rotate-12 opacity-20 blur-xl`}></div>
+        <div className={`absolute -top-4 -right-4 w-24 h-24 bg-gradient-to-br ${currentRole.gradient} rounded-2xl rotate-12 opacity-20 blur-xl`}></div>
+        <div className={`absolute -bottom-4 -left-4 w-24 h-24 bg-gradient-to-tr ${currentRole.gradient} rounded-2xl -rotate-12 opacity-20 blur-xl`}></div>
         
-        <div className="bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl border border-purple-100 p-8 relative">
+        <div className="bg-white/90 backdrop-blur-xl rounded-2xl shadow-2xl border border-purple-100 p-6 relative">
           {/* Gradient accent based on role */}
-          <div className={`absolute top-0 left-0 right-0 h-2 bg-gradient-to-r ${currentRole.gradient} rounded-t-3xl`}></div>
+          <div className={`absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r ${currentRole.gradient} rounded-t-2xl`}></div>
           
           {/* Icon with role color */}
-          <div className="flex justify-center mb-6">
-            <div className={`w-20 h-20 bg-gradient-to-br ${currentRole.gradient} rounded-2xl flex items-center justify-center shadow-lg transform hover:rotate-6 transition-transform`}>
-              {currentRole.icon && <currentRole.icon className="w-10 h-10 text-white" />}
+          <div className="flex justify-center mb-4">
+            <div className={`w-16 h-16 bg-gradient-to-br ${currentRole.gradient} rounded-xl flex items-center justify-center shadow-lg transform hover:rotate-6 transition-transform`}>
+              {currentRole.icon && <currentRole.icon className="w-8 h-8 text-white" />}
             </div>
           </div>
 
           {/* Title with role */}
-          <h2 className="text-3xl font-light text-center text-gray-800 mb-2">
+          <h2 className="text-2xl font-light text-center text-gray-800 mb-1">
             Welcome Back
           </h2>
-          <p className="text-center mb-4">
-            <span className={`inline-block px-4 py-1 bg-gradient-to-r ${currentRole.gradient} text-white text-sm font-medium rounded-full shadow-sm`}>
+          <p className="text-center mb-3">
+            <span className={`inline-block px-3 py-0.5 bg-gradient-to-r ${currentRole.gradient} text-white text-xs font-medium rounded-full shadow-sm`}>
               {currentRole.label}
             </span>
           </p>
 
           {/* Quick role selector */}
-          <div className="flex justify-center gap-2 mt-2 mb-6">
+          <div className="flex justify-center gap-1.5 mt-1 mb-4">
             {Object.entries(roleConfig).map(([key, config]) => (
               <button
                 key={key}
                 onClick={() => handleRoleSelect(key as UserRole)}
-                className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${
                   selectedRole === key 
-                    ? `bg-gradient-to-r ${config.gradient} w-6` 
+                    ? `bg-gradient-to-r ${config.gradient} w-5` 
                     : 'bg-purple-200 hover:bg-purple-400'
                 }`}
                 title={config.label}
@@ -215,58 +217,58 @@ const Login = () => {
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700 ml-1">Email</label>
+          <form onSubmit={handleSubmit} className="space-y-3">
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-gray-700 ml-1">Email</label>
               <div className="relative group">
-                <Mail className={`absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-${currentRole.text} group-focus-within:text-${currentRole.text} transition-colors`} />
+                <Mail className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-${currentRole.text} group-focus-within:text-${currentRole.text} transition-colors`} />
                 <input
                   type="email"
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
-                  className={`w-full pl-10 pr-4 py-3 ${currentRole.bg} border ${currentRole.border} rounded-xl focus:outline-none focus:ring-2 focus:ring-${currentRole.text} focus:border-transparent transition-all`}
+                  className={`w-full pl-9 pr-3 py-2 text-sm ${currentRole.bg} border ${currentRole.border} rounded-lg focus:outline-none focus:ring-2 focus:ring-${currentRole.text} focus:border-transparent transition-all`}
                   placeholder="your@email.com"
                   required
                 />
               </div>
             </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700 ml-1">Password</label>
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-gray-700 ml-1">Password</label>
               <div className="relative group">
-                <Lock className={`absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-${currentRole.text} group-focus-within:text-${currentRole.text} transition-colors`} />
+                <Lock className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-${currentRole.text} group-focus-within:text-${currentRole.text} transition-colors`} />
                 <input
                   type={showPassword ? 'text' : 'password'}
                   name="password"
                   value={formData.password}
                   onChange={handleChange}
-                  className={`w-full pl-10 pr-12 py-3 ${currentRole.bg} border ${currentRole.border} rounded-xl focus:outline-none focus:ring-2 focus:ring-${currentRole.text} focus:border-transparent transition-all`}
+                  className={`w-full pl-9 pr-9 py-2 text-sm ${currentRole.bg} border ${currentRole.border} rounded-lg focus:outline-none focus:ring-2 focus:ring-${currentRole.text} focus:border-transparent transition-all`}
                   placeholder="••••••••"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-purple-400 hover:text-purple-600 transition-colors"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-purple-400 hover:text-purple-600 transition-colors"
                 >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
             </div>
 
             <div className="flex items-center justify-between">
-              <label className="flex items-center gap-2 cursor-pointer group">
+              <label className="flex items-center gap-1.5 cursor-pointer group">
                 <input 
                   type="checkbox" 
                   name="rememberMe"
-                  className={`w-4 h-4 text-${currentRole.text} bg-${currentRole.light} border-${currentRole.border} rounded focus:ring-${currentRole.text}`}
+                  className={`w-3.5 h-3.5 text-${currentRole.text} bg-${currentRole.light} border-${currentRole.border} rounded focus:ring-${currentRole.text}`}
                   checked={formData.rememberMe}
                   onChange={handleChange}
                 />
-                <span className="text-sm text-gray-600 group-hover:text-purple-600 transition-colors">Remember me</span>
+                <span className="text-xs text-gray-600 group-hover:text-purple-600 transition-colors">Remember me</span>
               </label>
-              <button className={`text-sm ${currentRole.text} hover:${currentRole.text} transition-colors`}>
+              <button className={`text-xs ${currentRole.text} hover:${currentRole.text} transition-colors`}>
                 Forgot password?
               </button>
             </div>
@@ -274,24 +276,24 @@ const Login = () => {
             <button
               type="submit"
               disabled={isLoading}
-              className={`w-full bg-gradient-to-r ${currentRole.gradient} text-white py-3 rounded-xl font-medium hover:shadow-lg ${currentRole.shadow} transition-all transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 group relative overflow-hidden`}
+              className={`w-full bg-gradient-to-r ${currentRole.gradient} text-white py-2.5 rounded-lg text-sm font-medium hover:shadow-lg ${currentRole.shadow} transition-all transform hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 group relative overflow-hidden`}
             >
               <span className="absolute inset-0 bg-white/20 transform -translate-x-full group-hover:translate-x-0 transition-transform duration-300"></span>
               {isLoading ? (
-                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
               ) : (
                 <>
-                  <span>Sign In as {currentRole.label}</span>
-                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  <span>Sign In</span>
+                  <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
                 </>
               )}
             </button>
           </form>
 
           {/* Contact Admin */}
-          <p className="text-center text-sm text-gray-500 mt-6">
+          <p className="text-center text-xs text-gray-500 mt-4">
             Don't have an account?{' '}
-            <button className={`font-medium ${currentRole.text} hover:${currentRole.text} transition-colors`}>
+            <button className={`font-medium ${currentRole.text} hover:${currentRole.text} transition-colors text-xs`}>
               Contact Administrator
             </button>
           </p>

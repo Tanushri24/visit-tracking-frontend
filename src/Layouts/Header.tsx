@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import * as Icons from 'lucide-react';
 
 interface HeaderProps {
@@ -58,10 +59,15 @@ const Header: React.FC<HeaderProps> = ({
   theme = 'purple',
   role
 }) => {
+  const navigate = useNavigate();
   const [profileOpen, setProfileOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [filterOpen, setFilterOpen] = useState(false);
+  
   const profileRef = useRef<HTMLDivElement>(null);
   const notificationsRef = useRef<HTMLDivElement>(null);
+  const filterRef = useRef<HTMLDivElement>(null);
+  
   const colors = themeColors[theme as keyof typeof themeColors];
 
   const unreadCount = 3; // Mock count
@@ -73,6 +79,9 @@ const Header: React.FC<HeaderProps> = ({
       }
       if (notificationsRef.current && !notificationsRef.current.contains(event.target as Node)) {
         setNotificationsOpen(false);
+      }
+      if (filterRef.current && !filterRef.current.contains(event.target as Node)) {
+        setFilterOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -88,6 +97,21 @@ const Header: React.FC<HeaderProps> = ({
       default: return r;
     }
   };
+
+  const handleLogout = () => {
+    // Clear auth data
+    localStorage.removeItem('auth');
+    // Redirect to welcome page
+    navigate('/');
+  };
+
+  const filterOptions = [
+    { label: 'Today', value: 'today', icon: Icons.Calendar },
+    { label: 'This Week', value: 'week', icon: Icons.CalendarDays },
+    { label: 'This Month', value: 'month', icon: Icons.CalendarRange },
+    { label: 'Last Month', value: 'lastMonth', icon: Icons.CalendarOff },
+    { label: 'Custom Range', value: 'custom', icon: Icons.SlidersHorizontal },
+  ];
 
   return (
     <header className={`bg-white border-b border-${colors.light} h-16 flex-shrink-0 shadow-md shadow-${colors.shadow} sticky top-0 z-40`}>
@@ -119,6 +143,63 @@ const Header: React.FC<HeaderProps> = ({
 
         {/* Right Section */}
         <div className="flex items-center space-x-2">
+          {/* Filter Button with Dropdown */}
+          <div className="relative" ref={filterRef}>
+            <button 
+              className={`p-2 rounded-lg hover:bg-${colors.light} transition-colors text-${colors.primary}-600`}
+              onClick={() => setFilterOpen(!filterOpen)}
+            >
+              <Icons.Filter className="w-5 h-5" />
+            </button>
+            
+            {filterOpen && (
+              <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-2xl border border-gray-100 py-2 z-50 overflow-hidden">
+                {/* Header */}
+                <div className={`px-4 py-2 border-b border-${colors.light} mb-1`}>
+                  <h3 className={`text-xs font-semibold text-${colors.text} uppercase tracking-wider`}>
+                    Filter Options
+                  </h3>
+                </div>
+                
+                {/* Filter Options */}
+                <div className="space-y-0.5">
+                  {filterOptions.map((option, index) => (
+                    <button
+                      key={index}
+                      onClick={() => {
+                        console.log('Selected filter:', option.label);
+                        setFilterOpen(false);
+                      }}
+                      className={`w-full text-left px-4 py-2.5 hover:bg-${colors.lightBg} flex items-center space-x-3 transition-colors group`}
+                    >
+                      <div className={`p-1 rounded-md bg-${colors.lightBg} group-hover:bg-white transition-colors`}>
+                        <option.icon className={`w-3.5 h-3.5 text-${colors.primary}-600`} />
+                      </div>
+                      <span className={`text-sm text-gray-700 group-hover:text-${colors.primary}-700 flex-1`}>
+                        {option.label}
+                      </span>
+                      {option.value === 'today' && (
+                        <span className={`text-[10px] px-1.5 py-0.5 rounded-full bg-${colors.primary}-100 text-${colors.primary}-600`}>
+                          New
+                        </span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+                
+                {/* Footer */}
+                <div className={`mt-2 pt-2 border-t border-${colors.light} px-4 py-2`}>
+                  <button 
+                    onClick={() => setFilterOpen(false)}
+                    className={`w-full text-center text-xs text-${colors.primary}-600 hover:text-${colors.primary}-700 font-medium`}
+                  >
+                    Clear Filters
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
           {/* Notifications */}
           <div className="relative" ref={notificationsRef}>
             <button 
@@ -130,6 +211,24 @@ const Header: React.FC<HeaderProps> = ({
                 <span className={`absolute top-1.5 right-1.5 w-2 h-2 bg-${colors.primary}-500 rounded-full ring-2 ring-white animate-pulse`}></span>
               )}
             </button>
+            
+            {notificationsOpen && (
+              <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-2xl border border-gray-100 py-2 z-50">
+                <div className="px-4 py-2 border-b border-gray-100">
+                  <h3 className="text-sm font-semibold text-gray-800">Notifications</h3>
+                </div>
+                <div className="py-2">
+                  <div className="px-4 py-3 hover:bg-gray-50">
+                    <p className="text-sm text-gray-700">New visit scheduled</p>
+                    <p className="text-xs text-gray-400 mt-1">5 min ago</p>
+                  </div>
+                  <div className="px-4 py-3 hover:bg-gray-50">
+                    <p className="text-sm text-gray-700">Report ready to download</p>
+                    <p className="text-xs text-gray-400 mt-1">1 hour ago</p>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Divider */}
@@ -174,7 +273,10 @@ const Header: React.FC<HeaderProps> = ({
                 
                 <div className={`border-t border-${colors.light} my-2`}></div>
                 
-                <button className={`w-full text-left px-4 py-2 hover:bg-${colors.lightBg} flex items-center space-x-3 text-${colors.primary}-700`}>
+                <button 
+                  onClick={handleLogout}
+                  className={`w-full text-left px-4 py-2 hover:bg-${colors.lightBg} flex items-center space-x-3 text-${colors.primary}-700`}
+                >
                   <Icons.LogOut className={`w-4 h-4 text-${colors.primary}-500`} />
                   <span className="text-sm font-medium">Logout</span>
                 </button>
