@@ -28,7 +28,7 @@ const Login = () => {
     }
   }, [roleFromUrl]);
 
-  // Role-based configurations
+  // Role-based configurations - All Purple
   const roleConfig = {
     'super-admin': {
       icon: Crown,
@@ -43,37 +43,37 @@ const Login = () => {
     'admin': {
       icon: Shield,
       label: 'Admin',
-      gradient: 'from-blue-600 to-cyan-600',
-      light: 'blue-100',
-      text: 'text-blue-600',
-      bg: 'bg-blue-50',
-      border: 'border-blue-200',
-      shadow: 'shadow-blue-500/30'
+      gradient: 'from-purple-600 to-indigo-600',
+      light: 'purple-100',
+      text: 'text-purple-600',
+      bg: 'bg-purple-50',
+      border: 'border-purple-200',
+      shadow: 'shadow-purple-500/30'
     },
     'manager': {
       icon: Users,
       label: 'Manager',
-      gradient: 'from-orange-500 to-amber-500',
-      light: 'orange-100',
-      text: 'text-orange-600',
-      bg: 'bg-orange-50',
-      border: 'border-orange-200',
-      shadow: 'shadow-orange-500/30'
+      gradient: 'from-purple-600 to-indigo-600',
+      light: 'purple-100',
+      text: 'text-purple-600',
+      bg: 'bg-purple-50',
+      border: 'border-purple-200',
+      shadow: 'shadow-purple-500/30'
     },
     'employee': {
       icon: Briefcase,
       label: 'Employee',
-      gradient: 'from-emerald-600 to-green-600',
-      light: 'emerald-100',
-      text: 'text-emerald-600',
-      bg: 'bg-emerald-50',
-      border: 'border-emerald-200',
-      shadow: 'shadow-emerald-500/30'
+      gradient: 'from-purple-600 to-indigo-600',
+      light: 'purple-100',
+      text: 'text-purple-600',
+      bg: 'bg-purple-50',
+      border: 'border-purple-200',
+      shadow: 'shadow-purple-500/30'
     },
     'management': {
       icon: BarChart3,
       label: 'Management',
-      gradient: 'from-purple-500 to-pink-500',
+      gradient: 'from-purple-600 to-indigo-600',
       light: 'purple-100',
       text: 'text-purple-600',
       bg: 'bg-purple-50',
@@ -175,22 +175,22 @@ const Login = () => {
 
       {/* Main Card */}
       <div className="relative w-full max-w-sm">
-        {/* Decorative elements with role color */}
+        {/* Decorative elements with role color - All Purple */}
         <div className={`absolute -top-4 -right-4 w-24 h-24 bg-gradient-to-br ${currentRole.gradient} rounded-2xl rotate-12 opacity-20 blur-xl`}></div>
         <div className={`absolute -bottom-4 -left-4 w-24 h-24 bg-gradient-to-tr ${currentRole.gradient} rounded-2xl -rotate-12 opacity-20 blur-xl`}></div>
         
         <div className="bg-white/90 backdrop-blur-xl rounded-2xl shadow-2xl border border-purple-100 p-6 relative">
-          {/* Gradient accent based on role */}
+          {/* Gradient accent based on role - All Purple */}
           <div className={`absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r ${currentRole.gradient} rounded-t-2xl`}></div>
           
-          {/* Icon with role color */}
+          {/* Icon with role color - All Purple */}
           <div className="flex justify-center mb-4">
             <div className={`w-16 h-16 bg-gradient-to-br ${currentRole.gradient} rounded-xl flex items-center justify-center shadow-lg transform hover:rotate-6 transition-transform`}>
               {currentRole.icon && <currentRole.icon className="w-8 h-8 text-white" />}
             </div>
           </div>
 
-          {/* Title with role */}
+          {/* Title with role - All Purple */}
           <h2 className="text-2xl font-light text-center text-gray-800 mb-1">
             Welcome Back
           </h2>
@@ -200,7 +200,7 @@ const Login = () => {
             </span>
           </p>
 
-          {/* Quick role selector */}
+          {/* Quick role selector - All Purple */}
           <div className="flex justify-center gap-1.5 mt-1 mb-4">
             {Object.entries(roleConfig).map(([key, config]) => (
               <button
