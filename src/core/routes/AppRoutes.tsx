@@ -1,74 +1,50 @@
-import { Routes, Route, Navigate } from 'react-router-dom'
-import PrivateRoute from './PrivateRoute'
-import PublicRoute from './PublicRoute'
-import AuthRoutes from '../../modules/auth/routes/AuthRoutes'
-import SuperAdminRoutes from '../../modules/super-admin/routes/SuperAdminRoutes' // Import SuperAdminRoutes
+import { Routes, Route, Navigate } from 'react-router-dom';
+import PrivateRoute from './PrivateRoute';
+import PublicRoute from './PublicRoute';
+import Welcome from '../../modules/auth/pages/welcome'; // Import Welcome page
+import Login from '../../modules/auth/pages/Login'; // Import Login page
+import AuthRoutes from '../../modules/auth/routes/AuthRoutes';
 
-// Temporary placeholder components for other dashboards
-const EmployeeDashboard = () => (
-  <div className="min-h-screen bg-gray-100 p-8">
-    <div className="max-w-7xl mx-auto">
-      <h1 className="text-3xl font-bold text-gray-900">Employee Dashboard</h1>
-      <p className="mt-4 text-gray-600">Welcome to Employee Dashboard</p>
-    </div>
-  </div>
-)
-
-const ManagerDashboard = () => (
-  <div className="min-h-screen bg-gray-100 p-8">
-    <div className="max-w-7xl mx-auto">
-      <h1 className="text-3xl font-bold text-gray-900">Manager Dashboard</h1>
-      <p className="mt-4 text-gray-600">Welcome to Manager Dashboard</p>
-    </div>
-  </div>
-)
-
-const AdminDashboard = () => (
-  <div className="min-h-screen bg-gray-100 p-8">
-    <div className="max-w-7xl mx-auto">
-      <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
-      <p className="mt-4 text-gray-600">Welcome to Admin Dashboard</p>
-    </div>
-  </div>
-)
-
-const ManagementDashboard = () => (
-  <div className="min-h-screen bg-gray-100 p-8">
-    <div className="max-w-7xl mx-auto">
-      <h1 className="text-3xl font-bold text-gray-900">Management Dashboard</h1>
-      <p className="mt-4 text-gray-600">Welcome to Management Dashboard</p>
-    </div>
-  </div>
-)
-
-// Super Admin Dashboard component yahan se hata diya kyunki ab SuperAdminRoutes mein hai
+// Import all role-based routes
+import SuperAdminRoutes from '../../modules/super-admin/routes/SuperAdminRoutes';
+import AdminRoutes from '../../modules/admin/routes/AdminRoutes';
+import ManagerRoutes from '../../modules/manager/routes/ManagerRoutes';
+import EmployeeRoutes from '../../modules/employee/routes/EmployeeRoutes';
 
 const AppRoutes = () => {
+  // Check if user is authenticated
+  const isAuthenticated = localStorage.getItem('auth') ? true : false;
+  
+  // Mock user role - replace with actual auth
+  const userRole = 'employee'; // This would come from auth context
+
   return (
     <Routes>
-      {/* Redirect root to login or dashboard based on auth */}
-      <Route path="/" element={<Navigate to="/auth/login" replace />} />
+      {/* Public Routes - No auth required */}
+      <Route path="/" element={<Welcome />} />
+      <Route path="/login" element={<Login />} />
       
-      {/* Public Routes */}
-      <Route element={<PublicRoute />}>
-        <Route path="/auth/*" element={<AuthRoutes />} />
-      </Route>
+      {/* Auth Routes (if you have multiple auth pages) */}
+      <Route path="/auth/*" element={<AuthRoutes />} />
 
-      {/* Private Routes */}
+      {/* Private Routes - Require authentication */}
       <Route element={<PrivateRoute />}>
-        <Route path="/employee/dashboard" element={<EmployeeDashboard />} />
-        <Route path="/manager/dashboard" element={<ManagerDashboard />} />
-        <Route path="/admin/dashboard" element={<AdminDashboard />} />
-        <Route path="/management/dashboard" element={<ManagementDashboard />} />
-        
-        {/* Super Admin Routes - Call kiya yahan */}
+        {/* All role-based routes */}
         <Route path="/super-admin/*" element={<SuperAdminRoutes />} />
+        <Route path="/admin/*" element={<AdminRoutes />} />
+        <Route path="/manager/*" element={<ManagerRoutes />} />
+        <Route path="/employee/*" element={<EmployeeRoutes />} />
+        <Route path="/management/*" element={<div>Management Dashboard</div>} />
       </Route>
 
-      {/* Catch all - 404 */}
-      <Route path="*" element={<div className="min-h-screen flex items-center justify-center">404 - Page Not Found</div>} />
+      {/* Redirect based on auth status */}
+      <Route path="*" element={
+        isAuthenticated 
+          ? <Navigate to={`/${userRole}/dashboard`} replace />
+          : <Navigate to="/" replace />
+      } />
     </Routes>
-  )
-}
+  );
+};
 
-export default AppRoutes
+export default AppRoutes;
