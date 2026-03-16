@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import * as Icons from 'lucide-react';
 
 interface SidebarProps {
@@ -13,8 +14,8 @@ interface SidebarProps {
   role: string;
 }
 
-// Theme colors mapping
-const themeColors = {
+// Theme colors mapping with direct classes
+const themeClasses = {
   purple: {
     primary: 'purple',
     gradient: 'from-purple-600 to-indigo-600',
@@ -22,8 +23,18 @@ const themeColors = {
     lightBg: 'purple-50',
     text: 'purple-900',
     textLight: 'purple-500',
+    textPrimary: 'purple-600',
+    textPrimaryHover: 'purple-800',
+    border: 'purple-200',
     shadow: 'purple-200/20',
-    shadowDark: 'purple-300'
+    shadowDark: 'purple-300',
+    ring: 'purple-500',
+    bgLight: 'purple-50',
+    bgHover: 'purple-100',
+    iconColor: 'text-purple-500',
+    iconHover: 'group-hover:text-purple-700',
+    hoverBg: 'hover:bg-purple-100',
+    hoverText: 'hover:text-purple-900'
   },
   blue: {
     primary: 'blue',
@@ -32,8 +43,18 @@ const themeColors = {
     lightBg: 'blue-50',
     text: 'blue-900',
     textLight: 'blue-500',
+    textPrimary: 'blue-600',
+    textPrimaryHover: 'blue-800',
+    border: 'blue-200',
     shadow: 'blue-200/20',
-    shadowDark: 'blue-300'
+    shadowDark: 'blue-300',
+    ring: 'blue-500',
+    bgLight: 'blue-50',
+    bgHover: 'blue-100',
+    iconColor: 'text-blue-500',
+    iconHover: 'group-hover:text-blue-700',
+    hoverBg: 'hover:bg-blue-100',
+    hoverText: 'hover:text-blue-900'
   },
   orange: {
     primary: 'orange',
@@ -42,8 +63,18 @@ const themeColors = {
     lightBg: 'orange-50',
     text: 'orange-900',
     textLight: 'orange-500',
+    textPrimary: 'orange-600',
+    textPrimaryHover: 'orange-800',
+    border: 'orange-200',
     shadow: 'orange-200/20',
-    shadowDark: 'orange-300'
+    shadowDark: 'orange-300',
+    ring: 'orange-500',
+    bgLight: 'orange-50',
+    bgHover: 'orange-100',
+    iconColor: 'text-orange-500',
+    iconHover: 'group-hover:text-orange-700',
+    hoverBg: 'hover:bg-orange-100',
+    hoverText: 'hover:text-orange-900'
   },
   green: {
     primary: 'emerald',
@@ -52,8 +83,18 @@ const themeColors = {
     lightBg: 'emerald-50',
     text: 'emerald-900',
     textLight: 'emerald-500',
+    textPrimary: 'emerald-600',
+    textPrimaryHover: 'emerald-800',
+    border: 'emerald-200',
     shadow: 'emerald-200/20',
-    shadowDark: 'emerald-300'
+    shadowDark: 'emerald-300',
+    ring: 'emerald-500',
+    bgLight: 'emerald-50',
+    bgHover: 'emerald-100',
+    iconColor: 'text-emerald-500',
+    iconHover: 'group-hover:text-emerald-700',
+    hoverBg: 'hover:bg-emerald-100',
+    hoverText: 'hover:text-emerald-900'
   }
 };
 
@@ -74,8 +115,9 @@ const Sidebar: React.FC<SidebarProps> = ({
   theme = 'purple',
   role
 }) => {
+  const navigate = useNavigate();
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
-  const colors = themeColors[theme as keyof typeof themeColors];
+  const colors = themeClasses[theme as keyof typeof themeClasses];
 
   const toggleSidebar = () => {
     if (!isMobile) {
@@ -91,6 +133,13 @@ const Sidebar: React.FC<SidebarProps> = ({
       case 'employee': return 'Employee';
       default: return r;
     }
+  };
+
+  const handleLogout = () => {
+    // Clear auth data
+    localStorage.removeItem('auth');
+    // Redirect to welcome page
+    navigate('/');
   };
 
   return (
@@ -131,7 +180,7 @@ const Sidebar: React.FC<SidebarProps> = ({
           {/* Collapse Button */}
           <button
             onClick={toggleSidebar}
-            className={`hidden lg:block p-1.5 rounded-lg hover:bg-${colors.light} text-${colors.primary}-600 transition-colors`}
+            className={`hidden lg:block p-1.5 rounded-lg ${colors.hoverBg} text-${colors.primary}-600 transition-colors`}
           >
             {collapsed ? <Icons.ChevronRight className="w-4 h-4" /> : <Icons.ChevronLeft className="w-4 h-4" />}
           </button>
@@ -139,7 +188,7 @@ const Sidebar: React.FC<SidebarProps> = ({
           {/* Mobile Close */}
           <button
             onClick={closeMobileMenu}
-            className={`lg:hidden p-1.5 rounded-lg hover:bg-${colors.light} text-${colors.primary}-600`}
+            className={`lg:hidden p-1.5 rounded-lg ${colors.hoverBg} text-${colors.primary}-600`}
           >
             <Icons.ChevronLeft className="w-5 h-5" />
           </button>
@@ -178,13 +227,20 @@ const Sidebar: React.FC<SidebarProps> = ({
                   flex items-center space-x-3 px-3 py-2 rounded-lg transition-all
                   ${item.active 
                     ? `bg-gradient-to-r ${colors.gradient} text-white shadow-md shadow-${colors.shadowDark}` 
-                    : `text-${colors.primary}-700 hover:bg-${colors.light} hover:text-${colors.primary}-900`
+                    : `text-${colors.primary}-700 ${colors.hoverBg} ${colors.hoverText}`
                   }
                   ${collapsed && !isMobile ? 'justify-center' : ''}
                   group relative
                 `}
               >
-                <IconComponent name={item.icon} className={`w-5 h-5 ${item.active ? 'text-white' : `text-${colors.primary}-500 group-hover:text-${colors.primary}-700`}`} />
+                <IconComponent 
+                  name={item.icon} 
+                  className={`w-5 h-5 ${
+                    item.active 
+                      ? 'text-white' 
+                      : `${colors.iconColor} ${colors.iconHover}`
+                  }`} 
+                />
                 {(!collapsed || isMobile) && (
                   <>
                     <span className="text-sm font-medium flex-1">{item.label}</span>
@@ -213,14 +269,15 @@ const Sidebar: React.FC<SidebarProps> = ({
         {/* Logout */}
         <div className={`p-4 border-t border-${colors.light} flex-shrink-0 shadow-inner bg-gradient-to-r from-${colors.lightBg}/50 to-white`}>
           <button
+            onClick={handleLogout}
             className={`
               flex items-center space-x-3 px-3 py-2 w-full rounded-lg 
-              text-${colors.primary}-700 hover:bg-${colors.light} hover:text-${colors.primary}-900 transition-all
+              text-${colors.primary}-700 ${colors.hoverBg} ${colors.hoverText} transition-all
               ${collapsed && !isMobile ? 'justify-center' : ''}
               group relative
             `}
           >
-            <Icons.LogOut className={`w-5 h-5 text-${colors.primary}-500 group-hover:text-${colors.primary}-700`} />
+            <Icons.LogOut className={`w-5 h-5 ${colors.iconColor} ${colors.iconHover}`} />
             {(!collapsed || isMobile) && <span className="text-sm font-medium">Logout</span>}
             
             {/* Tooltip */}

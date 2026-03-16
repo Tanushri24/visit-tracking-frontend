@@ -1,95 +1,58 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import Calendar from 'react-calendar';
+import 'react-calendar/dist/Calendar.css';
 import { 
-  Users, Settings, FileText, Eye,
-  Calendar, MapPin, BarChart3,
-  PlusCircle, Download, Filter,
-  UserPlus, Shield, Activity,
-  Clock, CheckCircle, AlertCircle
+  Users, Activity, Clock, CheckCircle,
+  PlusCircle, Download, Filter as FilterIcon,
+  Calendar as CalendarIcon
 } from 'lucide-react';
+import { 
+  STATS_CARDS, 
+  QUICK_ACTIONS, 
+  RECENT_ACTIVITIES, 
+  PENDING_APPROVALS, 
+  MASTER_STATS,
+  FILTER_OPTIONS 
+} from '../data/data';
 
 const AdminDashboard = () => {
-  // Stats cards
-  const stats = [
-    { 
-      label: 'Total Users', 
-      value: '1,234', 
-      change: '+12%',
-      icon: Users,
-      borderColor: 'border-l-blue-500',
-      shadowColor: 'shadow-blue-100',
-      iconBg: 'bg-blue-100',
-      iconColor: 'text-blue-600',
-      lightBg: 'bg-blue-50'
-    },
-    { 
-      label: 'Active Masters', 
-      value: '48', 
-      change: '+3',
-      icon: Settings,
-      borderColor: 'border-l-purple-500',
-      shadowColor: 'shadow-purple-100',
-      iconBg: 'bg-purple-100',
-      iconColor: 'text-purple-600',
-      lightBg: 'bg-purple-50'
-    },
-    { 
-      label: 'Total Reports', 
-      value: '567', 
-      change: '+8%',
-      icon: FileText,
-      borderColor: 'border-l-emerald-500',
-      shadowColor: 'shadow-emerald-100',
-      iconBg: 'bg-emerald-100',
-      iconColor: 'text-emerald-600',
-      lightBg: 'bg-emerald-50'
-    },
-    { 
-      label: 'Active Visits', 
-      value: '89', 
-      change: '+23%',
-      icon: Eye,
-      borderColor: 'border-l-orange-500',
-      shadowColor: 'shadow-orange-100',
-      iconBg: 'bg-orange-100',
-      iconColor: 'text-orange-600',
-      lightBg: 'bg-orange-50'
-    },
-  ];
+  // States for dropdowns
+  const [showFilterMenu, setShowFilterMenu] = useState(false);
+  const [showCalendar, setShowCalendar] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [filterLabel, setFilterLabel] = useState('This Week');
 
-  // Quick actions
-  const quickActions = [
-    { icon: UserPlus, label: 'Add User', color: 'blue', onClick: () => {} },
-    { icon: Settings, label: 'Manage Masters', color: 'purple', onClick: () => {} },
-    { icon: FileText, label: 'Generate Report', color: 'emerald', onClick: () => {} },
-    { icon: Calendar, label: 'Schedule', color: 'orange', onClick: () => {} },
-  ];
+  // Refs for outside click detection
+  const filterRef = useRef<HTMLDivElement>(null);
+  const calendarRef = useRef<HTMLDivElement>(null);
 
-  // Recent activities
-  const recentActivities = [
-    { user: 'John Smith', action: 'added new user', target: 'Emma Wilson', time: '5 min ago', type: 'create' },
-    { user: 'Admin', action: 'updated master', target: 'Location Settings', time: '15 min ago', type: 'update' },
-    { user: 'Sarah Johnson', action: 'generated report', target: 'Monthly Summary', time: '1 hour ago', type: 'report' },
-    { user: 'Michael Chen', action: 'modified permissions', target: 'Manager Role', time: '2 hours ago', type: 'security' },
-  ];
+  // Handle outside clicks
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (filterRef.current && !filterRef.current.contains(event.target as Node)) {
+        setShowFilterMenu(false);
+      }
+      if (calendarRef.current && !calendarRef.current.contains(event.target as Node)) {
+        setShowCalendar(false);
+      }
+    };
 
-  // Pending approvals
-  const pendingApprovals = [
-    { item: 'New User Registration', count: 5, priority: 'high' },
-    { item: 'Master Data Changes', count: 3, priority: 'medium' },
-    { item: 'Report Requests', count: 8, priority: 'low' },
-  ];
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
-  // Master data stats
-  const masterStats = [
-    { name: 'Locations', count: 42, icon: MapPin },
-    { name: 'Roles', count: 8, icon: Shield },
-    { name: 'Permissions', count: 24, icon: Settings },
-    { name: 'Categories', count: 15, icon: FileText },
-  ];
+  // Handle filter selection
+  const handleFilterSelect = (option: typeof FILTER_OPTIONS[0]) => {
+    setFilterLabel(option.label);
+    setShowFilterMenu(false);
+    console.log('Filter selected:', option.value);
+  };
 
   return (
     <div className="p-4 md:p-6 space-y-5 bg-gradient-to-br from-blue-50 via-white to-purple-50 min-h-screen">
-      {/* Header with Title */}
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="p-2.5 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl shadow-lg shadow-blue-200">
@@ -110,15 +73,60 @@ const AdminDashboard = () => {
           <button className="p-1.5 bg-white rounded-lg hover:bg-gray-50 border border-gray-200">
             <Download className="w-3.5 h-3.5 text-gray-600" />
           </button>
-          <button className="p-1.5 bg-white rounded-lg hover:bg-gray-50 border border-gray-200">
-            <Filter className="w-3.5 h-3.5 text-gray-600" />
-          </button>
+          
+          {/* Filter Button */}
+          <div className="relative" ref={filterRef}>
+            <button 
+              onClick={() => setShowFilterMenu(!showFilterMenu)}
+              className="p-1.5 bg-white rounded-lg hover:bg-gray-50 border border-gray-200 flex items-center gap-1"
+            >
+              <FilterIcon className="w-3.5 h-3.5 text-gray-600" />
+              <span className="text-xs text-gray-600">{filterLabel}</span>
+            </button>
+
+            {showFilterMenu && (
+              <div className="absolute right-0 mt-2 w-40 bg-white rounded-lg shadow-xl border border-gray-200 p-1 z-50">
+                {FILTER_OPTIONS.map((option) => (
+                  <button
+                    key={option.value}
+                    onClick={() => handleFilterSelect(option)}
+                    className="w-full text-left px-3 py-2 text-xs rounded-lg hover:bg-blue-50 transition-colors"
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Calendar Button */}
+          <div className="relative" ref={calendarRef}>
+            <button 
+              onClick={() => setShowCalendar(!showCalendar)}
+              className="p-1.5 bg-white rounded-lg hover:bg-gray-50 border border-gray-200"
+            >
+              <CalendarIcon className="w-3.5 h-3.5 text-gray-600" />
+            </button>
+            
+            {showCalendar && (
+              <div className="absolute right-0 mt-2 z-50">
+                <Calendar
+                  onChange={(value) => {
+                    setSelectedDate(value as Date);
+                    setShowCalendar(false);
+                  }}
+                  value={selectedDate}
+                  className="rounded-lg shadow-xl border border-gray-200"
+                />
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        {stats.map((stat, i) => (
+        {STATS_CARDS.map((stat, i) => (
           <div 
             key={i}
             className={`bg-white rounded-lg p-3 border-l-4 ${stat.borderColor} border border-gray-100 shadow-lg ${stat.shadowColor} hover:shadow-xl transition-all`}
@@ -140,8 +148,8 @@ const AdminDashboard = () => {
       </div>
 
       {/* Quick Actions Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        {quickActions.map((action, i) => (
+      {/* <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {QUICK_ACTIONS.map((action, i) => (
           <button
             key={i}
             onClick={action.onClick}
@@ -151,11 +159,11 @@ const AdminDashboard = () => {
             <p className={`text-xs font-medium text-${action.color}-700`}>{action.label}</p>
           </button>
         ))}
-      </div>
+      </div> */}
 
       {/* Main Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Left Column - 2 columns */}
+        {/* Left Column */}
         <div className="lg:col-span-2 space-y-4">
           {/* Recent Activities */}
           <div className="bg-white rounded-lg border border-gray-100 shadow-lg shadow-blue-100/50">
@@ -172,11 +180,11 @@ const AdminDashboard = () => {
             </div>
             
             <div className="divide-y divide-gray-100">
-              {recentActivities.map((activity, i) => (
+              {RECENT_ACTIVITIES.map((activity, i) => (
                 <div key={i} className="p-3 hover:bg-blue-50/30 transition-colors">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <div className={`w-6 h-6 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center text-white text-[10px] font-medium`}>
+                      <div className="w-6 h-6 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center text-white text-[10px] font-medium">
                         {activity.user.charAt(0)}
                       </div>
                       <div>
@@ -205,7 +213,7 @@ const AdminDashboard = () => {
           <div className="bg-white rounded-lg p-4 border border-gray-100 shadow-lg shadow-purple-100/50">
             <h2 className="text-sm font-medium text-gray-700 mb-3">Master Data Overview</h2>
             <div className="grid grid-cols-2 gap-3">
-              {masterStats.map((stat, i) => (
+              {MASTER_STATS.map((stat, i) => (
                 <div key={i} className="flex items-center gap-2 p-2 hover:bg-purple-50/30 rounded-lg">
                   <div className="p-1.5 bg-purple-100 rounded-md">
                     <stat.icon className="w-3.5 h-3.5 text-purple-600" />
@@ -220,13 +228,13 @@ const AdminDashboard = () => {
           </div>
         </div>
 
-        {/* Right Column - 1 column */}
+        {/* Right Column */}
         <div className="space-y-4">
           {/* Pending Approvals */}
           <div className="bg-white rounded-lg p-4 border border-gray-100 shadow-lg shadow-orange-100/50">
             <h2 className="text-sm font-medium text-gray-700 mb-3">Pending Approvals</h2>
             <div className="space-y-3">
-              {pendingApprovals.map((item, i) => (
+              {PENDING_APPROVALS.map((item, i) => (
                 <div key={i} className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <div className={`w-2 h-2 rounded-full ${
