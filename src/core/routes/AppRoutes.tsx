@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import PrivateRoute from './PrivateRoute'
 import PublicRoute from './PublicRoute'
 import AuthRoutes from '../../modules/auth/routes/AuthRoutes'
+import SuperAdminRoutes from '../../modules/super-admin/routes/SuperAdminRoutes' // Import SuperAdminRoutes
 
 // Temporary placeholder components for other dashboards
 const EmployeeDashboard = () => (
@@ -40,14 +41,7 @@ const ManagementDashboard = () => (
   </div>
 )
 
-const SuperAdminDashboard = () => (
-  <div className="min-h-screen bg-gray-100 p-8">
-    <div className="max-w-7xl mx-auto">
-      <h1 className="text-3xl font-bold text-gray-900">Super Admin Dashboard</h1>
-      <p className="mt-4 text-gray-600">Welcome to Super Admin Dashboard</p>
-    </div>
-  </div>
-)
+// Super Admin Dashboard component yahan se hata diya kyunki ab SuperAdminRoutes mein hai
 
 const AppRoutes = () => {
   return (
@@ -66,7 +60,9 @@ const AppRoutes = () => {
         <Route path="/manager/dashboard" element={<ManagerDashboard />} />
         <Route path="/admin/dashboard" element={<AdminDashboard />} />
         <Route path="/management/dashboard" element={<ManagementDashboard />} />
-        <Route path="/super-admin/dashboard" element={<SuperAdminDashboard />} />
+        
+        {/* Super Admin Routes - Call kiya yahan */}
+        <Route path="/super-admin/*" element={<SuperAdminRoutes />} />
       </Route>
 
       {/* Catch all - 404 */}
