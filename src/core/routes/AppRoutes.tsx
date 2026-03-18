@@ -1,9 +1,10 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import PrivateRoute from './PrivateRoute';
 import PublicRoute from './PublicRoute';
-import Welcome from '../../modules/auth/pages/welcome'; // Import Welcome page
-import Login from '../../modules/auth/pages/Login'; // Import Login page
-import AuthRoutes from '../../modules/auth/routes/AuthRoutes';
+import Welcome from '../../auth/pages/welcome'; // Import Welcome page
+import Login from '../../auth/pages/Login'; // Import Login page
+import AuthRoutes from '../../auth/routes/AuthRoutes';
+import EmployeeRegistration from '../../auth/registration/EmployeeRegistration';
 
 // Import all role-based routes
 import SuperAdminRoutes from '../../modules/super-admin/routes/SuperAdminRoutes';
@@ -23,7 +24,8 @@ const AppRoutes = () => {
       {/* Public Routes - No auth required */}
       <Route path="/" element={<Welcome />} />
       <Route path="/login" element={<Login />} />
-      
+      <Route path="/registration" element={<EmployeeRegistration />} />
+
       {/* Auth Routes (if you have multiple auth pages) */}
       <Route path="/auth/*" element={<AuthRoutes />} />
 
