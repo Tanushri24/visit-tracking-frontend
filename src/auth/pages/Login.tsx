@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom'; // Added Link
 import { 
   Mail, Lock, Eye, EyeOff, ArrowRight, 
   ChevronLeft, Shield, Crown, Users, Briefcase, BarChart3
@@ -290,12 +290,15 @@ const Login = () => {
             </button>
           </form>
 
-          {/* Contact Admin */}
+          {/* Register Now Link - UPDATED */}
           <p className="text-center text-xs text-gray-500 mt-4">
             Don't have an account?{' '}
-            <button className={`font-medium ${currentRole.text} hover:${currentRole.text} transition-colors text-xs`}>
-              Contact Administrator
-            </button>
+            <Link 
+              to="/registration" 
+              className={`font-medium ${currentRole.text} hover:${currentRole.text} transition-colors text-xs hover:underline`}
+            >
+              Register Now
+            </Link>
           </p>
         </div>
       </div>
