@@ -51,7 +51,7 @@ const AdminDashboard = () => {
   };
 
   return (
-    <div className="p-3 sm:p-4 md:p-6 space-y-3 sm:space-y-4 md:space-y-5 bg-gradient-to-br from-blue-50 via-white to-purple-50 min-h-screen">
+    <div className="p-3 sm:p-4 md:p-6 space-y-3 sm:space-y-4 md:space-y-5 bg-white min-h-screen">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0">
         <div className="flex items-center gap-2 sm:gap-3">
