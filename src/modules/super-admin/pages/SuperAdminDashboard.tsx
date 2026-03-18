@@ -96,7 +96,7 @@ const RecentVisitItem = ({ visit }: { visit: Visit }) => (
   <div className="p-2 sm:p-3 hover:bg-purple-50/30 transition-colors">
     <div className="flex items-center justify-between">
       <div className="flex items-center gap-1.5 sm:gap-2">
-        <div className="w-6 h-6 sm:w-7 sm:h-7 bg-gradient-to-br from-purple-500 to-indigo-500 rounded-md flex items-center justify-center text-white text-[8px] sm:text-[10px] font-medium shadow-sm">
+        <div className="w-6 h-6 sm:w-7 sm:h-7 bg-white rounded-md flex items-center justify-center text-white text-[8px] sm:text-[10px] font-medium shadow-sm">
           {visit.avatar}
         </div>
         <div>
@@ -186,7 +186,7 @@ const SuperAdminDashboard = () => {
   ];
 
   return (
-    <div className="p-3 sm:p-4 md:p-6 space-y-3 sm:space-y-4 md:space-y-5 bg-gradient-to-br from-purple-50 via-white to-purple-50 min-h-screen">
+    <div className="p-3 sm:p-4 md:p-6 space-y-3 sm:space-y-4 md:space-y-5 bg-white min-h-screen">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-0">
         <div className="flex items-center gap-2">

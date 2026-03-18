@@ -1,6 +1,9 @@
+// src/modules/admin/routes/AdminRoutes.tsx
+
 import { Route, Routes } from 'react-router-dom';
 import Layout from '../../../Layouts/Layout';
 import AdminDashboard from '../pages/AdminDashboard';
+import AdminEmployeeRegistration from '../pages/EmployeeRegistration/AdminEmployeeRegistration';
 
 // Wrapper component to avoid repeating Layout
 const AdminLayout = ({ children }: { children: React.ReactNode }) => (
@@ -15,20 +18,18 @@ const AdminRoutes = () => {
       {/* Dashboard */}
       <Route path="dashboard" element={<AdminLayout><AdminDashboard /></AdminLayout>} />
       
-      {/* User Management - Uncomment when ready */}
-      {/* <Route path="users" element={<AdminLayout><ManageUsers /></AdminLayout>} />
-      <Route path="users/:id" element={<AdminLayout><UserDetails /></AdminLayout>} /> */}
+      {/* ✅ Employee Registration - CORRECT PATH */}
+      <Route 
+        path="employee-registration"  // ✅ Must match menu href
+        element={
+          <AdminLayout>
+            <AdminEmployeeRegistration />
+          </AdminLayout>
+        } 
+      />
       
       {/* Master Management */}
-      {/* <Route path="masters" element={<AdminLayout><ManageMasters /></AdminLayout>} />
-      <Route path="masters/:id" element={<AdminLayout><MasterDetails /></AdminLayout>} /> */}
-      
-      {/* Reports */}
-      {/* <Route path="reports" element={<AdminLayout><ViewReports /></AdminLayout>} />
-      <Route path="reports/:id" element={<AdminLayout><ReportDetails /></AdminLayout>} /> */}
-      
-      {/* Settings */}
-      {/* <Route path="settings" element={<AdminLayout><div>Admin Settings</div></AdminLayout>} /> */}
+      {/* <Route path="masters" element={<AdminLayout><ManageMasters /></AdminLayout>} /> */}
       
       {/* Default route - dashboard */}
       <Route path="*" element={<AdminLayout><AdminDashboard /></AdminLayout>} />

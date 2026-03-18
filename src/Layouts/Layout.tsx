@@ -16,7 +16,12 @@ const superAdminMenu = [
     href: '/super-admin/dashboard',
     active: true
   },
-
+  {
+    icon: 'Database',
+    label: 'Employee Registration',
+    href: '/super-admin/employee-registration',
+   
+  },
   // ========== MASTER MANAGEMENT (All 12 Masters from SRS) ==========
   {
     icon: 'Database',
@@ -156,6 +161,12 @@ const adminMenu = [
   },
 
   // ========== MASTER MANAGEMENT (Limited) ==========
+   {
+    icon: 'Database',
+    label: 'Employee Registration',
+    href: '/admin/employee-registration',  // ✅ Must match route path
+  },
+  
   {
     icon: 'Database',
     label: 'Master Data',
