@@ -7,6 +7,7 @@ import Welcome from '../../auth/pages/welcome';
 import Login from '../../auth/pages/Login';
 import AuthRoutes from '../../auth/routes/AuthRoutes';
 import EmployeeRegistration from '../../auth/registration/EmployeeRegistration';
+import ForgotPassword from '../../auth/pages/ForgotPassword';
 
 // Import all role-based routes
 import SuperAdminRoutes from '../../modules/super-admin/routes/SuperAdminRoutes';
@@ -26,6 +27,7 @@ const AppRoutes = () => {
       <Route path="/login" element={<Login />} />
       <Route path="/auth/*" element={<AuthRoutes />} />
       <Route path="/registration" element={<EmployeeRegistration />} />
+       <Route path="/forgotpassword" element={<ForgotPassword />} />
 
       {/* Private Routes */}
       <Route element={<PrivateRoute />}>
