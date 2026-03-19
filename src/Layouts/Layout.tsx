@@ -6,7 +6,6 @@ interface LayoutProps {
   children: React.ReactNode;
   role: 'super_admin' | 'admin' | 'manager' | 'employee' | 'management';
 }
-
 // ==================== SUPER ADMIN MENU ====================
 const superAdminMenu = [
   // ========== DASHBOARD ==========
