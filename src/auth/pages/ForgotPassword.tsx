@@ -1,7 +1,7 @@
-// src/auth/pages/ForgotPassword.tsx
+// src/auth/pages/ChangePassword.tsx
 
-import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import * as yup from 'yup';
 import { 
     ArrowLeft, Lock, Eye, EyeOff, KeyRound,
@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 
 // ==================== YUP VALIDATION SCHEMA ====================
-const forgotPasswordSchema = yup.object().shape({
+const changePasswordSchema = yup.object().shape({
     oldPassword: yup
         .string()
         .required('Old password is required'),
@@ -30,13 +30,36 @@ const forgotPasswordSchema = yup.object().shape({
         .oneOf([yup.ref('newPassword')], 'Passwords do not match')
 });
 
-type ForgotPasswordFormData = yup.InferType<typeof forgotPasswordSchema>;
+type ChangePasswordFormData = yup.InferType<typeof changePasswordSchema>;
 
-const ForgotPassword: React.FC = () => {
+interface LocationState {
+    userRole?: string;
+    requiresPasswordChange?: boolean;
+}
+
+const ChangePassword: React.FC = () => {
     const navigate = useNavigate();
+    const location = useLocation();
+    const state = location.state as LocationState;
+    
+    // Get user role from location state or localStorage
+    const [userRole, setUserRole] = useState<string>('employee');
+    
+    useEffect(() => {
+        // Try to get role from state first, then from localStorage
+        if (state?.userRole) {
+            setUserRole(state.userRole);
+        } else {
+            const authData = localStorage.getItem('auth');
+            if (authData) {
+                const { userRole } = JSON.parse(authData);
+                setUserRole(userRole || 'employee');
+            }
+        }
+    }, [state]);
     
     // Form State
-    const [formData, setFormData] = useState<ForgotPasswordFormData>({
+    const [formData, setFormData] = useState<ChangePasswordFormData>({
         oldPassword: '',
         newPassword: '',
         confirmPassword: ''
@@ -59,10 +82,20 @@ const ForgotPassword: React.FC = () => {
         match: false
     });
 
-    // ✅ FIXED: Validate field with Yup - using validateSync instead of validate
+    // Role-based configurations
+    const roleConfig: Record<string, { gradient: string }> = {
+        'super-admin': { gradient: 'from-purple-600 to-indigo-600' },
+        'admin': { gradient: 'from-purple-600 to-indigo-600' },
+        'manager': { gradient: 'from-purple-600 to-indigo-600' },
+        'employee': { gradient: 'from-purple-600 to-indigo-600' },
+        'management': { gradient: 'from-purple-600 to-indigo-600' }
+    };
+
+    const currentGradient = roleConfig[userRole]?.gradient || 'from-purple-600 to-indigo-600';
+
+    // Validate field with Yup
     const validateField = (name: string, value: string): string => {
         try {
-            // Get the schema for the specific field
             let fieldSchema: yup.AnySchema;
             
             switch(name) {
@@ -87,9 +120,8 @@ const ForgotPassword: React.FC = () => {
                     return '';
             }
             
-            // Validate synchronously
             fieldSchema.validateSync(value, { abortEarly: false });
-            return ''; // No error
+            return '';
         } catch (err) {
             if (err instanceof yup.ValidationError) {
                 return err.message;
@@ -101,7 +133,7 @@ const ForgotPassword: React.FC = () => {
     // Validate entire form
     const validateForm = async (): Promise<boolean> => {
         try {
-            await forgotPasswordSchema.validate(formData, { abortEarly: false });
+            await changePasswordSchema.validate(formData, { abortEarly: false });
             setErrors({});
             return true;
         } catch (err) {
@@ -189,15 +221,31 @@ const ForgotPassword: React.FC = () => {
         setIsLoading(true);
 
         try {
-            // Simulate API call
+            // Simulate API call to change password
             await new Promise(resolve => setTimeout(resolve, 1500));
+            
+            // Get current auth data
+            const authData = localStorage.getItem('auth');
+            if (authData) {
+                const parsedAuth = JSON.parse(authData);
+                // Update password changed status
+                parsedAuth.passwordChanged = true;
+                localStorage.setItem('auth', JSON.stringify(parsedAuth));
+            }
             
             // Show success
             setSuccess(true);
             
             // Redirect to login after 3 seconds
             setTimeout(() => {
-                navigate('/login');
+                // Clear any existing auth to force re-login
+                localStorage.removeItem('auth');
+                navigate('/login', { 
+                    state: { 
+                        message: 'Password changed successfully. Please login with your new password.',
+                        userRole: userRole 
+                    } 
+                });
             }, 3000);
         } catch (error) {
             console.error('Password change failed:', error);
@@ -242,28 +290,30 @@ const ForgotPassword: React.FC = () => {
                 <div className="absolute top-40 right-20 w-64 h-64 bg-purple-300 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-float-slower"></div>
             </div>
 
-            {/* Back Button */}
-            <div className="w-full max-w-sm mb-3 relative z-10">
-                <button
-                    onClick={() => navigate('/login')}
-                    className="inline-flex items-center gap-1.5 text-purple-600 hover:text-purple-800 transition-colors bg-white/80 backdrop-blur-sm px-3 py-1.5 rounded-full shadow-sm border border-purple-100 text-xs"
-                >
-                    <ArrowLeft className="w-3.5 h-3.5" />
-                    Back to Login
-                </button>
-            </div>
+            {/* Back Button - Only show if not from forced password change */}
+            {!state?.requiresPasswordChange && (
+                <div className="w-full max-w-sm mb-3 relative z-10">
+                    <button
+                        onClick={() => navigate('/login')}
+                        className="inline-flex items-center gap-1.5 text-purple-600 hover:text-purple-800 transition-colors bg-white/80 backdrop-blur-sm px-3 py-1.5 rounded-full shadow-sm border border-purple-100 text-xs"
+                    >
+                        <ArrowLeft className="w-3.5 h-3.5" />
+                        Back to Login
+                    </button>
+                </div>
+            )}
 
             {/* Main Card */}
             <div className="relative w-full max-w-sm z-10">
                 {/* Decorative Elements */}
-                <div className="absolute -top-3 -right-3 w-16 h-16 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-2xl rotate-12 opacity-10 blur-xl"></div>
-                <div className="absolute -bottom-3 -left-3 w-16 h-16 bg-gradient-to-tr from-purple-600 to-indigo-600 rounded-2xl -rotate-12 opacity-10 blur-xl"></div>
+                <div className={`absolute -top-3 -right-3 w-16 h-16 bg-gradient-to-br ${currentGradient} rounded-2xl rotate-12 opacity-10 blur-xl`}></div>
+                <div className={`absolute -bottom-3 -left-3 w-16 h-16 bg-gradient-to-tr ${currentGradient} rounded-2xl -rotate-12 opacity-10 blur-xl`}></div>
                 
                 <div className="bg-white/95 backdrop-blur-xl rounded-xl shadow-lg border border-purple-100 p-5 relative">
                     
                     {/* Header Icon */}
                     <div className="flex justify-center mb-3">
-                        <div className="w-14 h-14 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-lg flex items-center justify-center shadow-md">
+                        <div className={`w-14 h-14 bg-gradient-to-br ${currentGradient} rounded-lg flex items-center justify-center shadow-md`}>
                             <Shield className="w-7 h-7 text-white" />
                         </div>
                     </div>
@@ -273,7 +323,10 @@ const ForgotPassword: React.FC = () => {
                         Change Password
                     </h2>
                     <p className="text-center text-gray-500 text-xs mb-4">
-                        Enter your old password and choose a new one
+                        {state?.requiresPasswordChange 
+                            ? 'You need to change your password before accessing the dashboard'
+                            : 'Enter your old password and choose a new one'
+                        }
                     </p>
 
                     {/* Form */}
@@ -443,7 +496,7 @@ const ForgotPassword: React.FC = () => {
                         <button
                             type="submit"
                             disabled={isLoading}
-                            className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white py-2.5 rounded-lg text-sm font-medium hover:shadow-md hover:shadow-purple-500/30 transition-all transform hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1.5 mt-2"
+                            className={`w-full bg-gradient-to-r ${currentGradient} text-white py-2.5 rounded-lg text-sm font-medium hover:shadow-md hover:shadow-purple-500/30 transition-all transform hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1.5 mt-2`}
                         >
                             {isLoading ? (
                                 <>
@@ -496,4 +549,4 @@ const ForgotPassword: React.FC = () => {
     );
 };
 
-export default ForgotPassword;
+export default ChangePassword;

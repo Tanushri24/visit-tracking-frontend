@@ -12,25 +12,21 @@ import OrganizationMaster from '../pages/Master/Components/OrganizationMaster';
 import DepartmentMaster from '../pages/Master/Components/DepartmentMaster';
 import ContactPersonMaster from '../pages/Master/Components/ContactPersonMaster';
 
-// Import Funnel Management (Top level only)
-// import FunnelManagement from '../pages/Funnel/FunnelManagement';
+// Expense Configuration Pages
+import ExpenseConfig from '../pages/expense-configrution/ExpenseConfig';
+import RateManagement from '../pages/expense-configrution/RateManagement';
+import RateChangeHistory from '../pages/expense-configrution/RateChangeHistory';
+import VehicleTypes from '../pages/expense-configrution/VehicleTypes';
+import EffectiveDates from '../pages/expense-configrution/EffectiveDates';
 
 // Import User Management (Top level only for now)
 import UserManagement from '../pages/User/UserManagement';
 
-// Import Expense Configuration (Top level only for now)
-// import ExpenseConfig from '../pages/Expense/ExpenseConfig';
-
-// Import Visit Management (Top level only for now)
+// Import other modules (commented out for now)
+// import FunnelManagement from '../pages/Funnel/FunnelManagement';
 // import VisitManagement from '../pages/Visit/VisitManagement';
-
-// Import Business Outcomes (Top level only for now)
 // import BusinessOutcomes from '../pages/Outcomes/BusinessOutcomes';
-
-// Import Reports (Top level only for now)
 // import Reports from '../pages/Reports/Reports';
-
-// Import Audit Logs (Top level only for now)
 // import AuditLogs from '../pages/Audit/AuditLogs';
 
 const SuperAdminRoutes = () => {
@@ -67,7 +63,7 @@ const SuperAdminRoutes = () => {
         }
       />
       
-      {/* Master Management Sub-routes - These will work when clicked from dropdown */}
+      {/* Master Management Sub-routes */}
       <Route
         path="master-management/company"
         element={
@@ -104,17 +100,68 @@ const SuperAdminRoutes = () => {
         }
       />
       
-      {/* ========== FUNNEL MANAGEMENT (NO DROPDOWN - TOP LEVEL ONLY) ========== */}
+      {/* ========== EXPENSE CONFIGURATION (WITH DROPDOWN) ========== */}
+      {/* Expense Configuration Overview */}
       <Route
-        path="Funnel-management"
+        path="expense-config"
         element={
           <Layout role="super_admin">
-            <div>Coming Soon</div>
+            <ExpenseConfig />
           </Layout>
         }
       />
       
-      {/* ========== USER MANAGEMENT (NO DROPDOWN - TOP LEVEL ONLY) ========== */}
+      {/* Expense Configuration Sub-routes */}
+      <Route
+        path="expense-config/rates"
+        element={
+          <Layout role="super_admin">
+            <RateManagement />
+          </Layout>
+        }
+      />
+      
+      <Route
+        path="expense-config/history"
+        element={
+          <Layout role="super_admin">
+            <RateChangeHistory />
+          </Layout>
+        }
+      />
+      
+      <Route
+        path="expense-config/vehicles"
+        element={
+          <Layout role="super_admin">
+            <VehicleTypes />
+          </Layout>
+        }
+      />
+      
+      <Route
+        path="expense-config/effective-dates"
+        element={
+          <Layout role="super_admin">
+            <EffectiveDates />
+          </Layout>
+        }
+      />
+      
+      {/* ========== FUNNEL MANAGEMENT ========== */}
+      <Route
+        path="Funnel-management"
+        element={
+          <Layout role="super_admin">
+            <div className="p-6">
+              <h1 className="text-2xl font-bold text-gray-800">Funnel Management</h1>
+              <p className="text-gray-600 mt-2">Coming Soon</p>
+            </div>
+          </Layout>
+        }
+      />
+      
+      {/* ========== USER MANAGEMENT ========== */}
       <Route
         path="users"
         element={
@@ -124,52 +171,54 @@ const SuperAdminRoutes = () => {
         }
       />
       
-      {/* ========== EXPENSE CONFIGURATION (NO DROPDOWN - TOP LEVEL ONLY) ========== */}
-      <Route
-        path="expense-config"
-        element={
-          <Layout role="super_admin">
-            <div>Coming Soon</div>
-          </Layout>
-        }
-      />
-      
-      {/* ========== VISIT MANAGEMENT (NO DROPDOWN - TOP LEVEL ONLY) ========== */}
+      {/* ========== VISIT MANAGEMENT ========== */}
       <Route
         path="visits"
         element={
           <Layout role="super_admin">
-            <div>Coming Soon</div>
+            <div className="p-6">
+              <h1 className="text-2xl font-bold text-gray-800">Visit Management</h1>
+              <p className="text-gray-600 mt-2">Coming Soon</p>
+            </div>
           </Layout>
         }
       />
       
-      {/* ========== BUSINESS OUTCOMES (NO DROPDOWN - TOP LEVEL ONLY) ========== */}
+      {/* ========== BUSINESS OUTCOMES ========== */}
       <Route
         path="outcomes"
         element={
           <Layout role="super_admin">
-            <div>Coming Soon</div>
+            <div className="p-6">
+              <h1 className="text-2xl font-bold text-gray-800">Business Outcomes</h1>
+              <p className="text-gray-600 mt-2">Coming Soon</p>
+            </div>
           </Layout>
         }
       />
       
-      {/* ========== REPORTS (NO DROPDOWN - TOP LEVEL ONLY) ========== */}
+      {/* ========== REPORTS ========== */}
       <Route
         path="reports"
         element={
           <Layout role="super_admin">
-            <div>Coming Soon</div>
+            <div className="p-6">
+              <h1 className="text-2xl font-bold text-gray-800">Reports</h1>
+              <p className="text-gray-600 mt-2">Coming Soon</p>
+            </div>
           </Layout>
         }
       />
       
-      {/* ========== AUDIT LOGS (NO DROPDOWN - TOP LEVEL ONLY) ========== */}
+      {/* ========== AUDIT LOGS ========== */}
       <Route
         path="audit"
         element={
           <Layout role="super_admin">
-            <div>Coming Soon</div>
+            <div className="p-6">
+              <h1 className="text-2xl font-bold text-gray-800">Audit Logs</h1>
+              <p className="text-gray-600 mt-2">Coming Soon</p>
+            </div>
           </Layout>
         }
       />
