@@ -25,21 +25,14 @@ const superAdminMenu = [
   {
     icon: 'Database',
     label: 'Master Management',
-    href: '',
-    children: [
-      { icon: 'Building2', label: 'Company Master', href: '/super-admin/masters/companies' },
-      { icon: 'Building', label: 'Organisation Master', href: '/super-admin/masters/organisations' },
-      { icon: 'Layers', label: 'Department Master', href: '/super-admin/masters/departments' },
-      { icon: 'Users2', label: 'Contact Person Master', href: '/super-admin/masters/contacts' },
-      { icon: 'User', label: 'Employee Master', href: '/super-admin/masters/employees' },
-      { icon: 'Badge', label: 'Designation Master', href: '/super-admin/masters/designations' },
-      { icon: 'Tag', label: 'Visit Purpose Master', href: '/super-admin/masters/purposes' },
-      { icon: 'GitMerge', label: 'Funnel Stage Master', href: '/super-admin/masters/funnel-stages' },
-      { icon: 'Target', label: 'Outcome Type Master', href: '/super-admin/masters/outcomes' },
-      { icon: 'DollarSign', label: 'Expense Rate Master', href: '/super-admin/masters/expense-rates' },
-      { icon: 'MapPin', label: 'Location Master', href: '/super-admin/masters/locations' },
-      { icon: 'Car', label: 'Vehicle Type Master', href: '/super-admin/masters/vehicles' }
-    ]
+    href: '/super-admin/master-management',
+   
+  },
+   {
+    icon: 'Database',
+    label: 'Funnel Management',
+    href: '/super-admin/Funnel-management',
+   
   },
 
   // ========== USER MANAGEMENT ==========
