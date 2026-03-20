@@ -11,7 +11,7 @@ interface SidebarProps {
   navItems: any[];
   userInfo: { name: string; email: string; avatar: string };
   role: string;
-   theme?: string;
+  theme?: string;
 }
 
 // Dynamic icon component
@@ -33,9 +33,18 @@ const Sidebar: React.FC<SidebarProps> = ({
   const navigate = useNavigate();
   const location = useLocation();
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
+  const [expandedMenus, setExpandedMenus] = useState<string[]>([]);
 
   const toggleSidebar = () => {
     if (!isMobile) setCollapsed(!collapsed);
+  };
+
+  const toggleSubMenu = (label: string) => {
+    setExpandedMenus(prev => 
+      prev.includes(label) 
+        ? prev.filter(item => item !== label)
+        : [...prev, label]
+    );
   };
 
   const getRoleLabel = (r: string) => {
@@ -51,6 +60,104 @@ const Sidebar: React.FC<SidebarProps> = ({
   const handleLogout = () => {
     localStorage.removeItem('auth');
     navigate('/');
+  };
+
+  // Check if any child is active
+  const hasActiveChild = (item: any) => {
+    if (!item.children) return false;
+    return item.children.some((child: any) => location.pathname === child.href);
+  };
+
+  // Render navigation items recursively
+  const renderNavItem = (item: any, depth: number = 0) => {
+    const isActive = location.pathname === item.href;
+    const hasChildren = item.children && item.children.length > 0;
+    const isExpanded = expandedMenus.includes(item.label);
+    const hasActiveDescendant = hasChildren && hasActiveChild(item);
+    
+    // Don't show labels when collapsed
+    if (collapsed && !isMobile && depth === 0) {
+      return (
+        <div key={item.label} className="relative">
+          <Link
+            to={item.href || '#'}
+            onMouseEnter={() => setHoveredItem(item.label)}
+            onMouseLeave={() => setHoveredItem(null)}
+            className={`
+              flex items-center justify-center px-3 py-2 rounded-lg transition-all
+              ${isActive || hasActiveDescendant
+                ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white'
+                : 'text-purple-700 hover:bg-purple-100 hover:text-purple-900'
+              }
+              group relative
+            `}
+          >
+            <IconComponent
+              name={item.icon}
+              className={`w-5 h-5 ${
+                isActive || hasActiveDescendant ? 'text-white' : 'text-purple-500 group-hover:text-purple-700'
+              }`}
+            />
+
+            {/* Tooltip */}
+            {hoveredItem === item.label && (
+              <span className="absolute left-full ml-2 px-2 py-1 bg-purple-900 text-white text-xs rounded shadow-lg whitespace-nowrap z-50">
+                {item.label}
+              </span>
+            )}
+          </Link>
+        </div>
+      );
+    }
+
+    return (
+      <div key={item.label} className="space-y-1">
+        {/* Parent Menu Item */}
+        <div
+          className={`
+            flex items-center justify-between px-3 py-2 rounded-lg transition-all cursor-pointer
+            ${isActive || hasActiveDescendant
+              ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white'
+              : 'text-purple-700 hover:bg-purple-100 hover:text-purple-900'
+            }
+          `}
+          onClick={() => {
+            if (hasChildren) {
+              toggleSubMenu(item.label);
+            } else if (item.href) {
+              navigate(item.href);
+              if (isMobile) closeMobileMenu();
+            }
+          }}
+        >
+          <div className="flex items-center space-x-3">
+            <IconComponent
+              name={item.icon}
+              className={`w-5 h-5 ${
+                isActive || hasActiveDescendant ? 'text-white' : 'text-purple-500'
+              }`}
+            />
+            <span className="text-sm font-medium">{item.label}</span>
+          </div>
+
+          {hasChildren && (
+            <IconComponent
+              name={isExpanded ? 'ChevronDown' : 'ChevronRight'}
+              className={`w-4 h-4 ${
+                isActive || hasActiveDescendant ? 'text-white' : 'text-purple-400'
+              }`}
+            />
+          )}
+        </div>
+
+        {/* Child Menu Items */}
+        {hasChildren && isExpanded && (
+          <div className={`pl-10 space-y-1 mt-1 ${depth > 0 ? 'pl-8' : ''}`}>
+            {item.children.map((child: any) => renderNavItem(child, depth + 1))}
+          </div>
+        )}
+      </div>
+    );
   };
 
   return (
@@ -126,47 +233,7 @@ const Sidebar: React.FC<SidebarProps> = ({
         {/* Navigation */}
         <nav className="flex-1 overflow-y-auto p-4">
           <div className="space-y-1">
-            {navItems.map((item, index) => {
-              const isActive = location.pathname === item.href;
-
-              return (
-                <Link
-                  key={index}
-                  to={item.href}
-                  onMouseEnter={() => setHoveredItem(item.label)}
-                  onMouseLeave={() => setHoveredItem(null)}
-                  className={`
-                    flex items-center space-x-3 px-3 py-2 rounded-lg transition-all
-                    ${isActive
-                      ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white'
-                      : 'text-purple-700 hover:bg-purple-100 hover:text-purple-900'
-                    }
-                    ${collapsed && !isMobile ? 'justify-center' : ''}
-                    group relative
-                  `}
-                >
-                  <IconComponent
-                    name={item.icon}
-                    className={`w-5 h-5 ${
-                      isActive ? 'text-white' : 'text-purple-500 group-hover:text-purple-700'
-                    }`}
-                  />
-
-                  {(!collapsed || isMobile) && (
-                    <span className="text-sm font-medium flex-1">
-                      {item.label}
-                    </span>
-                  )}
-
-                  {/* Tooltip */}
-                  {collapsed && !isMobile && hoveredItem === item.label && (
-                    <span className="absolute left-full ml-2 px-2 py-1 bg-purple-900 text-white text-xs rounded shadow-lg whitespace-nowrap z-50">
-                      {item.label}
-                    </span>
-                  )}
-                </Link>
-              );
-            })}
+            {navItems.map(item => renderNavItem(item))}
           </div>
         </nav>
 

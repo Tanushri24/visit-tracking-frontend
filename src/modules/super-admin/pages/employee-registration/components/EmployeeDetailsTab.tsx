@@ -321,7 +321,7 @@ const EmployeeDetailsTab: React.FC<EmployeeDetailsTabProps> = ({
                     </div>
 
                     {/* Password */}
-                    <div className="space-y-1.5">
+                    {/* <div className="space-y-1.5">
                         <label className="text-xs font-medium text-gray-600 flex items-center gap-1.5">
                             <Lock className="w-3.5 h-3.5 text-purple-500" />
                             Password <span className="text-red-500">*</span>
@@ -358,10 +358,10 @@ const EmployeeDetailsTab: React.FC<EmployeeDetailsTabProps> = ({
                         <p className="text-xs text-gray-400 mt-0.5">
                             8+ chars, 1 uppercase, 1 number
                         </p>
-                    </div>
+                    </div> */}
 
                     {/* Confirm Password */}
-                    <div className="space-y-1.5">
+                    {/* <div className="space-y-1.5">
                         <label className="text-xs font-medium text-gray-600 flex items-center gap-1.5">
                             <Lock className="w-3.5 h-3.5 text-purple-500" />
                             Confirm Password <span className="text-red-500">*</span>
@@ -395,7 +395,7 @@ const EmployeeDetailsTab: React.FC<EmployeeDetailsTabProps> = ({
                                 {errors.confirmPassword}
                             </p>
                         )}
-                    </div>
+                    </div> */}
                 </div>
             </div>
 
