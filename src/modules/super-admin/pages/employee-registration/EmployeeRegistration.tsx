@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { 
     ArrowLeft, ArrowRight, CheckCircle, Save,
-    User, FileText 
+    User, FileText, AlertCircle 
 } from 'lucide-react';
 
 // Import components
@@ -23,14 +23,17 @@ import type {
 } from './components/types';
 import { validateRegistrationForm } from './components/validation';
 
+// Import API service
+import { createEmployee, type CreateEmployeeRequest } from '../../services/registrationApi';
+
 const EmployeeRegistration: React.FC = () => {
     const navigate = useNavigate();
 
-    // Form Data State - ✅ FIXED: Changed semicolon to comma
+    // Form Data State
     const [formData, setFormData] = useState<EmployeeRegistrationData>({
         // Employee Information
         employeeCode: '',
-        fullName: '',    // ✅ FIXED: Changed ; to ,
+        fullName: '',
         email: '',
         mobile: '',
         password: '',
@@ -98,6 +101,7 @@ const EmployeeRegistration: React.FC = () => {
     const [agreeToTerms, setAgreeToTerms] = useState(false);
     const [touched, setTouched] = useState<Set<string>>(new Set());
     const [registrationSuccess, setRegistrationSuccess] = useState(false);
+    const [apiError, setApiError] = useState<string | null>(null);
 
     // Validate on form data change
     useEffect(() => {
@@ -118,6 +122,8 @@ const EmployeeRegistration: React.FC = () => {
         }));
 
         setTouched(prev => new Set(prev).add(name));
+        // Clear API error when user starts typing again
+        setApiError(null);
     };
 
     // Handle Blur Event
@@ -128,13 +134,12 @@ const EmployeeRegistration: React.FC = () => {
         setTouched(prev => new Set(prev).add(name));
     };
 
-    // Handle Tab Change - ✅ FIXED: Updated allFields array
+    // Handle Tab Change
     const handleTabChange = (tabIndex: number) => {
         if (tabIndex === 1) {
             const validationErrors = validateRegistrationForm(formData);
             setErrors(validationErrors);
             
-            // ✅ FIXED: Changed firstName/lastName to fullName
             const allFields = [
                 'employeeCode', 'fullName', 'email', 'mobile', 
                 'password', 'confirmPassword', 'designation', 'department', 
@@ -161,6 +166,7 @@ const EmployeeRegistration: React.FC = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
+        // Validate form
         const validationErrors = validateRegistrationForm(formData);
         setErrors(validationErrors);
 
@@ -176,16 +182,42 @@ const EmployeeRegistration: React.FC = () => {
         }
 
         setIsLoading(true);
+        setApiError(null);
 
         try {
-            await new Promise(resolve => setTimeout(resolve, 2000));
-            setRegistrationSuccess(true);
-            setTimeout(() => {
-                navigate('/super-admin/employees');
-            }, 3000);
+            // Prepare data for API
+            const apiData: CreateEmployeeRequest = {
+                fullName: formData.fullName,
+                email: formData.email,
+                mobile: formData.mobile,
+                // Convert string IDs to numbers, default to 0 if empty
+                roleId: formData.role ? parseInt(formData.role) : 0,
+                designationId: formData.designation ? parseInt(formData.designation) : 0,
+                departmentId: formData.department ? parseInt(formData.department) : 0,
+                reportingManagerId: formData.reportingManager ? parseInt(formData.reportingManager) : 0
+            };
+
+            // Log the data being sent (for debugging)
+            console.log('Sending data to API:', apiData);
+
+            // Call API
+            const response = await createEmployee(apiData);
+
+            if (response.success) {
+                setRegistrationSuccess(true);
+                // Redirect after 3 seconds
+                setTimeout(() => {
+                    navigate('/super-admin/employees');
+                }, 3000);
+            } else {
+                // Show specific error message from API
+                setApiError(response.message || 'Registration failed. Please try again.');
+                // Scroll to top to show error
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
         } catch (error) {
             console.error('Registration failed:', error);
-            alert('Registration failed. Please try again.');
+            setApiError('An unexpected error occurred. Please try again.');
         } finally {
             setIsLoading(false);
         }
@@ -210,12 +242,15 @@ const EmployeeRegistration: React.FC = () => {
                     <p className="text-sm text-gray-600 mb-4">
                         New employee has been registered in the system.
                     </p>
+                    <div className="text-xs text-gray-500 mb-4">
+                        Redirecting to employee list...
+                    </div>
                     <Link
                         to="/super-admin/employees"
                         className="inline-flex items-center gap-1 text-sm text-purple-600 hover:text-purple-700 font-medium"
                     >
                         <ArrowLeft className="w-3 h-3" />
-                        Go to Employee List
+                        Go to Employee List Now
                     </Link>
                 </div>
             </div>
@@ -245,6 +280,19 @@ const EmployeeRegistration: React.FC = () => {
                         <h1 className="text-lg font-semibold text-gray-800">Create New Employee</h1>
                         <p className="text-xs text-gray-500 mt-0.5">Add a new employee to the system</p>
                     </div>
+
+                    {/* API Error Message */}
+                    {apiError && (
+                        <div className="mx-6 mt-4 p-3 bg-red-50 border border-red-200 rounded-md">
+                            <div className="flex items-start gap-2">
+                                <AlertCircle className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" />
+                                <div className="text-xs text-red-700">
+                                    <span className="font-medium">Error: </span>
+                                    {apiError}
+                                </div>
+                            </div>
+                        </div>
+                    )}
 
                     {/* Tab Navigation */}
                     <div className="border-b border-gray-200 px-6">

@@ -37,24 +37,6 @@ export const validateRegistrationForm = (
         errors.mobile = 'Please enter a 10-digit mobile number';
     }
 
-    // Password
-    if (!formData.password) {
-        errors.password = 'Password is required';
-    } else if (formData.password.length < 8) {
-        errors.password = 'Password must be at least 8 characters';
-    } else if (!/[A-Z]/.test(formData.password)) {
-        errors.password = 'Password must contain at least one uppercase letter';
-    } else if (!/[0-9]/.test(formData.password)) {
-        errors.password = 'Password must contain at least one number';
-    }
-
-    // Confirm Password
-    if (!formData.confirmPassword) {
-        errors.confirmPassword = 'Please confirm your password';
-    } else if (formData.password !== formData.confirmPassword) {
-        errors.confirmPassword = 'Passwords do not match';
-    }
-
     // Designation
     if (!formData.designation) {
         errors.designation = 'Please select a designation';

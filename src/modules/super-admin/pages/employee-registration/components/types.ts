@@ -117,3 +117,78 @@ export interface ApiResponse {
     message: string;
     data?: any;
 }
+// src/components/registration/components/types.ts
+
+export interface EmployeeRegistrationData {
+    employeeCode: string;
+    fullName: string;
+    email: string;
+    mobile: string;
+    password: string;
+    confirmPassword: string;
+    designation: string;
+    department: string;
+    reportingManager: string;
+    location: string;
+    role: string;
+}
+
+export interface Designation {
+    id: number;
+    name: string;
+}
+
+export interface Department {
+    id: number;
+    name: string;
+}
+
+export interface Manager {
+    id: number;
+    name: string;
+    email: string;
+}
+
+export interface Location {
+    id: number;
+    name: string;
+    city: string;
+}
+
+export interface UserRole {
+    id: number;
+    name: string;
+}
+
+export interface RegistrationErrors {
+    employeeCode?: string;
+    fullName?: string;
+    email?: string;
+    mobile?: string;
+    password?: string;
+    confirmPassword?: string;
+    designation?: string;
+    department?: string;
+    reportingManager?: string;
+    location?: string;
+    role?: string;
+}
+
+// API related types
+export interface CreateEmployeeApiRequest {
+    fullName: string;
+    email: string;
+    mobile: string;
+    roleId: number;
+    designationId: number;
+    departmentId: number;
+    reportingManagerId: number;
+}
+
+export interface ApiResponse<T = any> {
+    success: boolean;
+    message: string;
+    
+    error?: string;
+    statusCode?: number;
+}
