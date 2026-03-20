@@ -5,16 +5,38 @@ import Layout from '../../../Layouts/Layout';
 import SuperAdminDashboard from '../pages/SuperAdminDashboard';
 import EmployeeRegistration from '../pages/employee-registration/EmployeeRegistration';
 
-// Import other pages as you create them
- import MasterManagement from '../pages/Master/MasterManagement';
-import FunnelManagement from '../pages/Funnel/FunnelManagemet';
+// Master Management Pages
+import MasterManagement from '../pages/Master/MasterManagement';
+import CompanyMaster from '../pages/Master/Components/CompanyMaster';
+import OrganizationMaster from '../pages/Master/Components/OrganizationMaster';
+import DepartmentMaster from '../pages/Master/Components/DepartmentMaster';
+import ContactPersonMaster from '../pages/Master/Components/ContactPersonMaster';
+
+// Import Funnel Management (Top level only)
+// import FunnelManagement from '../pages/Funnel/FunnelManagement';
+
+// Import User Management (Top level only for now)
 import UserManagement from '../pages/User/UserManagement';
-// ... other imports
+
+// Import Expense Configuration (Top level only for now)
+// import ExpenseConfig from '../pages/Expense/ExpenseConfig';
+
+// Import Visit Management (Top level only for now)
+// import VisitManagement from '../pages/Visit/VisitManagement';
+
+// Import Business Outcomes (Top level only for now)
+// import BusinessOutcomes from '../pages/Outcomes/BusinessOutcomes';
+
+// Import Reports (Top level only for now)
+// import Reports from '../pages/Reports/Reports';
+
+// Import Audit Logs (Top level only for now)
+// import AuditLogs from '../pages/Audit/AuditLogs';
 
 const SuperAdminRoutes = () => {
   return (
     <Routes>
-      {/* Dashboard */}
+      {/* ========== DASHBOARD ========== */}
       <Route
         path="dashboard"
         element={
@@ -24,7 +46,7 @@ const SuperAdminRoutes = () => {
         }
       />
       
-      {/* Employee Registration - matches menu href */}
+      {/* ========== EMPLOYEE REGISTRATION ========== */}
       <Route
         path="employee-registration"
         element={
@@ -34,449 +56,125 @@ const SuperAdminRoutes = () => {
         }
       />
       
-      {/* Master Management - matches menu href */}
+      {/* ========== MASTER MANAGEMENT (WITH DROPDOWN) ========== */}
+      {/* Master Management Overview */}
       <Route
         path="master-management"
         element={
           <Layout role="super_admin">
-            <MasterManagement/>
+            <MasterManagement />
           </Layout>
         }
       />
       
-      {/* Funnel Management - matches menu href (case sensitive!) */}
+      {/* Master Management Sub-routes - These will work when clicked from dropdown */}
       <Route
-        path="Funnel-management"  // 👈 Note: Capital 'F' to match menu href
+        path="master-management/company"
         element={
           <Layout role="super_admin">
-            <FunnelManagement/>
+            <CompanyMaster />
           </Layout>
         }
       />
       
-      {/* User Management Routes */}
+      <Route
+        path="master-management/organization"
+        element={
+          <Layout role="super_admin">
+            <OrganizationMaster />
+          </Layout>
+        }
+      />
+      
+      <Route
+        path="master-management/department"
+        element={
+          <Layout role="super_admin">
+            <DepartmentMaster />
+          </Layout>
+        }
+      />
+      
+      <Route
+        path="master-management/contact-person"
+        element={
+          <Layout role="super_admin">
+            <ContactPersonMaster />
+          </Layout>
+        }
+      />
+      
+      {/* ========== FUNNEL MANAGEMENT (NO DROPDOWN - TOP LEVEL ONLY) ========== */}
+      <Route
+        path="Funnel-management"
+        element={
+          <Layout role="super_admin">
+            <div>Coming Soon</div>
+          </Layout>
+        }
+      />
+      
+      {/* ========== USER MANAGEMENT (NO DROPDOWN - TOP LEVEL ONLY) ========== */}
       <Route
         path="users"
         element={
           <Layout role="super_admin">
-            <UserManagement/>
-          </Layout>
-        }
-      />
-      <Route
-        path="users/list"
-        element={
-          <Layout role="super_admin">
-            <div>All Users Page (Coming Soon)</div>
-          </Layout>
-        }
-      />
-      <Route
-        path="users/roles"
-        element={
-          <Layout role="super_admin">
-            <div>Roles & Permissions Page (Coming Soon)</div>
-          </Layout>
-        }
-      />
-      <Route
-        path="users/sessions"
-        element={
-          <Layout role="super_admin">
-            <div>Active Sessions Page (Coming Soon)</div>
-          </Layout>
-        }
-      />
-      <Route
-        path="users/managers"
-        element={
-          <Layout role="super_admin">
-            <div>Reporting Managers Page (Coming Soon)</div>
+            <UserManagement />
           </Layout>
         }
       />
       
-      {/* Expense Configuration Routes */}
+      {/* ========== EXPENSE CONFIGURATION (NO DROPDOWN - TOP LEVEL ONLY) ========== */}
       <Route
         path="expense-config"
         element={
           <Layout role="super_admin">
-            <div>Expense Configuration Overview (Coming Soon)</div>
-          </Layout>
-        }
-      />
-      <Route
-        path="expense-config/rates"
-        element={
-          <Layout role="super_admin">
-            <div>Rate Management Page (Coming Soon)</div>
-          </Layout>
-        }
-      />
-      <Route
-        path="expense-config/history"
-        element={
-          <Layout role="super_admin">
-            <div>Rate Change History Page (Coming Soon)</div>
-          </Layout>
-        }
-      />
-      <Route
-        path="expense-config/vehicles"
-        element={
-          <Layout role="super_admin">
-            <div>Vehicle Types Page (Coming Soon)</div>
-          </Layout>
-        }
-      />
-      <Route
-        path="expense-config/effective-dates"
-        element={
-          <Layout role="super_admin">
-            <div>Effective Dates Page (Coming Soon)</div>
+            <div>Coming Soon</div>
           </Layout>
         }
       />
       
-      {/* Visit Management Routes */}
+      {/* ========== VISIT MANAGEMENT (NO DROPDOWN - TOP LEVEL ONLY) ========== */}
       <Route
         path="visits"
         element={
           <Layout role="super_admin">
-            <div>Visit Management Overview (Coming Soon)</div>
-          </Layout>
-        }
-      />
-      <Route
-        path="visits/all"
-        element={
-          <Layout role="super_admin">
-            <div>All Visits Page (Coming Soon)</div>
-          </Layout>
-        }
-      />
-      <Route
-        path="visits/today"
-        element={
-          <Layout role="super_admin">
-            <div>Today's Visits Page (Coming Soon)</div>
-          </Layout>
-        }
-      />
-      <Route
-        path="visits/monthly"
-        element={
-          <Layout role="super_admin">
-            <div>Monthly Visits Page (Coming Soon)</div>
-          </Layout>
-        }
-      />
-      <Route
-        path="visits/followups"
-        element={
-          <Layout role="super_admin">
-            <div>Pending Follow-ups Page (Coming Soon)</div>
-          </Layout>
-        }
-      />
-      <Route
-        path="visits/approvals"
-        element={
-          <Layout role="super_admin">
-            <div>Expense Approvals Page (Coming Soon)</div>
+            <div>Coming Soon</div>
           </Layout>
         }
       />
       
-      {/* Funnel Management Routes */}
-      <Route
-        path="funnel"
-        element={
-          <Layout role="super_admin">
-            <div>Funnel Management Overview (Coming Soon)</div>
-          </Layout>
-        }
-      />
-      <Route
-        path="funnel/stage-wise"
-        element={
-          <Layout role="super_admin">
-            <div>Stage-wise Funnel Page (Coming Soon)</div>
-          </Layout>
-        }
-      />
-      <Route
-        path="funnel/employee-wise"
-        element={
-          <Layout role="super_admin">
-            <div>Employee-wise Funnel Page (Coming Soon)</div>
-          </Layout>
-        }
-      />
-      <Route
-        path="funnel/client-wise"
-        element={
-          <Layout role="super_admin">
-            <div>Client-wise Funnel Page (Coming Soon)</div>
-          </Layout>
-        }
-      />
-      <Route
-        path="funnel/dept-wise"
-        element={
-          <Layout role="super_admin">
-            <div>Department-wise Funnel Page (Coming Soon)</div>
-          </Layout>
-        }
-      />
-      <Route
-        path="funnel/conversion"
-        element={
-          <Layout role="super_admin">
-            <div>Conversion Tracking Page (Coming Soon)</div>
-          </Layout>
-        }
-      />
-      <Route
-        path="funnel/stalled"
-        element={
-          <Layout role="super_admin">
-            <div>Stalled Opportunities Page (Coming Soon)</div>
-          </Layout>
-        }
-      />
-      
-      {/* Business Outcomes Routes */}
+      {/* ========== BUSINESS OUTCOMES (NO DROPDOWN - TOP LEVEL ONLY) ========== */}
       <Route
         path="outcomes"
         element={
           <Layout role="super_admin">
-            <div>Business Outcomes Overview (Coming Soon)</div>
-          </Layout>
-        }
-      />
-      <Route
-        path="outcomes/leads"
-        element={
-          <Layout role="super_admin">
-            <div>Leads Generated Page (Coming Soon)</div>
-          </Layout>
-        }
-      />
-      <Route
-        path="outcomes/proposals"
-        element={
-          <Layout role="super_admin">
-            <div>Proposals Created Page (Coming Soon)</div>
-          </Layout>
-        }
-      />
-      <Route
-        path="outcomes/orders"
-        element={
-          <Layout role="super_admin">
-            <div>Orders Received Page (Coming Soon)</div>
-          </Layout>
-        }
-      />
-      <Route
-        path="outcomes/lost"
-        element={
-          <Layout role="super_admin">
-            <div>Lost Deals Page (Coming Soon)</div>
-          </Layout>
-        }
-      />
-      <Route
-        path="outcomes/pipeline"
-        element={
-          <Layout role="super_admin">
-            <div>Pipeline Value Page (Coming Soon)</div>
-          </Layout>
-        }
-      />
-      <Route
-        path="outcomes/confirmed"
-        element={
-          <Layout role="super_admin">
-            <div>Confirmed Business Page (Coming Soon)</div>
-          </Layout>
-        }
-      />
-      <Route
-        path="outcomes/cost-per-lead"
-        element={
-          <Layout role="super_admin">
-            <div>Cost per Lead Page (Coming Soon)</div>
-          </Layout>
-        }
-      />
-      <Route
-        path="outcomes/productivity"
-        element={
-          <Layout role="super_admin">
-            <div>Productivity Score Page (Coming Soon)</div>
+            <div>Coming Soon</div>
           </Layout>
         }
       />
       
-      {/* Reports Routes */}
+      {/* ========== REPORTS (NO DROPDOWN - TOP LEVEL ONLY) ========== */}
       <Route
         path="reports"
         element={
           <Layout role="super_admin">
-            <div>Reports Overview (Coming Soon)</div>
-          </Layout>
-        }
-      />
-      <Route
-        path="reports/daily-visit"
-        element={
-          <Layout role="super_admin">
-            <div>Daily Visit Report (Coming Soon)</div>
-          </Layout>
-        }
-      />
-      <Route
-        path="reports/date-range"
-        element={
-          <Layout role="super_admin">
-            <div>Date Range Visit Report (Coming Soon)</div>
-          </Layout>
-        }
-      />
-      <Route
-        path="reports/employee-summary"
-        element={
-          <Layout role="super_admin">
-            <div>Employee Visit Summary (Coming Soon)</div>
-          </Layout>
-        }
-      />
-      <Route
-        path="reports/organisation"
-        element={
-          <Layout role="super_admin">
-            <div>Organisation Visit Report (Coming Soon)</div>
-          </Layout>
-        }
-      />
-      <Route
-        path="reports/department"
-        element={
-          <Layout role="super_admin">
-            <div>Department Visit Report (Coming Soon)</div>
-          </Layout>
-        }
-      />
-      <Route
-        path="reports/expense"
-        element={
-          <Layout role="super_admin">
-            <div>Expense Report (Coming Soon)</div>
-          </Layout>
-        }
-      />
-      <Route
-        path="reports/vehicle-expense"
-        element={
-          <Layout role="super_admin">
-            <div>Vehicle-wise Expense Report (Coming Soon)</div>
-          </Layout>
-        }
-      />
-      <Route
-        path="reports/funnel-stage"
-        element={
-          <Layout role="super_admin">
-            <div>Funnel Stage Report (Coming Soon)</div>
-          </Layout>
-        }
-      />
-      <Route
-        path="reports/followup-pending"
-        element={
-          <Layout role="super_admin">
-            <div>Follow-up Pending Report (Coming Soon)</div>
-          </Layout>
-        }
-      />
-      <Route
-        path="reports/business-outcome"
-        element={
-          <Layout role="super_admin">
-            <div>Business Outcome Report (Coming Soon)</div>
-          </Layout>
-        }
-      />
-      <Route
-        path="reports/conversion"
-        element={
-          <Layout role="super_admin">
-            <div>Conversion Analysis Report (Coming Soon)</div>
-          </Layout>
-        }
-      />
-      <Route
-        path="reports/productivity"
-        element={
-          <Layout role="super_admin">
-            <div>Monthly Productivity Report (Coming Soon)</div>
-          </Layout>
-        }
-      />
-      <Route
-        path="reports/cost-revenue"
-        element={
-          <Layout role="super_admin">
-            <div>Cost vs Revenue Report (Coming Soon)</div>
+            <div>Coming Soon</div>
           </Layout>
         }
       />
       
-      {/* Audit Logs Routes */}
+      {/* ========== AUDIT LOGS (NO DROPDOWN - TOP LEVEL ONLY) ========== */}
       <Route
         path="audit"
         element={
           <Layout role="super_admin">
-            <div>Audit Logs Overview (Coming Soon)</div>
-          </Layout>
-        }
-      />
-      <Route
-        path="audit/visits"
-        element={
-          <Layout role="super_admin">
-            <div>Visit Change History (Coming Soon)</div>
-          </Layout>
-        }
-      />
-      <Route
-        path="audit/rates"
-        element={
-          <Layout role="super_admin">
-            <div>Rate Change History (Coming Soon)</div>
-          </Layout>
-        }
-      />
-      <Route
-        path="audit/users"
-        element={
-          <Layout role="super_admin">
-            <div>User Activity Logs (Coming Soon)</div>
-          </Layout>
-        }
-      />
-      <Route
-        path="audit/masters"
-        element={
-          <Layout role="super_admin">
-            <div>Master Data Changes (Coming Soon)</div>
+            <div>Coming Soon</div>
           </Layout>
         }
       />
       
-      {/* Default route - redirect to dashboard */}
+      {/* ========== DEFAULT ROUTE ========== */}
       <Route
         path="*"
         element={<Navigate to="/super-admin/dashboard" replace />}

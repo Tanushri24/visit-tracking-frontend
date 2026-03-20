@@ -26,26 +26,25 @@ const superAdminMenu = [
     icon: 'Database',
     label: 'Master Management',
     href: '/super-admin/master-management',
-   
+    children: [
+      { icon: 'Building2', label: 'Company Master', href: '/super-admin/master-management/company' },
+      { icon: 'Building', label: 'Organization Master', href: '/super-admin/master-management/organization' },
+      { icon: 'Layers', label: 'Department Master', href: '/super-admin/master-management/department' },
+      { icon: 'Users', label: 'Contact Person Master', href: '/super-admin/master-management/contact-person' }
+    ]
   },
-   {
-    icon: 'Database',
-    label: 'Funnel Management',
-    href: '/super-admin/Funnel-management',
+  //  {
+  //   icon: 'Database',
+  //   label: 'Funnel Management',
+  //   href: '/super-admin/Funnel-management',
    
-  },
+  // },
 
   // ========== USER MANAGEMENT ==========
   { 
     icon: 'Users', 
     label: 'User Management',
     href: '/super-admin/users',
-    children: [
-      { icon: 'UserPlus', label: 'All Users', href: '/super-admin/users/list' },
-      { icon: 'Shield', label: 'Roles & Permissions', href: '/super-admin/users/roles' },
-      { icon: 'UserCheck', label: 'Active Sessions', href: '/super-admin/users/sessions' },
-      { icon: 'UserCog', label: 'Reporting Managers', href: '/super-admin/users/managers' }
-    ]
   },
 
   // ========== EXPENSE RATE CONFIGURATION ==========
@@ -76,19 +75,19 @@ const superAdminMenu = [
   },
 
   // ========== FUNNEL MANAGEMENT ==========
-  {
-    icon: 'BarChart4',
-    label: 'Funnel Management',
-    href: '/super-admin/funnel',
-    children: [
-      { icon: 'Activity', label: 'Stage-wise Funnel', href: '/super-admin/funnel/stage-wise' },
-      { icon: 'Users', label: 'Employee-wise Funnel', href: '/super-admin/funnel/employee-wise' },
-      { icon: 'Building2', label: 'Client-wise Funnel', href: '/super-admin/funnel/client-wise' },
-      { icon: 'Layers', label: 'Department-wise Funnel', href: '/super-admin/funnel/dept-wise' },
-      { icon: 'TrendingUp', label: 'Conversion Tracking', href: '/super-admin/funnel/conversion' },
-      { icon: 'AlertCircle', label: 'Stalled Opportunities', href: '/super-admin/funnel/stalled' }
-    ]
-  },
+  // {
+  //   icon: 'BarChart4',
+  //   label: 'Funnel Management',
+  //   href: '/super-admin/funnel',
+  //   children: [
+  //     { icon: 'Activity', label: 'Stage-wise Funnel', href: '/super-admin/funnel/stage-wise' },
+  //     { icon: 'Users', label: 'Employee-wise Funnel', href: '/super-admin/funnel/employee-wise' },
+  //     { icon: 'Building2', label: 'Client-wise Funnel', href: '/super-admin/funnel/client-wise' },
+  //     { icon: 'Layers', label: 'Department-wise Funnel', href: '/super-admin/funnel/dept-wise' },
+  //     { icon: 'TrendingUp', label: 'Conversion Tracking', href: '/super-admin/funnel/conversion' },
+  //     { icon: 'AlertCircle', label: 'Stalled Opportunities', href: '/super-admin/funnel/stalled' }
+  //   ]
+  // },
 
   // ========== BUSINESS OUTCOME TRACKING ==========
   {
