@@ -1,5 +1,6 @@
 // src/modules/super-admin/routes/SuperAdminRoutes.tsx
 
+import React from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import Layout from '../../../Layouts/Layout';
 import SuperAdminDashboard from '../pages/SuperAdminDashboard';
@@ -11,6 +12,11 @@ import CompanyMaster from '../pages/Master/Components/CompanyMaster';
 import OrganizationMaster from '../pages/Master/Components/OrganizationMaster';
 import DepartmentMaster from '../pages/Master/Components/DepartmentMaster';
 import ContactPersonMaster from '../pages/Master/Components/ContactPersonMaster';
+import VisitPurposeMaster from  '../pages/Master/Components/VisitPurposeMaster';
+import VehicleTypesMater from '../pages/Master/Components/VehicleTypeMaster';
+import ExpenseRateMaster from '../pages/Master/Components/ExpenseRateMaster';
+import FunnelStageMaster from '../pages/Master/Components/FunnelStageMaster';
+import OutcomeMaster from '../pages/Master/Components/OutcomeMaster';
 
 // Expense Configuration Pages
 import ExpenseConfig from '../pages/expense-configrution/ExpenseConfig';
@@ -22,9 +28,15 @@ import EffectiveDates from '../pages/expense-configrution/EffectiveDates';
 // Import User Management (Top level only for now)
 import UserManagement from '../pages/User/UserManagement';
 
+
+
 // Import other modules (commented out for now)
 // import FunnelManagement from '../pages/Funnel/FunnelManagement';
-// import VisitManagement from '../pages/Visit/VisitManagement';
+import VisitManagement from '../pages/Visits/VisitManagement';
+import AllVisits from '../pages/Visits/Components/AllVisits';
+import TodaysVisits from '../pages/Visits/Components/TodaysVisits';
+import MonthlyVisits from '../pages/Visits/Components/MonthlyVisits';
+
 // import BusinessOutcomes from '../pages/Outcomes/BusinessOutcomes';
 // import Reports from '../pages/Reports/Reports';
 // import AuditLogs from '../pages/Audit/AuditLogs';
@@ -99,7 +111,51 @@ const SuperAdminRoutes = () => {
           </Layout>
         }
       />
-      
+
+      <Route
+        path="master-management/Visit-Purpose"
+        element={
+          <Layout role="super_admin">
+            <VisitPurposeMaster />
+          </Layout>
+        }
+      />
+
+      <Route
+        path="master-management/Vehicle-Type"
+        element={
+          <Layout role="super_admin">
+            <VehicleTypesMater />
+          </Layout>
+        }
+      />
+      <Route
+        path="master-management/Expense-Rate"
+        element={
+          <Layout role="super_admin">
+            <ExpenseRateMaster />
+          </Layout>
+        }
+      />
+
+      <Route
+        path="master-management/Funnel-Stage"
+        element={
+          <Layout role="super_admin">
+            <FunnelStageMaster />
+          </Layout>
+        }
+      />
+
+      <Route
+        path="master-management/Outcome-Master"
+        element={
+          <Layout role="super_admin">
+            <OutcomeMaster />
+          </Layout>
+        }
+      />
+
       {/* ========== EXPENSE CONFIGURATION (WITH DROPDOWN) ========== */}
       {/* Expense Configuration Overview */}
       <Route
@@ -172,14 +228,49 @@ const SuperAdminRoutes = () => {
       />
       
       {/* ========== VISIT MANAGEMENT ========== */}
+
+      
       <Route
-        path="visits"
+        path="Visit-Management"
         element={
           <Layout role="super_admin">
-            <div className="p-6">
-              <h1 className="text-2xl font-bold text-gray-800">Visit Management</h1>
-              <p className="text-gray-600 mt-2">Coming Soon</p>
-            </div>
+            <VisitManagement />
+          </Layout>
+        }
+      />
+
+      {/* All Visits - List all visits */}
+      <Route
+        path="Visit-Management/all-visits"
+        element={
+          <Layout role="super_admin">
+            <AllVisits />
+          </Layout>
+        }
+      />
+
+
+      <Route
+        path="Visit-Management/todays-visits"
+        element={
+          <Layout role="super_admin">
+            <TodaysVisits />
+          </Layout>
+        }
+      />
+      <Route
+        path="Visit-Management/todays-visits"
+        element={
+          <Layout role="super_admin">
+            <TodaysVisits />
+          </Layout>
+        }
+      />
+      <Route
+        path="Visit-Management/monthly-visits"
+        element={
+          <Layout role="super_admin">
+            <MonthlyVisits />
           </Layout>
         }
       />

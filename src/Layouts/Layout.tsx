@@ -30,8 +30,14 @@ const superAdminMenu = [
       { icon: 'Building2', label: 'Company Master', href: '/super-admin/master-management/company' },
       { icon: 'Building', label: 'Organization Master', href: '/super-admin/master-management/organization' },
       { icon: 'Layers', label: 'Department Master', href: '/super-admin/master-management/department' },
-      { icon: 'Users', label: 'Contact Person Master', href: '/super-admin/master-management/contact-person' }
+      { icon: 'Users', label: 'Contact Person Master', href: '/super-admin/master-management/contact-person' },
+      { icon: 'Target', label: 'Visit Purpose Master', href: '/super-admin/master-management/visit-purpose' },
+      { icon: 'Truck', label: 'Vehicle Type Master', href: '/super-admin/master-management/vehicle-type' }, // vehicles
+      { icon: 'DollarSign', label: 'Expense Rate Master', href: '/super-admin/master-management/expense-rate' }, // finance / rates
+      { icon: 'Funnel', label: 'Funnel Stage Master', href: '/super-admin/master-management/funnel-stage' }, // funnel / sales stages
+      { icon: 'CheckCircle', label: 'Outcome Master', href: '/super-admin/master-management/outcome-master' }, // outcome / result
     ]
+    
   },
   //  {
   //   icon: 'Database',
@@ -64,11 +70,11 @@ const superAdminMenu = [
   {
     icon: 'MapPin',
     label: 'Visit Management',
-    href: '/super-admin/visits',
+    href: '/super-admin/Visit-Management',
     children: [
-      { icon: 'List', label: 'All Visits', href: '/super-admin/visits/all' },
-      { icon: 'Calendar', label: 'Today\'s Visits', href: '/super-admin/visits/today' },
-      { icon: 'CalendarRange', label: 'Monthly Visits', href: '/super-admin/visits/monthly' },
+      {icon: 'List', label: 'All Visits', href: '/super-admin/Visit-Management/all-visits'},
+      { icon: 'Calendar', label: 'Todays Visits', href: '/super-admin/Visit-Management/Todays-visits'},
+      { icon: 'CalendarRange', label: 'Monthly Visits', href: '/super-admin/Visit-Management/monthly-visits' },
       { icon: 'Clock', label: 'Pending Follow-ups', href: '/super-admin/visits/followups' },
       { icon: 'CheckCircle', label: 'Expense Approvals', href: '/super-admin/visits/approvals' }
     ]

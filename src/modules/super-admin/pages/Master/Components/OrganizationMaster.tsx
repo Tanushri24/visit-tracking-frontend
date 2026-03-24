@@ -8,7 +8,8 @@ import {
   Download,
   RefreshCw,
   Eye,
-  Building2
+  Building2,
+  Plus
 } from 'lucide-react';
 
 interface Organization {
@@ -33,8 +34,19 @@ interface Organization {
   updatedAt: string;
 }
 
+// Sample company data for dropdown
+const sampleCompanies = [
+  { id: 1, name: 'Agnigate Technologies Pvt. Ltd.' },
+  { id: 2, name: 'MP Board of Secondary Education' },
+  { id: 3, name: 'ITI Limited' },
+  { id: 4, name: 'Bhoj University' },
+  { id: 5, name: 'Infosys Limited' },
+  { id: 6, name: 'Tata Motors' },
+  { id: 7, name: 'ICICI Bank' },
+];
+
 const OrganizationMaster = () => {
-  const [organizations] = useState<Organization[]>([
+  const [organizations, setOrganizations] = useState<Organization[]>([
     {
       id: 1,
       organizationName: 'Examination Wing - MP Board',
@@ -192,6 +204,27 @@ const OrganizationMaster = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [selectedOrganization, setSelectedOrganization] = useState<Organization | null>(null);
   const [showViewModal, setShowViewModal] = useState(false);
+  const [showInsertModal, setShowInsertModal] = useState(false);
+  
+  // Form state for new organization
+  const [newOrganization, setNewOrganization] = useState({
+    organizationName: '',
+    companyId: 0,
+    companyName: '',
+    address: '',
+    city: '',
+    state: '',
+    pincode: '',
+    contactPerson: '',
+    contactEmail: '',
+    contactPhone: '',
+    website: '',
+    gstNo: '',
+    registrationNo: '',
+    establishedYear: '',
+    employeeCount: '',
+    status: 'active' as 'active' | 'inactive'
+  });
 
   // Get unique companies for filter
   const companies = ['all', ...new Set(organizations.map(o => o.companyName))];
@@ -249,12 +282,62 @@ const OrganizationMaster = () => {
     setShowViewModal(true);
   };
 
+  // Handle insert form input changes
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    
+    if (name === 'companyId') {
+      const selectedCompany = sampleCompanies.find(c => c.id === parseInt(value));
+      setNewOrganization(prev => ({ 
+        ...prev, 
+        companyId: parseInt(value),
+        companyName: selectedCompany ? selectedCompany.name : ''
+      }));
+    } else {
+      setNewOrganization(prev => ({ ...prev, [name]: value }));
+    }
+  };
+
+  // Handle form submission
+  const handleInsertOrganization = () => {
+    const newId = Math.max(...organizations.map(o => o.id), 0) + 1;
+    const currentDate = new Date().toISOString().split('T')[0];
+    
+    const organizationToAdd: Organization = {
+      id: newId,
+      ...newOrganization,
+      createdAt: currentDate,
+      updatedAt: currentDate
+    };
+    
+    setOrganizations([...organizations, organizationToAdd]);
+    setShowInsertModal(false);
+    setNewOrganization({
+      organizationName: '',
+      companyId: 0,
+      companyName: '',
+      address: '',
+      city: '',
+      state: '',
+      pincode: '',
+      contactPerson: '',
+      contactEmail: '',
+      contactPhone: '',
+      website: '',
+      gstNo: '',
+      registrationNo: '',
+      establishedYear: '',
+      employeeCount: '',
+      status: 'active'
+    });
+  };
+
   return (
     <div className="p-4 md:p-6 bg-gray-50 min-h-screen">
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-2xl md:text-3xl font-bold text-gray-800">Organization Master</h1>
-        <p className="text-sm text-gray-600 mt-1">View organization details (Read Only)</p>
+        <p className="text-sm text-gray-600 mt-1">Manage organization details</p>
       </div>
 
       {/* Stats Cards */}
@@ -295,18 +378,25 @@ const OrganizationMaster = () => {
           {/* Action Buttons */}
           <div className="flex gap-2 w-full md:w-auto">
             <button
+              onClick={() => setShowInsertModal(true)}
+              className="flex-1 md:flex-none px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 flex items-center justify-center gap-2"
+            >
+              <Plus size={18} />
+              <span>Add Organization</span>
+            </button>
+            <button
               onClick={() => setShowFilters(!showFilters)}
               className="flex-1 md:flex-none px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center justify-center gap-2"
             >
               <Filter size={18} />
-              <span className="md:hidden lg:inline">Filters</span>
+              <span>Filters</span>
             </button>
             <button
               onClick={exportToCSV}
               className="flex-1 md:flex-none px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center justify-center gap-2"
             >
               <Download size={18} />
-              <span className="md:hidden lg:inline">Export</span>
+              <span>Export</span>
             </button>
           </div>
         </div>
@@ -357,7 +447,7 @@ const OrganizationMaster = () => {
         )}
       </div>
 
-      {/* Table with Horizontal Scroll - Works on all devices */}
+      {/* Table */}
       <div className="bg-white rounded-lg shadow overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[1400px] lg:min-w-full">
@@ -379,9 +469,7 @@ const OrganizationMaster = () => {
             <tbody className="divide-y divide-gray-200">
               {currentItems.map((org, index) => (
                 <tr key={org.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3 text-sm text-gray-600">
-                    {indexOfFirstItem + index + 1}
-                  </td>
+                  <td className="px-4 py-3 text-sm text-gray-600">{indexOfFirstItem + index + 1}</td>
                   <td className="px-4 py-3">
                     <div>
                       <p className="font-medium text-gray-900">{org.organizationName}</p>
@@ -401,9 +489,7 @@ const OrganizationMaster = () => {
                   <td className="px-4 py-3 text-sm text-gray-600">{org.registrationNo}</td>
                   <td className="px-4 py-3">
                     <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold ${
-                      org.status === 'active' 
-                        ? 'bg-green-100 text-green-800' 
-                        : 'bg-red-100 text-red-800'
+                      org.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                     }`}>
                       {org.status}
                     </span>
@@ -411,7 +497,7 @@ const OrganizationMaster = () => {
                   <td className="px-4 py-3">
                     <button
                       onClick={() => viewOrganizationDetails(org)}
-                      className="p-1 text-blue-600 hover:bg-blue-50 rounded flex items-center gap-1"
+                      className="p-1 text-blue-600 hover:bg-blue-50 rounded"
                       title="View Details"
                     >
                       <Eye size={18} />
@@ -471,112 +557,145 @@ const OrganizationMaster = () => {
               </div>
 
               <div className="space-y-4">
-                {/* Organization Information */}
                 <div className="border-b pb-4">
                   <h3 className="text-lg font-semibold text-purple-600 mb-3">Organization Information</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-sm text-gray-500">Organization Name</p>
-                      <p className="font-medium">{selectedOrganization.organizationName}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Company</p>
-                      <p className="font-medium">{selectedOrganization.companyName}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Registration No</p>
-                      <p className="font-medium">{selectedOrganization.registrationNo}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">GST No</p>
-                      <p className="font-medium">{selectedOrganization.gstNo}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Website</p>
-                      <p className="font-medium text-blue-600">
-                        <a href={`https://${selectedOrganization.website}`} target="_blank" rel="noopener noreferrer">
-                          {selectedOrganization.website}
-                        </a>
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Status</p>
-                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold ${
-                        selectedOrganization.status === 'active' 
-                          ? 'bg-green-100 text-green-800' 
-                          : 'bg-red-100 text-red-800'
-                      }`}>
-                        {selectedOrganization.status}
-                      </span>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Established Year</p>
-                      <p className="font-medium">{selectedOrganization.establishedYear}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Employee Count</p>
-                      <p className="font-medium">{selectedOrganization.employeeCount}</p>
-                    </div>
+                    <div><p className="text-sm text-gray-500">Organization Name</p><p className="font-medium">{selectedOrganization.organizationName}</p></div>
+                    <div><p className="text-sm text-gray-500">Company</p><p className="font-medium">{selectedOrganization.companyName}</p></div>
+                    <div><p className="text-sm text-gray-500">Registration No</p><p className="font-medium">{selectedOrganization.registrationNo}</p></div>
+                    <div><p className="text-sm text-gray-500">GST No</p><p className="font-medium">{selectedOrganization.gstNo}</p></div>
+                    <div><p className="text-sm text-gray-500">Website</p><p className="font-medium text-blue-600">{selectedOrganization.website}</p></div>
+                    <div><p className="text-sm text-gray-500">Status</p><span className={`inline-flex px-2 py-1 rounded-full text-xs font-semibold ${selectedOrganization.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>{selectedOrganization.status}</span></div>
+                    <div><p className="text-sm text-gray-500">Established Year</p><p className="font-medium">{selectedOrganization.establishedYear}</p></div>
+                    <div><p className="text-sm text-gray-500">Employee Count</p><p className="font-medium">{selectedOrganization.employeeCount}</p></div>
                   </div>
                 </div>
 
-                {/* Address Information */}
                 <div className="border-b pb-4">
                   <h3 className="text-lg font-semibold text-purple-600 mb-3">Address</h3>
-                  <div className="grid grid-cols-1 gap-2">
-                    <p className="font-medium">{selectedOrganization.address}</p>
-                    <p>{selectedOrganization.city}, {selectedOrganization.state} - {selectedOrganization.pincode}</p>
-                  </div>
+                  <p className="font-medium">{selectedOrganization.address}</p>
+                  <p>{selectedOrganization.city}, {selectedOrganization.state} - {selectedOrganization.pincode}</p>
                 </div>
 
-                {/* Contact Information */}
-                <div className="border-b pb-4">
+                <div>
                   <h3 className="text-lg font-semibold text-purple-600 mb-3">Contact Information</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-sm text-gray-500">Contact Person</p>
-                      <p className="font-medium">{selectedOrganization.contactPerson}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Email</p>
-                      <p className="font-medium text-blue-600">
-                        <a href={`mailto:${selectedOrganization.contactEmail}`}>{selectedOrganization.contactEmail}</a>
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Phone</p>
-                      <p className="font-medium">{selectedOrganization.contactPhone}</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* System Information */}
-                <div>
-                  <h3 className="text-lg font-semibold text-purple-600 mb-3">System Information</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <p className="text-gray-500">Created At</p>
-                      <p className="font-medium">{new Date(selectedOrganization.createdAt).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
-                    </div>
-                    <div>
-                      <p className="text-gray-500">Last Updated</p>
-                      <p className="font-medium">{new Date(selectedOrganization.updatedAt).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
-                    </div>
+                    <div><p className="text-sm text-gray-500">Contact Person</p><p className="font-medium">{selectedOrganization.contactPerson}</p></div>
+                    <div><p className="text-sm text-gray-500">Email</p><p className="font-medium text-blue-600">{selectedOrganization.contactEmail}</p></div>
+                    <div><p className="text-sm text-gray-500">Phone</p><p className="font-medium">{selectedOrganization.contactPhone}</p></div>
                   </div>
                 </div>
               </div>
 
               <div className="flex justify-end mt-6">
+                <button onClick={() => setShowViewModal(false)} className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">Close</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Insert Organization Modal */}
+      {showInsertModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-bold text-gray-800">Add New Organization</h2>
                 <button
                   onClick={() => {
-                    setShowViewModal(false);
-                    setSelectedOrganization(null);
+                    setShowInsertModal(false);
+                    setNewOrganization({
+                      organizationName: '', companyId: 0, companyName: '', address: '', city: '', state: '', pincode: '',
+                      contactPerson: '', contactEmail: '', contactPhone: '', website: '', gstNo: '', registrationNo: '',
+                      establishedYear: '', employeeCount: '', status: 'active'
+                    });
                   }}
-                  className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+                  className="p-1 hover:bg-gray-100 rounded"
                 >
-                  Close
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
                 </button>
               </div>
+
+              <form onSubmit={(e) => { e.preventDefault(); handleInsertOrganization(); }}>
+                {/* Basic Information */}
+                <div className="border-b pb-4 mb-4">
+                  <h3 className="text-lg font-semibold text-purple-600 mb-3">Basic Information</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Organization Name *</label>
+                      <input type="text" name="organizationName" value={newOrganization.organizationName} onChange={handleInputChange} required className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Parent Company *</label>
+                      <select name="companyId" value={newOrganization.companyId} onChange={handleInputChange} required className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500">
+                        <option value="">Select Company</option>
+                        {sampleCompanies.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Registration Number</label>
+                      <input type="text" name="registrationNo" value={newOrganization.registrationNo} onChange={handleInputChange} className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">GST Number</label>
+                      <input type="text" name="gstNo" value={newOrganization.gstNo} onChange={handleInputChange} className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Website</label>
+                      <input type="text" name="website" value={newOrganization.website} onChange={handleInputChange} className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Established Year</label>
+                      <input type="text" name="establishedYear" value={newOrganization.establishedYear} onChange={handleInputChange} className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Employee Count</label>
+                      <input type="text" name="employeeCount" value={newOrganization.employeeCount} onChange={handleInputChange} className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                      <select name="status" value={newOrganization.status} onChange={handleInputChange} className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500">
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Address Information */}
+                <div className="border-b pb-4 mb-4">
+                  <h3 className="text-lg font-semibold text-purple-600 mb-3">Address Information</h3>
+                  <div className="grid grid-cols-1 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Full Address *</label>
+                      <textarea name="address" value={newOrganization.address} onChange={handleInputChange} required rows={2} className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500" />
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div><label className="block text-sm font-medium text-gray-700 mb-1">City *</label><input type="text" name="city" value={newOrganization.city} onChange={handleInputChange} required className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500" /></div>
+                      <div><label className="block text-sm font-medium text-gray-700 mb-1">State *</label><input type="text" name="state" value={newOrganization.state} onChange={handleInputChange} required className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500" /></div>
+                      <div><label className="block text-sm font-medium text-gray-700 mb-1">Pincode *</label><input type="text" name="pincode" value={newOrganization.pincode} onChange={handleInputChange} required className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500" /></div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Contact Information */}
+                <div className="mb-4">
+                  <h3 className="text-lg font-semibold text-purple-600 mb-3">Contact Information</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div><label className="block text-sm font-medium text-gray-700 mb-1">Contact Person *</label><input type="text" name="contactPerson" value={newOrganization.contactPerson} onChange={handleInputChange} required className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500" /></div>
+                    <div><label className="block text-sm font-medium text-gray-700 mb-1">Email *</label><input type="email" name="contactEmail" value={newOrganization.contactEmail} onChange={handleInputChange} required className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500" /></div>
+                    <div><label className="block text-sm font-medium text-gray-700 mb-1">Phone *</label><input type="tel" name="contactPhone" value={newOrganization.contactPhone} onChange={handleInputChange} required className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500" /></div>
+                  </div>
+                </div>
+
+                <div className="flex justify-end gap-3 mt-6">
+                  <button type="button" onClick={() => setShowInsertModal(false)} className="px-4 py-2 border rounded-lg hover:bg-gray-50">Cancel</button>
+                  <button type="submit" className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">Add Organization</button>
+                </div>
+              </form>
             </div>
           </div>
         </div>

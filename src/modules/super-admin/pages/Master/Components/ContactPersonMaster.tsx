@@ -10,9 +10,9 @@ import {
   Eye,
   UserCircle,
   Mail,
-  Phone,
   Building2,
-  MapPin
+  MapPin,
+  Plus
 } from 'lucide-react';
 
 interface ContactPerson {
@@ -47,7 +47,7 @@ interface ContactPerson {
 }
 
 const ContactPersonMaster = () => {
-  const [contacts] = useState<ContactPerson[]>([
+  const [contacts, setContacts] = useState<ContactPerson[]>([
     {
       id: 1,
       name: 'Dr. S.K. Rao',
@@ -271,6 +271,36 @@ const ContactPersonMaster = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [selectedContact, setSelectedContact] = useState<ContactPerson | null>(null);
   const [showViewModal, setShowViewModal] = useState(false);
+  const [showInsertModal, setShowInsertModal] = useState(false);
+  
+  // Form state for new contact
+  const [newContact, setNewContact] = useState({
+    name: '',
+    designation: '',
+    department: '',
+    organizationId: 0,
+    organizationName: '',
+    companyId: 0,
+    companyName: '',
+    email: '',
+    mobile: '',
+    alternatePhone: '',
+    whatsappNumber: '',
+    address: '',
+    city: '',
+    state: '',
+    pincode: '',
+    country: 'India',
+    dateOfBirth: '',
+    anniversaryDate: '',
+    gender: 'Male' as 'Male' | 'Female' | 'Other',
+    isPrimary: false,
+    isDecisionMaker: false,
+    reportingTo: '',
+    remarks: '',
+    preferredContactMode: 'Any' as 'Email' | 'Phone' | 'WhatsApp' | 'Any',
+    status: 'active' as 'active' | 'inactive'
+  });
 
   // Get unique values for filters
   const companies = ['all', ...new Set(contacts.map(c => c.companyName))];
@@ -339,6 +369,60 @@ const ContactPersonMaster = () => {
     setShowViewModal(true);
   };
 
+  // Handle insert form input changes
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    const { name, value, type } = e.target;
+    if (type === 'checkbox') {
+      const checked = (e.target as HTMLInputElement).checked;
+      setNewContact(prev => ({ ...prev, [name]: checked }));
+    } else {
+      setNewContact(prev => ({ ...prev, [name]: value }));
+    }
+  };
+
+  // Handle form submission
+  const handleInsertContact = () => {
+    const newId = Math.max(...contacts.map(c => c.id), 0) + 1;
+    const currentDate = new Date().toISOString().split('T')[0];
+    
+    const contactToAdd: ContactPerson = {
+      id: newId,
+      ...newContact,
+      createdAt: currentDate,
+      updatedAt: currentDate
+    };
+    
+    setContacts([...contacts, contactToAdd]);
+    setShowInsertModal(false);
+    setNewContact({
+      name: '',
+      designation: '',
+      department: '',
+      organizationId: 0,
+      organizationName: '',
+      companyId: 0,
+      companyName: '',
+      email: '',
+      mobile: '',
+      alternatePhone: '',
+      whatsappNumber: '',
+      address: '',
+      city: '',
+      state: '',
+      pincode: '',
+      country: 'India',
+      dateOfBirth: '',
+      anniversaryDate: '',
+      gender: 'Male',
+      isPrimary: false,
+      isDecisionMaker: false,
+      reportingTo: '',
+      remarks: '',
+      preferredContactMode: 'Any',
+      status: 'active'
+    });
+  };
+
   return (
     <div className="p-4 md:p-6 bg-gray-50 min-h-screen">
       {/* Header */}
@@ -369,9 +453,10 @@ const ContactPersonMaster = () => {
 
       {/* Action Bar */}
       <div className="bg-white rounded-lg shadow mb-6">
-        <div className="p-4 flex flex-col md:flex-row gap-4 items-center justify-between">
+        <div className="p-4 flex flex-col md:flex-row gap-4 items-stretch md:items-center justify-between">
           {/* Search */}
-          <div className="w-full md:w-96 relative">
+          <div className="relative flex-1 max-w-full md:max-w-md">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
             <input
               type="text"
               placeholder="Search contacts..."
@@ -379,24 +464,31 @@ const ContactPersonMaster = () => {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
-            <Search className="absolute left-3 top-2.5 text-gray-400" size={20} />
           </div>
 
-          {/* Action Buttons */}
-          <div className="flex gap-2 w-full md:w-auto">
+          {/* Action Buttons - Add button moved to left side */}
+          <div className="flex gap-2">
+            <button
+              onClick={() => setShowInsertModal(true)}
+              className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-all flex items-center justify-center gap-2 shadow-sm"
+            >
+              <Plus size={18} />
+              <span className="hidden sm:inline">Add New Contact</span>
+              <span className="sm:hidden">Add</span>
+            </button>
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className="flex-1 md:flex-none px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center justify-center gap-2"
+              className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center justify-center gap-2"
             >
               <Filter size={18} />
-              <span className="md:hidden lg:inline">Filters</span>
+              <span className="hidden sm:inline">Filters</span>
             </button>
             <button
               onClick={exportToCSV}
-              className="flex-1 md:flex-none px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center justify-center gap-2"
+              className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center justify-center gap-2"
             >
               <Download size={18} />
-              <span className="md:hidden lg:inline">Export</span>
+              <span className="hidden sm:inline">Export</span>
             </button>
           </div>
         </div>
@@ -486,7 +578,7 @@ const ContactPersonMaster = () => {
         )}
       </div>
 
-      {/* Table with Horizontal Scroll */}
+      {/* Table */}
       <div className="bg-white rounded-lg shadow overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[1800px] lg:min-w-full">
@@ -510,60 +602,40 @@ const ContactPersonMaster = () => {
             <tbody className="divide-y divide-gray-200">
               {currentItems.map((contact, index) => (
                 <tr key={contact.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3 text-sm text-gray-600">
-                    {indexOfFirstItem + index + 1}
-                  </td>
-                  <td className="px-4 py-3">
-                    <p className="font-medium text-gray-900">{contact.name}</p>
-                  </td>
+                  <td className="px-4 py-3 text-sm text-gray-600">{indexOfFirstItem + index + 1}</td>
+                  <td className="px-4 py-3"><p className="font-medium text-gray-900">{contact.name}</p></td>
                   <td className="px-4 py-3 text-sm text-gray-600">{contact.designation}</td>
                   <td className="px-4 py-3 text-sm text-gray-600">{contact.department}</td>
                   <td className="px-4 py-3 text-sm text-gray-600">{contact.organizationName}</td>
                   <td className="px-4 py-3 text-sm text-gray-600">{contact.companyName}</td>
                   <td className="px-4 py-3 text-sm text-gray-600">
-                    <a href={`mailto:${contact.email}`} className="text-blue-600 hover:underline">
-                      {contact.email}
-                    </a>
+                    <a href={`mailto:${contact.email}`} className="text-blue-600 hover:underline">{contact.email}</a>
                   </td>
                   <td className="px-4 py-3 text-sm text-gray-600">{contact.mobile}</td>
                   <td className="px-4 py-3 text-sm text-gray-600">{contact.city}</td>
                   <td className="px-4 py-3">
                     {contact.isDecisionMaker ? (
-                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">
-                        Yes
-                      </span>
+                      <span className="inline-flex px-2 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">Yes</span>
                     ) : (
-                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-800">
-                        No
-                      </span>
+                      <span className="inline-flex px-2 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-800">No</span>
                     )}
                   </td>
                   <td className="px-4 py-3">
                     {contact.isPrimary ? (
-                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-purple-100 text-purple-800">
-                        Primary
-                      </span>
+                      <span className="inline-flex px-2 py-1 rounded-full text-xs font-semibold bg-purple-100 text-purple-800">Primary</span>
                     ) : (
-                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-800">
-                        Secondary
-                      </span>
+                      <span className="inline-flex px-2 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-800">Secondary</span>
                     )}
                   </td>
                   <td className="px-4 py-3">
-                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold ${
-                      contact.status === 'active' 
-                        ? 'bg-green-100 text-green-800' 
-                        : 'bg-red-100 text-red-800'
+                    <span className={`inline-flex px-2 py-1 rounded-full text-xs font-semibold ${
+                      contact.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                     }`}>
                       {contact.status}
                     </span>
                   </td>
                   <td className="px-4 py-3">
-                    <button
-                      onClick={() => viewContactDetails(contact)}
-                      className="p-1 text-blue-600 hover:bg-blue-50 rounded flex items-center gap-1"
-                      title="View Details"
-                    >
+                    <button onClick={() => viewContactDetails(contact)} className="p-1 text-blue-600 hover:bg-blue-50 rounded" title="View Details">
                       <Eye size={18} />
                     </button>
                   </td>
@@ -580,21 +652,11 @@ const ContactPersonMaster = () => {
           Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, filteredContacts.length)} of {filteredContacts.length} entries
         </div>
         <div className="flex gap-2">
-          <button
-            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-            disabled={currentPage === 1}
-            className="px-3 py-1 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 flex items-center gap-1"
-          >
+          <button onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1} className="px-3 py-1 border rounded-lg disabled:opacity-50 hover:bg-gray-50 flex items-center gap-1">
             <ChevronLeft size={16} /> Previous
           </button>
-          <span className="px-4 py-1 bg-purple-600 text-white rounded-lg">
-            Page {currentPage} of {totalPages}
-          </span>
-          <button
-            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-            disabled={currentPage === totalPages}
-            className="px-3 py-1 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 flex items-center gap-1"
-          >
+          <span className="px-4 py-1 bg-purple-600 text-white rounded-lg">Page {currentPage} of {totalPages}</span>
+          <button onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} disabled={currentPage === totalPages} className="px-3 py-1 border rounded-lg disabled:opacity-50 hover:bg-gray-50 flex items-center gap-1">
             Next <ChevronRight size={16} />
           </button>
         </div>
@@ -607,170 +669,147 @@ const ContactPersonMaster = () => {
             <div className="p-6">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-bold text-gray-800">Contact Person Details</h2>
-                <button
-                  onClick={() => {
-                    setShowViewModal(false);
-                    setSelectedContact(null);
-                  }}
-                  className="p-1 hover:bg-gray-100 rounded"
-                >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
+                <button onClick={() => { setShowViewModal(false); setSelectedContact(null); }} className="p-1 hover:bg-gray-100 rounded">
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                 </button>
               </div>
-
               <div className="space-y-4">
-                {/* Personal Information */}
                 <div className="border-b pb-4">
-                  <h3 className="text-lg font-semibold text-purple-600 mb-3 flex items-center gap-2">
-                    <UserCircle size={20} /> Personal Information
-                  </h3>
+                  <h3 className="text-lg font-semibold text-purple-600 mb-3 flex items-center gap-2"><UserCircle size={20} /> Personal Information</h3>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                      <p className="text-sm text-gray-500">Full Name</p>
-                      <p className="font-medium">{selectedContact.name}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Gender</p>
-                      <p className="font-medium">{selectedContact.gender}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Date of Birth</p>
-                      <p className="font-medium">{new Date(selectedContact.dateOfBirth).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Anniversary</p>
-                      <p className="font-medium">{new Date(selectedContact.anniversaryDate).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
-                    </div>
+                    <div><p className="text-sm text-gray-500">Full Name</p><p className="font-medium">{selectedContact.name}</p></div>
+                    <div><p className="text-sm text-gray-500">Gender</p><p className="font-medium">{selectedContact.gender}</p></div>
+                    <div><p className="text-sm text-gray-500">Date of Birth</p><p className="font-medium">{new Date(selectedContact.dateOfBirth).toLocaleDateString()}</p></div>
+                    <div><p className="text-sm text-gray-500">Anniversary</p><p className="font-medium">{new Date(selectedContact.anniversaryDate).toLocaleDateString()}</p></div>
                   </div>
                 </div>
-
-                {/* Professional Information */}
                 <div className="border-b pb-4">
-                  <h3 className="text-lg font-semibold text-purple-600 mb-3 flex items-center gap-2">
-                    <Building2 size={20} /> Professional Information
-                  </h3>
+                  <h3 className="text-lg font-semibold text-purple-600 mb-3 flex items-center gap-2"><Building2 size={20} /> Professional Information</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-sm text-gray-500">Designation</p>
-                      <p className="font-medium">{selectedContact.designation}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Department</p>
-                      <p className="font-medium">{selectedContact.department}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Organization</p>
-                      <p className="font-medium">{selectedContact.organizationName}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Company</p>
-                      <p className="font-medium">{selectedContact.companyName}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Reporting To</p>
-                      <p className="font-medium">{selectedContact.reportingTo}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Remarks</p>
-                      <p className="font-medium">{selectedContact.remarks}</p>
-                    </div>
+                    <div><p className="text-sm text-gray-500">Designation</p><p className="font-medium">{selectedContact.designation}</p></div>
+                    <div><p className="text-sm text-gray-500">Department</p><p className="font-medium">{selectedContact.department}</p></div>
+                    <div><p className="text-sm text-gray-500">Organization</p><p className="font-medium">{selectedContact.organizationName}</p></div>
+                    <div><p className="text-sm text-gray-500">Company</p><p className="font-medium">{selectedContact.companyName}</p></div>
+                    <div><p className="text-sm text-gray-500">Reporting To</p><p className="font-medium">{selectedContact.reportingTo}</p></div>
+                    <div><p className="text-sm text-gray-500">Remarks</p><p className="font-medium">{selectedContact.remarks}</p></div>
                   </div>
                 </div>
-
-                {/* Contact Information */}
                 <div className="border-b pb-4">
-                  <h3 className="text-lg font-semibold text-purple-600 mb-3 flex items-center gap-2">
-                    <Mail size={20} /> Contact Information
-                  </h3>
+                  <h3 className="text-lg font-semibold text-purple-600 mb-3 flex items-center gap-2"><Mail size={20} /> Contact Information</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-sm text-gray-500">Email</p>
-                      <p className="font-medium text-blue-600">
-                        <a href={`mailto:${selectedContact.email}`}>{selectedContact.email}</a>
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Mobile</p>
-                      <p className="font-medium">{selectedContact.mobile}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Alternate Phone</p>
-                      <p className="font-medium">{selectedContact.alternatePhone}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">WhatsApp</p>
-                      <p className="font-medium">{selectedContact.whatsappNumber}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Preferred Contact Mode</p>
-                      <p className="font-medium">{selectedContact.preferredContactMode}</p>
-                    </div>
+                    <div><p className="text-sm text-gray-500">Email</p><p className="font-medium text-blue-600">{selectedContact.email}</p></div>
+                    <div><p className="text-sm text-gray-500">Mobile</p><p className="font-medium">{selectedContact.mobile}</p></div>
+                    <div><p className="text-sm text-gray-500">Alternate Phone</p><p className="font-medium">{selectedContact.alternatePhone}</p></div>
+                    <div><p className="text-sm text-gray-500">WhatsApp</p><p className="font-medium">{selectedContact.whatsappNumber}</p></div>
+                    <div><p className="text-sm text-gray-500">Preferred Contact Mode</p><p className="font-medium">{selectedContact.preferredContactMode}</p></div>
                   </div>
                 </div>
-
-                {/* Address Information */}
                 <div className="border-b pb-4">
-                  <h3 className="text-lg font-semibold text-purple-600 mb-3 flex items-center gap-2">
-                    <MapPin size={20} /> Address Information
-                  </h3>
+                  <h3 className="text-lg font-semibold text-purple-600 mb-3 flex items-center gap-2"><MapPin size={20} /> Address Information</h3>
                   <div className="grid grid-cols-1 gap-2">
                     <p className="font-medium">{selectedContact.address}</p>
                     <p>{selectedContact.city}, {selectedContact.state} - {selectedContact.pincode}</p>
                     <p>{selectedContact.country}</p>
                   </div>
                 </div>
-
-                {/* Status Information */}
                 <div>
                   <h3 className="text-lg font-semibold text-purple-600 mb-3">Status & System Information</h3>
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div>
-                      <p className="text-sm text-gray-500">Status</p>
-                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold ${
-                        selectedContact.status === 'active' 
-                          ? 'bg-green-100 text-green-800' 
-                          : 'bg-red-100 text-red-800'
-                      }`}>
-                        {selectedContact.status}
-                      </span>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Decision Maker</p>
-                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold ${
-                        selectedContact.isDecisionMaker ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'
-                      }`}>
-                        {selectedContact.isDecisionMaker ? 'Yes' : 'No'}
-                      </span>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Primary Contact</p>
-                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold ${
-                        selectedContact.isPrimary ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-800'
-                      }`}>
-                        {selectedContact.isPrimary ? 'Primary' : 'Secondary'}
-                      </span>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Created At</p>
-                      <p className="text-sm">{new Date(selectedContact.createdAt).toLocaleDateString()}</p>
-                    </div>
+                    <div><p className="text-sm text-gray-500">Status</p><span className={`inline-flex px-2 py-1 rounded-full text-xs font-semibold ${selectedContact.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>{selectedContact.status}</span></div>
+                    <div><p className="text-sm text-gray-500">Decision Maker</p><span className={`inline-flex px-2 py-1 rounded-full text-xs font-semibold ${selectedContact.isDecisionMaker ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'}`}>{selectedContact.isDecisionMaker ? 'Yes' : 'No'}</span></div>
+                    <div><p className="text-sm text-gray-500">Primary Contact</p><span className={`inline-flex px-2 py-1 rounded-full text-xs font-semibold ${selectedContact.isPrimary ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-800'}`}>{selectedContact.isPrimary ? 'Primary' : 'Secondary'}</span></div>
+                    <div><p className="text-sm text-gray-500">Created At</p><p className="text-sm">{new Date(selectedContact.createdAt).toLocaleDateString()}</p></div>
                   </div>
                 </div>
               </div>
-
               <div className="flex justify-end mt-6">
-                <button
-                  onClick={() => {
-                    setShowViewModal(false);
-                    setSelectedContact(null);
-                  }}
-                  className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
-                >
-                  Close
+                <button onClick={() => { setShowViewModal(false); setSelectedContact(null); }} className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">Close</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Insert Contact Modal */}
+      {showInsertModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-bold text-gray-800">Add New Contact Person</h2>
+                <button onClick={() => setShowInsertModal(false)} className="p-1 hover:bg-gray-100 rounded">
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                 </button>
               </div>
+
+              <form onSubmit={(e) => { e.preventDefault(); handleInsertContact(); }}>
+                <div className="space-y-4">
+                  {/* Personal Information */}
+                  <div className="border-b pb-4">
+                    <h3 className="text-lg font-semibold text-purple-600 mb-3">Personal Information</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div><label className="block text-sm font-medium text-gray-700 mb-1">Full Name *</label><input type="text" name="name" value={newContact.name} onChange={handleInputChange} required className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500" /></div>
+                      <div><label className="block text-sm font-medium text-gray-700 mb-1">Gender</label><select name="gender" value={newContact.gender} onChange={handleInputChange} className="w-full px-3 py-2 border rounded-lg"><option value="Male">Male</option><option value="Female">Female</option><option value="Other">Other</option></select></div>
+                      <div><label className="block text-sm font-medium text-gray-700 mb-1">Date of Birth</label><input type="date" name="dateOfBirth" value={newContact.dateOfBirth} onChange={handleInputChange} className="w-full px-3 py-2 border rounded-lg" /></div>
+                      <div><label className="block text-sm font-medium text-gray-700 mb-1">Anniversary Date</label><input type="date" name="anniversaryDate" value={newContact.anniversaryDate} onChange={handleInputChange} className="w-full px-3 py-2 border rounded-lg" /></div>
+                    </div>
+                  </div>
+
+                  {/* Professional Information */}
+                  <div className="border-b pb-4">
+                    <h3 className="text-lg font-semibold text-purple-600 mb-3">Professional Information</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div><label className="block text-sm font-medium text-gray-700 mb-1">Designation *</label><input type="text" name="designation" value={newContact.designation} onChange={handleInputChange} required className="w-full px-3 py-2 border rounded-lg" /></div>
+                      <div><label className="block text-sm font-medium text-gray-700 mb-1">Department *</label><input type="text" name="department" value={newContact.department} onChange={handleInputChange} required className="w-full px-3 py-2 border rounded-lg" /></div>
+                      <div><label className="block text-sm font-medium text-gray-700 mb-1">Organization *</label><input type="text" name="organizationName" value={newContact.organizationName} onChange={handleInputChange} required className="w-full px-3 py-2 border rounded-lg" /></div>
+                      <div><label className="block text-sm font-medium text-gray-700 mb-1">Company *</label><input type="text" name="companyName" value={newContact.companyName} onChange={handleInputChange} required className="w-full px-3 py-2 border rounded-lg" /></div>
+                      <div><label className="block text-sm font-medium text-gray-700 mb-1">Reporting To</label><input type="text" name="reportingTo" value={newContact.reportingTo} onChange={handleInputChange} className="w-full px-3 py-2 border rounded-lg" /></div>
+                      <div><label className="block text-sm font-medium text-gray-700 mb-1">Remarks</label><textarea name="remarks" value={newContact.remarks} onChange={handleInputChange} rows={2} className="w-full px-3 py-2 border rounded-lg" /></div>
+                    </div>
+                  </div>
+
+                  {/* Contact Information */}
+                  <div className="border-b pb-4">
+                    <h3 className="text-lg font-semibold text-purple-600 mb-3">Contact Information</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div><label className="block text-sm font-medium text-gray-700 mb-1">Email *</label><input type="email" name="email" value={newContact.email} onChange={handleInputChange} required className="w-full px-3 py-2 border rounded-lg" /></div>
+                      <div><label className="block text-sm font-medium text-gray-700 mb-1">Mobile *</label><input type="text" name="mobile" value={newContact.mobile} onChange={handleInputChange} required className="w-full px-3 py-2 border rounded-lg" /></div>
+                      <div><label className="block text-sm font-medium text-gray-700 mb-1">Alternate Phone</label><input type="text" name="alternatePhone" value={newContact.alternatePhone} onChange={handleInputChange} className="w-full px-3 py-2 border rounded-lg" /></div>
+                      <div><label className="block text-sm font-medium text-gray-700 mb-1">WhatsApp Number</label><input type="text" name="whatsappNumber" value={newContact.whatsappNumber} onChange={handleInputChange} className="w-full px-3 py-2 border rounded-lg" /></div>
+                      <div><label className="block text-sm font-medium text-gray-700 mb-1">Preferred Contact Mode</label><select name="preferredContactMode" value={newContact.preferredContactMode} onChange={handleInputChange} className="w-full px-3 py-2 border rounded-lg"><option value="Email">Email</option><option value="Phone">Phone</option><option value="WhatsApp">WhatsApp</option><option value="Any">Any</option></select></div>
+                    </div>
+                  </div>
+
+                  {/* Address Information */}
+                  <div className="border-b pb-4">
+                    <h3 className="text-lg font-semibold text-purple-600 mb-3">Address Information</h3>
+                    <div className="grid grid-cols-1 gap-4">
+                      <div><label className="block text-sm font-medium text-gray-700 mb-1">Address *</label><textarea name="address" value={newContact.address} onChange={handleInputChange} required rows={2} className="w-full px-3 py-2 border rounded-lg" /></div>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div><label className="block text-sm font-medium text-gray-700 mb-1">City *</label><input type="text" name="city" value={newContact.city} onChange={handleInputChange} required className="w-full px-3 py-2 border rounded-lg" /></div>
+                        <div><label className="block text-sm font-medium text-gray-700 mb-1">State *</label><input type="text" name="state" value={newContact.state} onChange={handleInputChange} required className="w-full px-3 py-2 border rounded-lg" /></div>
+                        <div><label className="block text-sm font-medium text-gray-700 mb-1">Pincode *</label><input type="text" name="pincode" value={newContact.pincode} onChange={handleInputChange} required className="w-full px-3 py-2 border rounded-lg" /></div>
+                      </div>
+                      <div><label className="block text-sm font-medium text-gray-700 mb-1">Country</label><input type="text" name="country" value={newContact.country} onChange={handleInputChange} className="w-full px-3 py-2 border rounded-lg" /></div>
+                    </div>
+                  </div>
+
+                  {/* Status Flags */}
+                  <div>
+                    <h3 className="text-lg font-semibold text-purple-600 mb-3">Status & Flags</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="flex items-center gap-2"><input type="checkbox" name="isPrimary" checked={newContact.isPrimary} onChange={handleInputChange} className="w-4 h-4" /><label className="text-sm font-medium text-gray-700">Primary Contact</label></div>
+                      <div className="flex items-center gap-2"><input type="checkbox" name="isDecisionMaker" checked={newContact.isDecisionMaker} onChange={handleInputChange} className="w-4 h-4" /><label className="text-sm font-medium text-gray-700">Decision Maker</label></div>
+                      <div><label className="block text-sm font-medium text-gray-700 mb-1">Status</label><select name="status" value={newContact.status} onChange={handleInputChange} className="w-full px-3 py-2 border rounded-lg"><option value="active">Active</option><option value="inactive">Inactive</option></select></div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex justify-end gap-3 mt-6">
+                  <button type="button" onClick={() => setShowInsertModal(false)} className="px-4 py-2 border rounded-lg hover:bg-gray-50">Cancel</button>
+                  <button type="submit" className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">Add Contact</button>
+                </div>
+              </form>
             </div>
           </div>
         </div>

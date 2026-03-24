@@ -7,7 +7,8 @@ import {
   Filter,
   Download,
   RefreshCw,
-  Eye
+  Eye,
+  Plus
 } from 'lucide-react';
 
 interface Company {
@@ -29,7 +30,7 @@ interface Company {
 }
 
 const CompanyMaster = () => {
-  const [companies] = useState<Company[]>([
+  const [companies, setCompanies] = useState<Company[]>([
     {
       id: 1,
       companyName: 'Agnigate Technologies Pvt. Ltd.',
@@ -159,6 +160,23 @@ const CompanyMaster = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
   const [showViewModal, setShowViewModal] = useState(false);
+  const [showInsertModal, setShowInsertModal] = useState(false);
+  
+  // Form state for new company
+  const [newCompany, setNewCompany] = useState({
+    companyName: '',
+    industryType: '',
+    address: '',
+    city: '',
+    state: '',
+    pincode: '',
+    contactPerson: '',
+    contactEmail: '',
+    contactPhone: '',
+    website: '',
+    gstNo: '',
+    status: 'active' as 'active' | 'inactive'
+  });
 
   // Get unique industry types for filter
   const industryTypes = ['all', ...new Set(companies.map(c => c.industryType))];
@@ -216,12 +234,59 @@ const CompanyMaster = () => {
     setShowViewModal(true);
   };
 
+  // Handle insert form input changes
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setNewCompany(prev => ({ ...prev, [name]: value }));
+  };
+
+  // Handle form submission
+  const handleInsertCompany = () => {
+    const newId = Math.max(...companies.map(c => c.id), 0) + 1;
+    const currentDate = new Date().toISOString().split('T')[0];
+    
+    const companyToAdd: Company = {
+      id: newId,
+      ...newCompany,
+      createdAt: currentDate,
+      updatedAt: currentDate
+    };
+    
+    setCompanies([...companies, companyToAdd]);
+    setShowInsertModal(false);
+    setNewCompany({
+      companyName: '',
+      industryType: '',
+      address: '',
+      city: '',
+      state: '',
+      pincode: '',
+      contactPerson: '',
+      contactEmail: '',
+      contactPhone: '',
+      website: '',
+      gstNo: '',
+      status: 'active'
+    });
+  };
+
   return (
     <div className="p-4 md:p-6 bg-gray-50 min-h-screen">
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-2xl md:text-3xl font-bold text-gray-800">Company Master</h1>
         <p className="text-sm text-gray-600 mt-1">View company details (Read Only)</p>
+      </div>
+
+      {/* Add Company Button - Moved above KPI Cards */}
+      <div className="mb-6 flex justify-end">
+        <button
+          onClick={() => setShowInsertModal(true)}
+          className="px-5 py-2.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 flex items-center gap-2 shadow-sm transition duration-200"
+        >
+          <Plus size={20} />
+          <span>Add New Company</span>
+        </button>
       </div>
 
       {/* Stats Cards */}
@@ -532,6 +597,234 @@ const CompanyMaster = () => {
                   Close
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Insert Company Modal */}
+      {showInsertModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-bold text-gray-800">Add New Company</h2>
+                <button
+                  onClick={() => {
+                    setShowInsertModal(false);
+                    setNewCompany({
+                      companyName: '',
+                      industryType: '',
+                      address: '',
+                      city: '',
+                      state: '',
+                      pincode: '',
+                      contactPerson: '',
+                      contactEmail: '',
+                      contactPhone: '',
+                      website: '',
+                      gstNo: '',
+                      status: 'active'
+                    });
+                  }}
+                  className="p-1 hover:bg-gray-100 rounded"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              <form onSubmit={(e) => { e.preventDefault(); handleInsertCompany(); }}>
+                <div className="space-y-4">
+                  {/* Basic Information */}
+                  <div className="border-b pb-4">
+                    <h3 className="text-lg font-semibold text-purple-600 mb-3">Basic Information</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Company Name *</label>
+                        <input
+                          type="text"
+                          name="companyName"
+                          value={newCompany.companyName}
+                          onChange={handleInputChange}
+                          required
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Industry Type *</label>
+                        <input
+                          type="text"
+                          name="industryType"
+                          value={newCompany.industryType}
+                          onChange={handleInputChange}
+                          required
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">GST No</label>
+                        <input
+                          type="text"
+                          name="gstNo"
+                          value={newCompany.gstNo}
+                          onChange={handleInputChange}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Website</label>
+                        <input
+                          type="text"
+                          name="website"
+                          value={newCompany.website}
+                          onChange={handleInputChange}
+                          placeholder="www.example.com"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                        <select
+                          name="status"
+                          value={newCompany.status}
+                          onChange={handleInputChange}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        >
+                          <option value="active">Active</option>
+                          <option value="inactive">Inactive</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Address Information */}
+                  <div className="border-b pb-4">
+                    <h3 className="text-lg font-semibold text-purple-600 mb-3">Address</h3>
+                    <div className="grid grid-cols-1 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Address *</label>
+                        <textarea
+                          name="address"
+                          value={newCompany.address}
+                          onChange={handleInputChange}
+                          required
+                          rows={2}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        />
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">City *</label>
+                          <input
+                            type="text"
+                            name="city"
+                            value={newCompany.city}
+                            onChange={handleInputChange}
+                            required
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">State *</label>
+                          <input
+                            type="text"
+                            name="state"
+                            value={newCompany.state}
+                            onChange={handleInputChange}
+                            required
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Pincode *</label>
+                          <input
+                            type="text"
+                            name="pincode"
+                            value={newCompany.pincode}
+                            onChange={handleInputChange}
+                            required
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Contact Information */}
+                  <div className="border-b pb-4">
+                    <h3 className="text-lg font-semibold text-purple-600 mb-3">Contact Information</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Contact Person *</label>
+                        <input
+                          type="text"
+                          name="contactPerson"
+                          value={newCompany.contactPerson}
+                          onChange={handleInputChange}
+                          required
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Email *</label>
+                        <input
+                          type="email"
+                          name="contactEmail"
+                          value={newCompany.contactEmail}
+                          onChange={handleInputChange}
+                          required
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Phone *</label>
+                        <input
+                          type="tel"
+                          name="contactPhone"
+                          value={newCompany.contactPhone}
+                          onChange={handleInputChange}
+                          required
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex justify-end gap-3 mt-6">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowInsertModal(false);
+                      setNewCompany({
+                        companyName: '',
+                        industryType: '',
+                        address: '',
+                        city: '',
+                        state: '',
+                        pincode: '',
+                        contactPerson: '',
+                        contactEmail: '',
+                        contactPhone: '',
+                        website: '',
+                        gstNo: '',
+                        status: 'active'
+                      });
+                    }}
+                    className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+                  >
+                    Add Company
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         </div>

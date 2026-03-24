@@ -1,0 +1,407 @@
+// src/modules/super-admin/pages/Master/VisitPurposeMaster.tsx
+import React, { useState } from 'react';
+import { 
+  Search, 
+  ChevronLeft,
+  ChevronRight,
+  Filter,
+  Download,
+  RefreshCw,
+  Eye,
+  Plus,
+  Target,
+  CheckCircle,
+  XCircle,
+  Layers
+} from 'lucide-react';
+
+interface VisitPurpose {
+  id: number;
+  purposeName: string;
+  status: 'active' | 'inactive';
+  createdAt: string;
+  updatedAt: string;
+}
+
+const VisitPurposeMaster = () => {
+  const [purposes, setPurposes] = useState<VisitPurpose[]>([
+    { id: 1, purposeName: 'Product Demo', status: 'active', createdAt: '2024-01-15', updatedAt: '2024-02-20' },
+    { id: 2, purposeName: 'Proposal Discussion', status: 'active', createdAt: '2024-01-20', updatedAt: '2024-02-18' },
+    { id: 3, purposeName: 'Requirement Collection', status: 'active', createdAt: '2024-01-25', updatedAt: '2024-02-15' },
+    { id: 4, purposeName: 'Tender Discussion', status: 'active', createdAt: '2024-02-01', updatedAt: '2024-02-10' },
+    { id: 5, purposeName: 'Relationship Meeting', status: 'active', createdAt: '2024-02-05', updatedAt: '2024-02-12' },
+    { id: 6, purposeName: 'Technical Support', status: 'inactive', createdAt: '2024-02-08', updatedAt: '2024-02-14' },
+    { id: 7, purposeName: 'Training Session', status: 'active', createdAt: '2024-02-10', updatedAt: '2024-02-16' },
+    { id: 8, purposeName: 'Payment Follow-up', status: 'active', createdAt: '2024-02-12', updatedAt: '2024-02-18' },
+    { id: 9, purposeName: 'Contract Renewal', status: 'inactive', createdAt: '2024-02-15', updatedAt: '2024-02-20' },
+    { id: 10, purposeName: 'Feedback Session', status: 'active', createdAt: '2024-02-18', updatedAt: '2024-02-22' }
+  ]);
+
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
+  const [showFilters, setShowFilters] = useState(false);
+  const [selectedPurpose, setSelectedPurpose] = useState<VisitPurpose | null>(null);
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [showInsertModal, setShowInsertModal] = useState(false);
+  
+  const [newPurpose, setNewPurpose] = useState({
+    purposeName: '',
+    status: 'active' as 'active' | 'inactive'
+  });
+
+  const filteredPurposes = purposes.filter(purpose => {
+    const matchesSearch = purpose.purposeName.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = filterStatus === 'all' || purpose.status === filterStatus;
+    return matchesSearch && matchesStatus;
+  });
+
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = filteredPurposes.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredPurposes.length / itemsPerPage);
+
+  const exportToCSV = () => {
+    const headers = ['Purpose Name', 'Status', 'Created At', 'Updated At'];
+    const csvData = filteredPurposes.map(p => [p.purposeName, p.status, p.createdAt, p.updatedAt]);
+    const csvContent = [headers, ...csvData].map(row => row.join(',')).join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `visit_purposes_${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+  };
+
+  const viewPurposeDetails = (purpose: VisitPurpose) => {
+    setSelectedPurpose(purpose);
+    setShowViewModal(true);
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setNewPurpose(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleInsertPurpose = () => {
+    const newId = Math.max(...purposes.map(p => p.id), 0) + 1;
+    const currentDate = new Date().toISOString().split('T')[0];
+    const purposeToAdd: VisitPurpose = {
+      id: newId,
+      ...newPurpose,
+      createdAt: currentDate,
+      updatedAt: currentDate
+    };
+    setPurposes([...purposes, purposeToAdd]);
+    setShowInsertModal(false);
+    setNewPurpose({ purposeName: '', status: 'active' });
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <div className="p-4 sm:p-6 lg:p-8">
+        {/* Header */}
+        <div className="mb-6">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Visit Purpose Master</h1>
+          <p className="text-sm text-gray-500 mt-1">Manage visit purposes for tracking</p>
+        </div>
+
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <div className="bg-white rounded-xl shadow-sm p-4 border-l-4 border-purple-500 hover:shadow-md transition-shadow">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs sm:text-sm text-gray-500">Total Purposes</p>
+                <p className="text-xl sm:text-2xl font-bold text-gray-900">{purposes.length}</p>
+              </div>
+              <div className="bg-purple-100 rounded-xl p-2 sm:p-2.5">
+                <Layers size={20} className="text-purple-600 sm:w-6 sm:h-6" />
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-white rounded-xl shadow-sm p-4 border-l-4 border-green-500 hover:shadow-md transition-shadow">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs sm:text-sm text-gray-500">Active Purposes</p>
+                <p className="text-xl sm:text-2xl font-bold text-green-600">{purposes.filter(p => p.status === 'active').length}</p>
+              </div>
+              <div className="bg-green-100 rounded-xl p-2 sm:p-2.5">
+                <CheckCircle size={20} className="text-green-600 sm:w-6 sm:h-6" />
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-white rounded-xl shadow-sm p-4 border-l-4 border-red-500 hover:shadow-md transition-shadow">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs sm:text-sm text-gray-500">Inactive Purposes</p>
+                <p className="text-xl sm:text-2xl font-bold text-red-600">{purposes.filter(p => p.status === 'inactive').length}</p>
+              </div>
+              <div className="bg-red-100 rounded-xl p-2 sm:p-2.5">
+                <XCircle size={20} className="text-red-600 sm:w-6 sm:h-6" />
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-white rounded-xl shadow-sm p-4 border-l-4 border-blue-500 hover:shadow-md transition-shadow">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs sm:text-sm text-gray-500">Purpose Types</p>
+                <p className="text-xl sm:text-2xl font-bold text-blue-600">{purposes.length}</p>
+              </div>
+              <div className="bg-blue-100 rounded-xl p-2 sm:p-2.5">
+                <Target size={20} className="text-blue-600 sm:w-6 sm:h-6" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Action Bar */}
+        <div className="bg-white rounded-xl shadow-sm mb-6">
+          <div className="p-4 flex flex-col sm:flex-row gap-4 items-stretch sm:items-center justify-between">
+            <div className="relative flex-1 max-w-full sm:max-w-md">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+              <input
+                type="text"
+                placeholder="Search purposes..."
+                className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setShowInsertModal(true)}
+                className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition-all flex items-center justify-center gap-2 shadow-sm"
+              >
+                <Plus size={18} />
+                <span className="hidden sm:inline">Add New Purpose</span>
+                <span className="sm:hidden">Add</span>
+              </button>
+              <button
+                onClick={() => setShowFilters(!showFilters)}
+                className="px-4 py-2 border border-gray-200 rounded-lg hover:bg-gray-50 hover:border-gray-300 transition-all flex items-center justify-center gap-2 text-gray-700"
+              >
+                <Filter size={16} />
+                <span className="hidden sm:inline">Filters</span>
+              </button>
+              <button
+                onClick={exportToCSV}
+                className="px-4 py-2 border border-gray-200 rounded-lg hover:bg-gray-50 hover:border-gray-300 transition-all flex items-center justify-center gap-2 text-gray-700"
+              >
+                <Download size={16} />
+                <span className="hidden sm:inline">Export</span>
+              </button>
+            </div>
+          </div>
+
+          {showFilters && (
+            <div className="p-4 border-t border-gray-100 bg-gray-50 rounded-b-xl">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                  <select
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    value={filterStatus}
+                    onChange={(e) => setFilterStatus(e.target.value)}
+                  >
+                    <option value="all">All Status</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                  </select>
+                </div>
+                <div className="flex items-end">
+                  <button
+                    onClick={() => {
+                      setFilterStatus('all');
+                      setSearchTerm('');
+                    }}
+                    className="px-4 py-2 text-gray-600 hover:text-gray-800 flex items-center gap-2 transition-colors"
+                  >
+                    <RefreshCw size={14} />
+                    Clear Filters
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Table */}
+        <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-100 border-b border-gray-100">
+                <tr>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">S.No</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Purpose Name</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                 </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {currentItems.map((purpose, index) => (
+                  <tr key={purpose.id} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-4 py-3 text-sm text-gray-500">{indexOfFirstItem + index + 1}</td>
+                    <td className="px-4 py-3">
+                      <p className="font-medium text-gray-900">{purpose.purposeName}</p>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium ${
+                        purpose.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                      }`}>
+                        {purpose.status}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <button
+                        onClick={() => viewPurposeDetails(purpose)}
+                        className="p-1.5 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+                        title="View Details"
+                      >
+                        <Eye size={16} />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Pagination */}
+        {filteredPurposes.length > 0 && (
+          <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="text-sm text-gray-500">
+              Showing <span className="font-medium">{indexOfFirstItem + 1}</span> to{' '}
+              <span className="font-medium">{Math.min(indexOfLastItem, filteredPurposes.length)}</span> of{' '}
+              <span className="font-medium">{filteredPurposes.length}</span> entries
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className="px-3 py-1.5 border border-gray-200 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors flex items-center gap-1 text-sm"
+              >
+                <ChevronLeft size={14} /> Previous
+              </button>
+              <span className="px-3 py-1.5 bg-purple-600 text-white rounded-lg text-sm font-medium">
+                Page {currentPage} of {totalPages}
+              </span>
+              <button
+                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+                className="px-3 py-1.5 border border-gray-200 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors flex items-center gap-1 text-sm"
+              >
+                Next <ChevronRight size={14} />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* View Modal */}
+        {showViewModal && selectedPurpose && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+              <div className="sticky top-0 bg-white border-b border-gray-100 px-6 py-4 flex justify-between items-center">
+                <h2 className="text-xl font-bold text-gray-900">Purpose Details</h2>
+                <button onClick={() => setShowViewModal(false)} className="p-1 hover:bg-gray-100 rounded-lg transition-colors">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <div className="p-6 space-y-6">
+                <div>
+                  <h3 className="text-lg font-semibold text-purple-600 mb-3">Purpose Information</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div><p className="text-sm text-gray-500">Purpose Name</p><p className="font-medium text-gray-900">{selectedPurpose.purposeName}</p></div>
+                    <div><p className="text-sm text-gray-500">Status</p><span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium ${selectedPurpose.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>{selectedPurpose.status}</span></div>
+                  </div>
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-purple-600 mb-3">System Information</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                    <div><p className="text-gray-500">Created At</p><p className="font-medium text-gray-900">{new Date(selectedPurpose.createdAt).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' })}</p></div>
+                    <div><p className="text-gray-500">Last Updated</p><p className="font-medium text-gray-900">{new Date(selectedPurpose.updatedAt).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' })}</p></div>
+                  </div>
+                </div>
+              </div>
+              <div className="sticky bottom-0 bg-white border-t border-gray-100 px-6 py-4 flex justify-end">
+                <button onClick={() => setShowViewModal(false)} className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors">Close</button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Insert Modal */}
+        {showInsertModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+              <div className="sticky top-0 bg-white border-b border-gray-100 px-6 py-4 flex justify-between items-center">
+                <h2 className="text-xl font-bold text-gray-900">Add New Purpose</h2>
+                <button onClick={() => setShowInsertModal(false)} className="p-1 hover:bg-gray-100 rounded-lg transition-colors">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <form onSubmit={(e) => { e.preventDefault(); handleInsertPurpose(); }}>
+                <div className="p-6 space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Purpose Name *</label>
+                    <input
+                      type="text"
+                      name="purposeName"
+                      value={newPurpose.purposeName}
+                      onChange={handleInputChange}
+                      required
+                      placeholder="e.g., Product Demo, Proposal Discussion"
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                    <select
+                      name="status"
+                      value={newPurpose.status}
+                      onChange={handleInputChange}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    >
+                      <option value="active">Active</option>
+                      <option value="inactive">Inactive</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="sticky bottom-0 bg-white border-t border-gray-100 px-6 py-4 flex justify-end gap-3">
+                  <button type="button" onClick={() => setShowInsertModal(false)} className="px-4 py-2 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">Cancel</button>
+                  <button type="submit" className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors">Add Purpose</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* No Results */}
+        {filteredPurposes.length === 0 && (
+          <div className="text-center py-12 bg-white rounded-xl shadow-sm">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-4">
+              <Search className="w-8 h-8 text-gray-400" />
+            </div>
+            <p className="text-gray-500">No visit purposes found matching your criteria.</p>
+            <button
+              onClick={() => { setSearchTerm(''); setFilterStatus('all'); }}
+              className="mt-3 text-purple-600 hover:text-purple-700 text-sm font-medium"
+            >
+              Clear all filters
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default VisitPurposeMaster;

@@ -244,7 +244,7 @@ const UserManagement: React.FC = () => {
         {/* Action Buttons */}
         <div className=" flex items-center gap-2">
           {/* Export Button */}
-          <button className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-xs font-medium text-gray-700">
+          <button className="bg:colinline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-xs font-medium text-gray-700">
             <Download className="w-3.5 h-3.5" />
             Export
           </button>
