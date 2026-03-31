@@ -25,6 +25,7 @@ import VehicleTypes from "../pages/expense-configrution/VehicleTypes";
 import EffectiveDates from "../pages/expense-configrution/EffectiveDates";
 
 // User Management
+<<<<<<< HEAD
 import UserManagement from "../pages/User/UserManagement";
 
 // Visit Management
@@ -32,6 +33,54 @@ import VisitManagement from "../pages/Visits/VisitManagement";
 import AllVisits from "../pages/Visits/Components/AllVisits";
 import TodaysVisits from "../pages/Visits/Components/TodaysVisits";
 import MonthlyVisits from "../pages/Visits/Components/MonthlyVisits";
+=======
+
+
+// Import User Management (Top level only for now)
+import UserManagement from '../pages/User/UserManagement';
+
+
+
+// Import other modules (commented out for now)
+
+
+import VisitManagement from '../pages/Visits/VisitManagement';
+import AllVisits from '../pages/Visits/Components/AllVisits';
+import TodaysVisits from '../pages/Visits/Components/TodaysVisits';
+import MonthlyVisits from '../pages/Visits/Components/MonthlyVisits';
+import PendingFollowUps from '../pages/Visits/Components/PendingFollowups';
+import ExpenseApprovals from '../pages/Visits/Components/ExpenseApprovals';
+
+
+//Funnel Management
+
+import FunnelManagement from '../pages/Funnel/FunnelManagemet';
+import StageWiseFunnel from '../pages/Funnel/Components/StageWiseFunnel';
+import EmployeeWiseFunnel from '../pages/Funnel/Components/EmployeeWiseFunnel';
+import ClientWiseFunnel from '../pages/Funnel/Components/ClientWiseFunnel';
+import DepartmentWiseFunnel from '../pages/Funnel/Components/DepartmentWiseFunnel';
+import ConversionTracking from '../pages/Funnel/Components/ConversionTracking';
+import StalledOpportunities from '../pages/Funnel/Components/StalledOpportunities';
+
+
+
+
+
+import BusinessOutcomes from '../pages/Outcomes/BusinessOutcomes';
+import LeadsGenerated from '../pages/Outcomes/Components/LeadsGenerated';
+import ProposalsCreated from '../pages/Outcomes/Components/ProposalsCreated';
+import PipelineValue from '../pages/Outcomes/Components/PipelineValue';
+import ConfirmedBusiness from '../pages/Outcomes/Components/ConfirmedBusiness';
+import CostperLead from '../pages/Outcomes/Components/CostperLead';
+import ProductivityScore from '../pages/Outcomes/Components/ProductivityScore';
+
+
+
+
+
+// import Reports from '../pages/Reports/Reports';
+// import AuditLogs from '../pages/Audit/AuditLogs';
+>>>>>>> acb0ce5fde67d4993ba4d9be0e64b291d4054935
 
 const SuperAdminRoutes = () => {
   return (
@@ -97,6 +146,11 @@ const SuperAdminRoutes = () => {
           </Layout>
         }
       />
+<<<<<<< HEAD
+=======
+
+    
+>>>>>>> acb0ce5fde67d4993ba4d9be0e64b291d4054935
       <Route
         path="master-management/visit-purpose"
         element={
@@ -138,8 +192,14 @@ const SuperAdminRoutes = () => {
         }
       />
 
+<<<<<<< HEAD
       {/* Expense Config */}
       <Route
+=======
+      {/* ========== EXPENSE CONFIGURATION (WITH DROPDOWN) ========== */}
+      
+      {/* <Route
+>>>>>>> acb0ce5fde67d4993ba4d9be0e64b291d4054935
         path="expense-config"
         element={
           <Layout role="super_admin">
@@ -179,8 +239,81 @@ const SuperAdminRoutes = () => {
           </Layout>
         }
       />
+<<<<<<< HEAD
 
       {/* User Management */}
+=======
+       */}
+      {/* ========== FUNNEL MANAGEMENT ========== */}
+     
+       <Route
+        path="funnel-management"
+        element={
+          <Layout role="super_admin">
+            <FunnelManagement/>
+          </Layout>
+        }
+      />
+      
+      <Route
+        path="funnel-management/stage-wise"
+        element={
+          <Layout role="super_admin">
+            <StageWiseFunnel />
+          </Layout>
+        }
+      />
+      <Route
+        path="funnel-management/Employee-wise"
+        element={
+          <Layout role="super_admin">
+            <EmployeeWiseFunnel />
+          </Layout>
+        }
+      />
+
+       <Route
+        path="funnel-management/Client-wise"
+        element={
+          <Layout role="super_admin">
+            <ClientWiseFunnel />
+          </Layout>
+        }
+      />
+
+      <Route
+        path="funnel-management/dept-wise"
+        element={
+          <Layout role="super_admin">
+            <DepartmentWiseFunnel />
+          </Layout>
+        }
+      />
+
+      <Route
+        path="funnel-management/conversion"
+        element={
+          <Layout role="super_admin">
+            <ConversionTracking />
+          </Layout>
+        }
+      />
+
+      <Route
+        path="funnel-management/stalled"
+        element={
+          <Layout role="super_admin">
+            <StalledOpportunities />
+          </Layout>
+        }
+      />
+
+
+
+
+
+      {/* ========== USER MANAGEMENT ========== */}
+>>>>>>> acb0ce5fde67d4993ba4d9be0e64b291d4054935
       <Route
         path="users"
         element={
@@ -199,6 +332,11 @@ const SuperAdminRoutes = () => {
           </Layout>
         }
       />
+<<<<<<< HEAD
+=======
+
+     
+>>>>>>> acb0ce5fde67d4993ba4d9be0e64b291d4054935
       <Route
         path="visit-management/all-visits"
         element={
@@ -223,6 +361,108 @@ const SuperAdminRoutes = () => {
           </Layout>
         }
       />
+<<<<<<< HEAD
+=======
+      <Route
+        path="Visit-Management/pending-follow-ups"
+        element={
+          <Layout role="super_admin">
+            <PendingFollowUps />
+          </Layout>
+        }
+      />
+      <Route
+        path="Visit-Management/expense-approvals"
+        element={
+          <Layout role="super_admin">
+            <ExpenseApprovals />
+          </Layout>
+        }
+      />
+
+      {/* ========== BUSINESS OUTCOMES ========== */}
+       <Route
+        path="business-outcomes"
+        element={
+          <Layout role="super_admin">
+            <BusinessOutcomes />
+          </Layout>
+        }
+      />
+
+       <Route
+        path="business-outcomes/lead"
+        element={
+          <Layout role="super_admin">
+            <LeadsGenerated/>
+          </Layout>
+        }
+      />
+      
+      <Route
+        path="business-outcomes/proposals"
+        element={
+          <Layout role="super_admin">
+            <ProposalsCreated/>
+          </Layout>
+        }
+      />
+         
+       <Route
+        path="business-outcomes/pipeline"
+        element={
+          <Layout role="super_admin">
+            <PipelineValue/>
+          </Layout>
+        }
+      />
+      <Route
+        path="business-outcomes/confirmed"
+        element={
+          <Layout role="super_admin">
+            <ConfirmedBusiness/>
+          </Layout>
+        }
+      />
+  
+       <Route
+        path="business-outcomes/cost-per-lead"
+        element={
+          <Layout role="super_admin">
+            <CostperLead/>
+          </Layout>
+        }
+      />
+      <Route
+        path="business-outcomes/productivity"
+        element={
+          <Layout role="super_admin">
+            <ProductivityScore/>
+          </Layout>
+        }
+      />
+
+
+
+
+      {/* ========== REPORTS ========== */}
+      <Route
+        path="visit-management/todays-visits"
+        element={
+          <Layout role="super_admin">
+            <TodaysVisits />
+          </Layout>
+        }
+      />
+      <Route
+        path="visit-management/monthly-visits"
+        element={
+          <Layout role="super_admin">
+            <MonthlyVisits />
+          </Layout>
+        }
+      />
+>>>>>>> acb0ce5fde67d4993ba4d9be0e64b291d4054935
 
       {/* Default Route */}
       <Route path="*" element={<Navigate to="/super-admin/dashboard" replace />} />

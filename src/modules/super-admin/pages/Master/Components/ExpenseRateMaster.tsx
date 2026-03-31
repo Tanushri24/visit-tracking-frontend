@@ -12,7 +12,8 @@ import {
   DollarSign,
   Calendar,
   TrendingUp,
-  PieChart
+  PieChart,
+  Trash2
 } from 'lucide-react';
 
 interface ExpenseRate {
@@ -40,9 +41,15 @@ const ExpenseRateMaster = () => {
   const [selectedRate, setSelectedRate] = useState<ExpenseRate | null>(null);
   const [showViewModal, setShowViewModal] = useState(false);
   const [showInsertModal, setShowInsertModal] = useState(false);
+<<<<<<< HEAD
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingRate, setEditingRate] = useState<ExpenseRate | null>(null);
 
+=======
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [rateToDelete, setRateToDelete] = useState<ExpenseRate | null>(null);
+  
+>>>>>>> acb0ce5fde67d4993ba4d9be0e64b291d4054935
   const [newRate, setNewRate] = useState({
     vehicleTypeId: 0,
     ratePerKm: 0,
@@ -51,6 +58,7 @@ const ExpenseRateMaster = () => {
     isActive: true
   });
 
+<<<<<<< HEAD
   const [editRate, setEditRate] = useState({
     vehicleTypeId: 0,
     ratePerKm: 0,
@@ -69,6 +77,9 @@ const ExpenseRateMaster = () => {
     createdAt: rate.createdAt ?? '',
     updatedAt: rate.updatedAt ?? ''
   });
+=======
+  const vehicleTypes = ['all', ...new Set(rates.map(r => r.vehicleType))];
+>>>>>>> acb0ce5fde67d4993ba4d9be0e64b291d4054935
 
   const fetchRates = async (): Promise<ExpenseRate[]> => {
     try {
@@ -129,6 +140,7 @@ const ExpenseRateMaster = () => {
     URL.revokeObjectURL(a.href);
   };
 
+<<<<<<< HEAD
   const viewRateDetails = (rate: ExpenseRate) => {
     setSelectedRate(rate);
     setShowViewModal(true);
@@ -144,6 +156,23 @@ const ExpenseRateMaster = () => {
       isActive: rate.isActive
     });
     setShowEditModal(true);
+=======
+  const viewRateDetails = (rate: ExpenseRate) => { setSelectedRate(rate); setShowViewModal(true); };
+  
+  // Delete rate
+  const handleDeleteRate = () => {
+    if (rateToDelete) {
+      setRates(rates.filter(r => r.id !== rateToDelete.id));
+      setShowDeleteModal(false);
+      setRateToDelete(null);
+    }
+  };
+
+  // Open delete confirmation modal
+  const openDeleteModal = (rate: ExpenseRate) => {
+    setRateToDelete(rate);
+    setShowDeleteModal(true);
+>>>>>>> acb0ce5fde67d4993ba4d9be0e64b291d4054935
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -162,6 +191,7 @@ const ExpenseRateMaster = () => {
     }));
   };
 
+<<<<<<< HEAD
   const handleEditInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const target = e.target as HTMLInputElement;
     const { name, value, type } = target;
@@ -316,6 +346,16 @@ const ExpenseRateMaster = () => {
     return new Date(value).toLocaleDateString('en-IN');
   };
 
+=======
+  const handleInsertRate = () => {
+    const newId = Math.max(...rates.map(r => r.id), 0) + 1;
+    const currentDate = new Date().toISOString().split('T')[0];
+    setRates([...rates, { id: newId, ...newRate, createdAt: currentDate, updatedAt: currentDate }]);
+    setShowInsertModal(false);
+    setNewRate({ vehicleType: '', ratePerKm: 0, effectiveFrom: '', effectiveTo: '', status: 'active' });
+  };
+
+>>>>>>> acb0ce5fde67d4993ba4d9be0e64b291d4054935
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="p-3 sm:p-4 md:p-5 lg:p-6">
@@ -435,6 +475,7 @@ const ExpenseRateMaster = () => {
 
         <div className="bg-white rounded-lg sm:rounded-xl shadow-sm overflow-hidden border border-gray-200">
           <div className="overflow-x-auto">
+<<<<<<< HEAD
             {loading ? (
               <div className="p-8 text-center text-gray-500">Loading expense rates...</div>
             ) : (
@@ -444,6 +485,40 @@ const ExpenseRateMaster = () => {
                     {['S.No', 'Rate ID', 'Vehicle Type Id', 'Rate Per KM', 'Effective From', 'Effective To', 'Status', 'Actions'].map((h, i) => (
                       <th key={i} className="px-3 sm:px-4 py-2.5 sm:py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">{h}</th>
                     ))}
+=======
+            <table className="w-full min-w-[650px]">
+              <thead>
+                <tr className="bg-gray-50 border-b border-gray-200">
+                  {['S.No', 'Rate ID', 'Vehicle Type', 'Rate Per KM', 'Effective From', 'Effective To', 'Status', 'Actions'].map((h, i) => (
+                    <th key={i} className="px-3 sm:px-4 py-2.5 sm:py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">{h}</th>
+                  ))}
+                  </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {currentItems.map((rate, index) => (
+                  <tr key={rate.id} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-3 sm:px-4 py-2.5 sm:py-3 text-sm text-gray-500">{indexOfFirstItem + index + 1}</td>
+                    <td className="px-3 sm:px-4 py-2.5 sm:py-3 text-sm font-mono text-purple-600 font-semibold">R-{rate.id.toString().padStart(4, '0')}</td>
+                    <td className="px-3 sm:px-4 py-2.5 sm:py-3 text-sm text-gray-700">{rate.vehicleType}</td>
+                    <td className="px-3 sm:px-4 py-2.5 sm:py-3 text-sm font-bold text-purple-600">₹{rate.ratePerKm}/km</td>
+                    <td className="px-3 sm:px-4 py-2.5 sm:py-3 text-sm text-gray-600">{new Date(rate.effectiveFrom).toLocaleDateString('en-IN')}</td>
+                    <td className="px-3 sm:px-4 py-2.5 sm:py-3 text-sm text-gray-600">{new Date(rate.effectiveTo).toLocaleDateString('en-IN')}</td>
+                    <td className="px-3 sm:px-4 py-2.5 sm:py-3">
+                      <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${rate.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                        {rate.status === 'active' ? 'Active' : 'Inactive'}
+                      </span>
+                    </td>
+                    <td className="px-3 sm:px-4 py-2.5 sm:py-3">
+                      <div className="flex gap-1.5">
+                        <button onClick={() => viewRateDetails(rate)} className="p-1.5 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors" title="View Details">
+                          <Eye size={14} />
+                        </button>
+                        <button onClick={() => openDeleteModal(rate)} className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Delete Rate">
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    </td>
+>>>>>>> acb0ce5fde67d4993ba4d9be0e64b291d4054935
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
@@ -586,15 +661,45 @@ const ExpenseRateMaster = () => {
           </div>
         )}
 
+<<<<<<< HEAD
         {showEditModal && editingRate && (
+=======
+        {/* Delete Confirmation Modal */}
+        {showDeleteModal && rateToDelete && (
+>>>>>>> acb0ce5fde67d4993ba4d9be0e64b291d4054935
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-3">
-            <div className="bg-white rounded-lg shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
-              <div className="sticky top-0 bg-white border-b px-4 py-3 flex justify-between items-center">
-                <h2 className="text-base sm:text-lg font-bold text-gray-800">Edit Expense Rate</h2>
-                <button onClick={() => { setShowEditModal(false); setEditingRate(null); }} className="p-1 hover:bg-gray-100 rounded">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                </button>
+            <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
+              <div className="p-5 sm:p-6">
+                <div className="flex items-center justify-center mb-4">
+                  <div className="p-3 bg-red-100 rounded-full">
+                    <Trash2 className="w-6 h-6 sm:w-8 sm:h-8 text-red-600" />
+                  </div>
+                </div>
+                <h3 className="text-base sm:text-lg font-bold text-center text-gray-800 mb-2">Confirm Delete</h3>
+                <p className="text-xs sm:text-sm text-gray-600 text-center mb-4">
+                  Are you sure you want to delete the expense rate for <strong className="text-gray-800">{rateToDelete.vehicleType}</strong>?
+                  <br />
+                  This action cannot be undone.
+                </p>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => {
+                      setShowDeleteModal(false);
+                      setRateToDelete(null);
+                    }}
+                    className="flex-1 px-3 py-1.5 sm:px-4 sm:py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition duration-200 text-sm"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleDeleteRate}
+                    className="flex-1 px-3 py-1.5 sm:px-4 sm:py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition duration-200 text-sm"
+                  >
+                    Delete
+                  </button>
+                </div>
               </div>
+<<<<<<< HEAD
               <form onSubmit={(e) => { e.preventDefault(); handleUpdateRate(); }}>
                 <div className="p-4 space-y-3">
                   <div>
@@ -625,6 +730,8 @@ const ExpenseRateMaster = () => {
                   <button type="submit" className="px-3 py-1.5 text-sm bg-purple-600 text-white rounded-lg hover:bg-purple-700">Update Rate</button>
                 </div>
               </form>
+=======
+>>>>>>> acb0ce5fde67d4993ba4d9be0e64b291d4054935
             </div>
           </div>
         )}

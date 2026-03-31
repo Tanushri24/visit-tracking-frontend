@@ -1,4 +1,3 @@
-// src/modules/super-admin/pages/master-management/MasterManagement.tsx
 
 import React from 'react';
 
@@ -13,7 +12,7 @@ const FunnelManagement = () => {
         <p className="text-gray-400 mt-2">
           This feature is under development
         </p>
-      </div>
+      </div> 
     </div>
   );
 };

@@ -12,7 +12,8 @@ import {
   Target,
   CheckCircle,
   XCircle,
-  Award
+  Award,
+  Trash2
 } from 'lucide-react';
 
 interface Outcome {
@@ -37,15 +38,22 @@ const OutcomeMaster = () => {
   const [selectedOutcome, setSelectedOutcome] = useState<Outcome | null>(null);
   const [showViewModal, setShowViewModal] = useState(false);
   const [showInsertModal, setShowInsertModal] = useState(false);
+<<<<<<< HEAD
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingOutcome, setEditingOutcome] = useState<Outcome | null>(null);
 
+=======
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [outcomeToDelete, setOutcomeToDelete] = useState<Outcome | null>(null);
+  
+>>>>>>> acb0ce5fde67d4993ba4d9be0e64b291d4054935
   const [newOutcome, setNewOutcome] = useState({
     outComeName: '',
     isRevenueLinked: false,
     isActive: true
   });
 
+<<<<<<< HEAD
   const [editOutcome, setEditOutcome] = useState({
     outComeName: '',
     isRevenueLinked: false,
@@ -84,6 +92,11 @@ const OutcomeMaster = () => {
     const matchesSearch = outcome.outComeName.toLowerCase().includes(searchTerm.toLowerCase());
     const status = outcome.isActive ? 'active' : 'inactive';
     const matchesStatus = filterStatus === 'all' || status === filterStatus;
+=======
+  const filteredOutcomes = outcomes.filter(outcome => {
+    const matchesSearch = outcome.outcomeName.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = filterStatus === 'all' || outcome.status === filterStatus;
+>>>>>>> acb0ce5fde67d4993ba4d9be0e64b291d4054935
     return matchesSearch && matchesStatus;
   });
 
@@ -109,6 +122,7 @@ const OutcomeMaster = () => {
     URL.revokeObjectURL(a.href);
   };
 
+<<<<<<< HEAD
   const viewOutcomeDetails = (outcome: Outcome) => {
     setSelectedOutcome(outcome);
     setShowViewModal(true);
@@ -122,6 +136,23 @@ const OutcomeMaster = () => {
       isActive: outcome.isActive
     });
     setShowEditModal(true);
+=======
+  const viewOutcomeDetails = (outcome: Outcome) => { setSelectedOutcome(outcome); setShowViewModal(true); };
+  
+  // Delete outcome
+  const handleDeleteOutcome = () => {
+    if (outcomeToDelete) {
+      setOutcomes(outcomes.filter(o => o.id !== outcomeToDelete.id));
+      setShowDeleteModal(false);
+      setOutcomeToDelete(null);
+    }
+  };
+
+  // Open delete confirmation modal
+  const openDeleteModal = (outcome: Outcome) => {
+    setOutcomeToDelete(outcome);
+    setShowDeleteModal(true);
+>>>>>>> acb0ce5fde67d4993ba4d9be0e64b291d4054935
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -138,6 +169,7 @@ const OutcomeMaster = () => {
     }));
   };
 
+<<<<<<< HEAD
   const handleEditInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const target = e.target as HTMLInputElement;
     const { name, value, type } = target;
@@ -263,6 +295,16 @@ const OutcomeMaster = () => {
     }
   };
 
+=======
+  const handleInsertOutcome = () => {
+    const newId = Math.max(...outcomes.map(o => o.id), 0) + 1;
+    const currentDate = new Date().toISOString().split('T')[0];
+    setOutcomes([...outcomes, { id: newId, ...newOutcome, createdAt: currentDate, updatedAt: currentDate }]);
+    setShowInsertModal(false);
+    setNewOutcome({ outcomeName: '', status: 'active' });
+  };
+
+>>>>>>> acb0ce5fde67d4993ba4d9be0e64b291d4054935
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="p-3 sm:p-4 md:p-6">
@@ -367,6 +409,7 @@ const OutcomeMaster = () => {
 
         <div className="bg-white rounded-lg sm:rounded-xl shadow-sm overflow-hidden border border-gray-100">
           <div className="overflow-x-auto">
+<<<<<<< HEAD
             {loading ? (
               <div className="p-8 text-center text-gray-500">Loading outcomes...</div>
             ) : (
@@ -376,6 +419,42 @@ const OutcomeMaster = () => {
                     {['S.No', 'Outcome ID', 'Outcome Name', 'Revenue Linked', 'Status', 'Actions'].map((h, i) => (
                       <th key={i} className="px-3 sm:px-4 py-2.5 sm:py-3 text-left text-[10px] sm:text-xs font-semibold text-gray-500 uppercase tracking-wider">{h}</th>
                     ))}
+=======
+            <table className="w-full min-w-[600px]">
+              <thead>
+                <tr className="bg-gray-50 border-b border-gray-100">
+                  {['S.No', 'Outcome ID', 'Outcome Name', 'Status', 'Actions'].map((h, i) => (
+                    <th key={i} className="px-3 sm:px-4 py-2.5 sm:py-3 text-left text-[10px] sm:text-xs font-semibold text-gray-500 uppercase tracking-wider">{h}</th>
+                  ))}
+                   </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {currentItems.map((outcome, index) => (
+                  <tr key={outcome.id} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-3 sm:px-4 py-2.5 sm:py-3 text-xs sm:text-sm text-gray-500">{indexOfFirstItem + index + 1}</td>
+                    <td className="px-3 sm:px-4 py-2.5 sm:py-3 text-xs sm:text-sm font-mono text-purple-600 font-medium">OUT-{outcome.id.toString().padStart(3, '0')}</td>
+                    <td className="px-3 sm:px-4 py-2.5 sm:py-3">
+                      <div className="flex items-center gap-1.5 sm:gap-2">
+                        <Target size={12} className="text-purple-500 sm:w-4 sm:h-4" />
+                        <p className="text-xs sm:text-sm font-medium text-gray-800">{outcome.outcomeName}</p>
+                      </div>
+                    </td>
+                    <td className="px-3 sm:px-4 py-2.5 sm:py-3">
+                      <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-medium ${outcome.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                        {outcome.status === 'active' ? 'Active' : 'Inactive'}
+                      </span>
+                    </td>
+                    <td className="px-3 sm:px-4 py-2.5 sm:py-3">
+                      <div className="flex gap-1">
+                        <button onClick={() => viewOutcomeDetails(outcome)} className="p-1.5 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-all" title="View Details">
+                          <Eye size={13} />
+                        </button>
+                        <button onClick={() => openDeleteModal(outcome)} className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all" title="Delete Outcome">
+                          <Trash2 size={13} />
+                        </button>
+                      </div>
+                    </td>
+>>>>>>> acb0ce5fde67d4993ba4d9be0e64b291d4054935
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
@@ -526,15 +605,45 @@ const OutcomeMaster = () => {
           </div>
         )}
 
+<<<<<<< HEAD
         {showEditModal && editingOutcome && (
+=======
+        {/* Delete Confirmation Modal */}
+        {showDeleteModal && outcomeToDelete && (
+>>>>>>> acb0ce5fde67d4993ba4d9be0e64b291d4054935
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-3">
-            <div className="bg-white rounded-lg shadow-xl w-full max-w-sm max-h-[85vh] overflow-y-auto">
-              <div className="sticky top-0 bg-white border-b px-4 py-3 flex justify-between items-center">
-                <h2 className="text-base font-bold">Edit Outcome</h2>
-                <button onClick={() => { setShowEditModal(false); setEditingOutcome(null); }} className="p-1 hover:bg-gray-100 rounded">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                </button>
+            <div className="bg-white rounded-lg shadow-xl w-full max-w-sm">
+              <div className="p-5 sm:p-6">
+                <div className="flex items-center justify-center mb-4">
+                  <div className="p-3 bg-red-100 rounded-full">
+                    <Trash2 className="w-6 h-6 sm:w-8 sm:h-8 text-red-600" />
+                  </div>
+                </div>
+                <h3 className="text-base sm:text-lg font-bold text-center text-gray-800 mb-2">Confirm Delete</h3>
+                <p className="text-xs sm:text-sm text-gray-600 text-center mb-4">
+                  Are you sure you want to delete the outcome <strong className="text-gray-800">{outcomeToDelete.outcomeName}</strong>?
+                  <br />
+                  This action cannot be undone.
+                </p>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => {
+                      setShowDeleteModal(false);
+                      setOutcomeToDelete(null);
+                    }}
+                    className="flex-1 px-3 py-1.5 sm:px-4 sm:py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition duration-200 text-sm"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleDeleteOutcome}
+                    className="flex-1 px-3 py-1.5 sm:px-4 sm:py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition duration-200 text-sm"
+                  >
+                    Delete
+                  </button>
+                </div>
               </div>
+<<<<<<< HEAD
               <form onSubmit={(e) => { e.preventDefault(); handleUpdateOutcome(); }}>
                 <div className="p-4 space-y-3">
                   <div>
@@ -555,6 +664,8 @@ const OutcomeMaster = () => {
                   <button type="submit" className="px-3 py-1.5 text-xs bg-purple-600 text-white rounded-lg hover:bg-purple-700">Update</button>
                 </div>
               </form>
+=======
+>>>>>>> acb0ce5fde67d4993ba4d9be0e64b291d4054935
             </div>
           </div>
         )}

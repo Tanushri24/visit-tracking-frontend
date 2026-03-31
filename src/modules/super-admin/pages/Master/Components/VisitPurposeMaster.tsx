@@ -12,7 +12,8 @@ import {
   Target,
   CheckCircle,
   XCircle,
-  Layers
+  Layers,
+  Trash2
 } from 'lucide-react';
 
 interface VisitPurpose {
@@ -23,7 +24,7 @@ interface VisitPurpose {
   updatedAt?: string;
 }
 
-const API_URL = 'https://localhost:7146/api/VisitPurpose';
+const API_URL = 'http://192.168.29.8:8080/api/Auth/login';
 
 const VisitPurposeMaster = () => {
   const [purposes, setPurposes] = useState<VisitPurpose[]>([]);
@@ -36,7 +37,13 @@ const VisitPurposeMaster = () => {
   const [selectedPurpose, setSelectedPurpose] = useState<VisitPurpose | null>(null);
   const [showViewModal, setShowViewModal] = useState(false);
   const [showInsertModal, setShowInsertModal] = useState(false);
+<<<<<<< HEAD
 
+=======
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [purposeToDelete, setPurposeToDelete] = useState<VisitPurpose | null>(null);
+  
+>>>>>>> 821998ecad2b67f4e96f3c7888ca89ce4dd2a039
   const [newPurpose, setNewPurpose] = useState({
     purposeName: '',
     isActive: true
@@ -51,7 +58,7 @@ const VisitPurposeMaster = () => {
   });
 
   const fetchPurposes = async (): Promise<VisitPurpose[]> => {
-    try {
+    try {         
       setLoading(true);
       const response = await axios.get<VisitPurpose[]>(API_URL);
       const normalizedPurposes = (response.data ?? []).map((purpose) => normalizePurpose(purpose));
@@ -102,6 +109,21 @@ const VisitPurposeMaster = () => {
   const viewPurposeDetails = (purpose: VisitPurpose) => {
     setSelectedPurpose(purpose);
     setShowViewModal(true);
+  };
+
+  // Delete purpose
+  const handleDeletePurpose = () => {
+    if (purposeToDelete) {
+      setPurposes(purposes.filter(p => p.id !== purposeToDelete.id));
+      setShowDeleteModal(false);
+      setPurposeToDelete(null);
+    }
+  };
+
+  // Open delete confirmation modal
+  const openDeleteModal = (purpose: VisitPurpose) => {
+    setPurposeToDelete(purpose);
+    setShowDeleteModal(true);
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -293,6 +315,7 @@ const VisitPurposeMaster = () => {
 
         <div className="bg-white rounded-xl shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
+<<<<<<< HEAD
             {loading ? (
               <div className="p-8 text-center text-gray-500">Loading visit purposes...</div>
             ) : (
@@ -303,6 +326,49 @@ const VisitPurposeMaster = () => {
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Purpose Name</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+=======
+            <table className="w-full">
+              <thead className="bg-gray-100 border-b border-gray-100">
+                <tr>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">S.No</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Purpose Name</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                 </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {currentItems.map((purpose, index) => (
+                  <tr key={purpose.id} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-4 py-3 text-sm text-gray-500">{indexOfFirstItem + index + 1}</td>
+                    <td className="px-4 py-3">
+                      <p className="font-medium text-gray-900">{purpose.purposeName}</p>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium ${
+                        purpose.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                      }`}>
+                        {purpose.status}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => viewPurposeDetails(purpose)}
+                          className="p-1.5 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+                          title="View Details"
+                        >
+                          <Eye size={16} />
+                        </button>
+                        <button
+                          onClick={() => openDeleteModal(purpose)}
+                          className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          title="Delete Purpose"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    </td>
+>>>>>>> 821998ecad2b67f4e96f3c7888ca89ce4dd2a039
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
@@ -490,7 +556,50 @@ const VisitPurposeMaster = () => {
           </div>
         )}
 
+<<<<<<< HEAD
         {filteredPurposes.length === 0 && !loading && (
+=======
+        {/* Delete Confirmation Modal */}
+        {showDeleteModal && purposeToDelete && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
+              <div className="p-6">
+                <div className="flex items-center justify-center mb-4">
+                  <div className="p-3 bg-red-100 rounded-full">
+                    <Trash2 className="w-8 h-8 text-red-600" />
+                  </div>
+                </div>
+                <h3 className="text-lg font-bold text-center text-gray-800 mb-2">Confirm Delete</h3>
+                <p className="text-sm text-gray-600 text-center mb-4">
+                  Are you sure you want to delete the visit purpose <strong className="text-gray-800">{purposeToDelete.purposeName}</strong>?
+                  <br />
+                  This action cannot be undone.
+                </p>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => {
+                      setShowDeleteModal(false);
+                      setPurposeToDelete(null);
+                    }}
+                    className="flex-1 px-5 py-2.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition duration-200"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleDeletePurpose}
+                    className="flex-1 px-5 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition duration-200"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* No Results */}
+        {filteredPurposes.length === 0 && (
+>>>>>>> 821998ecad2b67f4e96f3c7888ca89ce4dd2a039
           <div className="text-center py-12 bg-white rounded-xl shadow-sm">
             <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-4">
               <Search className="w-8 h-8 text-gray-400" />

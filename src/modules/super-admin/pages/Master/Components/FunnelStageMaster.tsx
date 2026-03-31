@@ -15,7 +15,8 @@ import {
   XCircle,
   Activity,
   Award,
-  Target
+  Target,
+  Trash2
 } from 'lucide-react';
 
 interface FunnelStage {
@@ -43,7 +44,13 @@ const FunnelStageMaster = () => {
   const [selectedStage, setSelectedStage] = useState<FunnelStage | null>(null);
   const [showViewModal, setShowViewModal] = useState(false);
   const [showInsertModal, setShowInsertModal] = useState(false);
+<<<<<<< HEAD
 
+=======
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [stageToDelete, setStageToDelete] = useState<FunnelStage | null>(null);
+  
+>>>>>>> acb0ce5fde67d4993ba4d9be0e64b291d4054935
   const [newStage, setNewStage] = useState({
     stageName: '',
     stageOrder: 0,
@@ -53,6 +60,7 @@ const FunnelStageMaster = () => {
     isActive: true
   });
 
+<<<<<<< HEAD
   const normalizeStage = (stage: Partial<FunnelStage>): FunnelStage => ({
     id: Number(stage.id ?? 0),
     stageName: stage.stageName ?? '',
@@ -85,6 +93,9 @@ const FunnelStageMaster = () => {
   }, []);
 
   const filteredStages = stages.filter((stage) => {
+=======
+  const filteredStages = stages.filter(stage => {
+>>>>>>> acb0ce5fde67d4993ba4d9be0e64b291d4054935
     const matchesSearch = stage.stageName.toLowerCase().includes(searchTerm.toLowerCase());
     const status = stage.isActive ? 'active' : 'inactive';
     const matchesStatus = filterStatus === 'all' || status === filterStatus;
@@ -114,9 +125,27 @@ const FunnelStageMaster = () => {
     URL.revokeObjectURL(a.href);
   };
 
+<<<<<<< HEAD
   const viewStageDetails = (stage: FunnelStage) => {
     setSelectedStage(stage);
     setShowViewModal(true);
+=======
+  const viewStageDetails = (stage: FunnelStage) => { setSelectedStage(stage); setShowViewModal(true); };
+  
+  // Delete stage
+  const handleDeleteStage = () => {
+    if (stageToDelete) {
+      setStages(stages.filter(s => s.id !== stageToDelete.id));
+      setShowDeleteModal(false);
+      setStageToDelete(null);
+    }
+  };
+
+  // Open delete confirmation modal
+  const openDeleteModal = (stage: FunnelStage) => {
+    setStageToDelete(stage);
+    setShowDeleteModal(true);
+>>>>>>> acb0ce5fde67d4993ba4d9be0e64b291d4054935
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -135,6 +164,7 @@ const FunnelStageMaster = () => {
     }));
   };
 
+<<<<<<< HEAD
   const handleInsertStage = async () => {
     if (!newStage.stageName.trim() || newStage.stageOrder <= 0) {
       alert('Stage Name and valid Stage Order are required');
@@ -202,6 +232,16 @@ const FunnelStageMaster = () => {
     }
   };
 
+=======
+  const handleInsertStage = () => {
+    const newId = Math.max(...stages.map(s => s.id), 0) + 1;
+    const currentDate = new Date().toISOString().split('T')[0];
+    setStages([...stages, { id: newId, ...newStage, createdAt: currentDate, updatedAt: currentDate }]);
+    setShowInsertModal(false);
+    setNewStage({ stageName: '', stageOrder: 0, status: 'active' });
+  };
+
+>>>>>>> acb0ce5fde67d4993ba4d9be0e64b291d4054935
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="p-3 sm:p-4 md:p-5 lg:p-6">
@@ -350,9 +390,53 @@ const FunnelStageMaster = () => {
                       </td>
                     </tr>
                   ))}
+<<<<<<< HEAD
                 </tbody>
               </table>
             )}
+=======
+                   </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+                {currentItems.map((stage, index) => (
+                  <tr key={stage.id} className="hover:bg-purple-50/30 transition-colors">
+                    <td className="px-3 sm:px-4 py-2.5 sm:py-3 text-xs sm:text-sm text-gray-400 font-medium">{indexOfFirstItem + index + 1}</td>
+                    <td className="px-3 sm:px-4 py-2.5 sm:py-3">
+                      <span className="inline-flex px-2 py-0.5 bg-purple-50 text-purple-700 rounded-full text-[10px] sm:text-xs font-mono font-semibold">
+                        STG-{stage.id.toString().padStart(3, '0')}
+                      </span>
+                    </td>
+                    <td className="px-3 sm:px-4 py-2.5 sm:py-3">
+                      <div className="flex items-center gap-2">
+                        <div className={`w-1.5 h-1.5 rounded-full ${stage.status === 'active' ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                        <span className="text-xs sm:text-sm font-medium text-gray-800">{stage.stageName}</span>
+                      </div>
+                    </td>
+                    <td className="px-3 sm:px-4 py-2.5 sm:py-3">
+                      <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-gray-100 flex items-center justify-center text-xs sm:text-sm font-bold text-gray-700">
+                        {stage.stageOrder}
+                      </div>
+                    </td>
+                    <td className="px-3 sm:px-4 py-2.5 sm:py-3">
+                      <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-medium ${stage.status === 'active' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
+                        {stage.status === 'active' ? 'Active' : 'Inactive'}
+                      </span>
+                    </td>
+                    <td className="px-3 sm:px-4 py-2.5 sm:py-3">
+                      <div className="flex gap-1">
+                        <button onClick={() => viewStageDetails(stage)} className="p-1 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded transition-all" title="View Details">
+                          <Eye size={13} />
+                        </button>
+                        <button onClick={() => openDeleteModal(stage)} className="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-all" title="Delete Stage">
+                          <Trash2 size={13} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+>>>>>>> acb0ce5fde67d4993ba4d9be0e64b291d4054935
           </div>
         </div>
 
@@ -480,7 +564,50 @@ const FunnelStageMaster = () => {
           </div>
         )}
 
+<<<<<<< HEAD
         {filteredStages.length === 0 && !loading && (
+=======
+        {/* Delete Confirmation Modal */}
+        {showDeleteModal && stageToDelete && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-3">
+            <div className="bg-white rounded-lg shadow-xl w-full max-w-sm">
+              <div className="p-5 sm:p-6">
+                <div className="flex items-center justify-center mb-4">
+                  <div className="p-3 bg-red-100 rounded-full">
+                    <Trash2 className="w-6 h-6 sm:w-8 sm:h-8 text-red-600" />
+                  </div>
+                </div>
+                <h3 className="text-base sm:text-lg font-bold text-center text-gray-800 mb-2">Confirm Delete</h3>
+                <p className="text-xs sm:text-sm text-gray-600 text-center mb-4">
+                  Are you sure you want to delete the funnel stage <strong className="text-gray-800">{stageToDelete.stageName}</strong>?
+                  <br />
+                  This action cannot be undone.
+                </p>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => {
+                      setShowDeleteModal(false);
+                      setStageToDelete(null);
+                    }}
+                    className="flex-1 px-3 py-1.5 sm:px-4 sm:py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition duration-200 text-sm"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleDeleteStage}
+                    className="flex-1 px-3 py-1.5 sm:px-4 sm:py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition duration-200 text-sm"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* No Results */}
+        {filteredStages.length === 0 && (
+>>>>>>> acb0ce5fde67d4993ba4d9be0e64b291d4054935
           <div className="text-center py-8 sm:py-10 bg-white rounded-lg shadow-sm">
             <div className="inline-flex items-center justify-center w-12 h-12 bg-gray-100 rounded-full mb-2">
               <TrendingUp className="w-6 h-6 text-gray-400" />

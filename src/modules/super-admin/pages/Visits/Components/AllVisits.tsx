@@ -23,7 +23,7 @@ import {
   Target,
   Percent,
   Upload,
-  Clock as ClockIcon,
+  ClockIcon,
   PlusCircle
 } from 'lucide-react';
 
@@ -58,7 +58,6 @@ interface Visit {
   createdAt: string;
 }
 
-// Create Visit Form Data Interface
 interface CreateVisitFormData {
   visitDate: string;
   employeeName: string;
@@ -82,6 +81,67 @@ interface CreateVisitFormData {
   checkInTime: string;
   checkOutTime: string;
 }
+
+// Constants
+const statusOptions = [
+  { value: 'all', label: 'All Status' },
+  { value: 'active', label: 'Active' },
+  { value: 'completed', label: 'Completed' },
+  { value: 'cancelled', label: 'Cancelled' }
+];
+
+const stageOptions = [
+  { value: 'all', label: 'All Stages' },
+  { value: 'Lead Identified', label: 'Lead Identified' },
+  { value: 'Initial Visit Done', label: 'Initial Visit' },
+  { value: 'Requirement Discussion', label: 'Requirement Discussion' },
+  { value: 'Proposal Shared', label: 'Proposal Shared' },
+  { value: 'Demo Conducted', label: 'Demo Conducted' },
+  { value: 'Commercial Negotiation', label: 'Negotiation' },
+  { value: 'Order Expected', label: 'Order Expected' },
+  { value: 'Won', label: 'Won' },
+  { value: 'Lost', label: 'Lost' }
+];
+
+const outcomeOptions = [
+  { value: 'all', label: 'All Outcomes' },
+  { value: 'Lead Generated', label: 'Lead Generated' },
+  { value: 'Requirement Collected', label: 'Requirement Collected' },
+  { value: 'Proposal Opportunity', label: 'Proposal Opportunity' },
+  { value: 'Demo Completed', label: 'Demo Completed' },
+  { value: 'Order Received', label: 'Order Received' },
+  { value: 'No Outcome', label: 'No Outcome' }
+];
+
+const stageColors: Record<string, string> = {
+  'Lead Identified': 'bg-purple-100 text-purple-700',
+  'Initial Visit Done': 'bg-blue-100 text-blue-700',
+  'Requirement Discussion': 'bg-indigo-100 text-indigo-700',
+  'Proposal Shared': 'bg-cyan-100 text-cyan-700',
+  'Demo Conducted': 'bg-teal-100 text-teal-700',
+  'Commercial Negotiation': 'bg-orange-100 text-orange-700',
+  'Order Expected': 'bg-yellow-100 text-yellow-700',
+  'Won': 'bg-green-100 text-green-700',
+  'Lost': 'bg-red-100 text-red-600'
+};
+
+const outcomeColors: Record<string, string> = {
+  'Lead Generated': 'bg-purple-100 text-purple-700',
+  'Requirement Collected': 'bg-blue-100 text-blue-700',
+  'Proposal Opportunity': 'bg-green-100 text-green-700',
+  'Demo Completed': 'bg-teal-100 text-teal-700',
+  'Order Received': 'bg-emerald-100 text-emerald-700',
+  'No Outcome': 'bg-gray-100 text-gray-600'
+};
+
+const getStatusBadgeClass = (status: string): string => {
+  switch(status) {
+    case 'active': return 'bg-blue-100 text-blue-700';
+    case 'completed': return 'bg-green-100 text-green-700';
+    case 'cancelled': return 'bg-red-100 text-red-600';
+    default: return 'bg-gray-100 text-gray-600';
+  }
+};
 
 const AllVisits: React.FC = () => {
   const [visits] = useState<Visit[]>([
@@ -217,8 +277,6 @@ const AllVisits: React.FC = () => {
   const [itemsPerPage] = useState(10);
   const [selectedVisit, setSelectedVisit] = useState<Visit | null>(null);
   const [showViewModal, setShowViewModal] = useState(false);
-  
-  // Create Visit Modal State
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [createFormData, setCreateFormData] = useState<CreateVisitFormData>({
     visitDate: new Date().toISOString().split('T')[0],
@@ -244,37 +302,7 @@ const AllVisits: React.FC = () => {
     checkOutTime: '05:00 PM'
   });
 
-  const statusOptions = [
-    { value: 'all', label: 'All Status' },
-    { value: 'active', label: 'Active' },
-    { value: 'completed', label: 'Completed' },
-    { value: 'cancelled', label: 'Cancelled' }
-  ];
-
-  const stageOptions = [
-    { value: 'all', label: 'All Stages' },
-    { value: 'Lead Identified', label: 'Lead Identified' },
-    { value: 'Initial Visit Done', label: 'Initial Visit' },
-    { value: 'Requirement Discussion', label: 'Requirement Discussion' },
-    { value: 'Proposal Shared', label: 'Proposal Shared' },
-    { value: 'Demo Conducted', label: 'Demo Conducted' },
-    { value: 'Commercial Negotiation', label: 'Negotiation' },
-    { value: 'Order Expected', label: 'Order Expected' },
-    { value: 'Won', label: 'Won' },
-    { value: 'Lost', label: 'Lost' }
-  ];
-
-  const outcomeOptions = [
-    { value: 'all', label: 'All Outcomes' },
-    { value: 'Lead Generated', label: 'Lead Generated' },
-    { value: 'Requirement Collected', label: 'Requirement Collected' },
-    { value: 'Proposal Opportunity', label: 'Proposal Opportunity' },
-    { value: 'Demo Completed', label: 'Demo Completed' },
-    { value: 'Order Received', label: 'Order Received' },
-    { value: 'No Outcome', label: 'No Outcome' }
-  ];
-
-  // Memoized calculations for better performance
+  // Stats calculation
   const stats = useMemo(() => {
     const totalVisits = visits.length;
     const totalExpense = visits.reduce((sum, v) => sum + v.totalExpense, 0);
@@ -285,7 +313,7 @@ const AllVisits: React.FC = () => {
     return { totalVisits, totalExpense, totalPipelineValue, avgProbability, avgExpensePerVisit };
   }, [visits]);
 
-  //  filtered visits
+  // Filtered visits
   const filteredVisits = useMemo(() => {
     return visits.filter(visit => {
       const matchesSearch = searchQuery === '' ||
@@ -319,7 +347,7 @@ const AllVisits: React.FC = () => {
     });
   }, [visits, searchQuery, selectedStatus, selectedStage, selectedOutcome, dateRange]);
 
-  // Pagination calculations
+  // Pagination
   const { currentItems, totalPages, indexOfFirstItem, indexOfLastItem } = useMemo(() => {
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
@@ -329,6 +357,9 @@ const AllVisits: React.FC = () => {
     return { currentItems, totalPages, indexOfFirstItem, indexOfLastItem };
   }, [filteredVisits, currentPage, itemsPerPage]);
 
+  const hasActiveFilters = searchQuery || selectedStatus !== 'all' || selectedStage !== 'all' || selectedOutcome !== 'all' || dateRange !== 'all';
+
+  // Handlers
   const resetFilters = useCallback(() => {
     setSearchQuery('');
     setSelectedStatus('all');
@@ -343,10 +374,6 @@ const AllVisits: React.FC = () => {
     setShowViewModal(true);
   }, []);
 
-  const handleCreateVisit = useCallback(() => {
-    setShowCreateModal(true);
-  }, []);
-
   const handleCreateFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setCreateFormData(prev => ({
@@ -358,10 +385,8 @@ const AllVisits: React.FC = () => {
   };
 
   const handleSubmitCreateVisit = useCallback(() => {
-    // Calculate total expense
     const totalExpense = createFormData.distanceKm * createFormData.ratePerKm;
     
-    // Create new visit object
     const newVisit: Visit = {
       id: visits.length + 1,
       visitId: `VIS-2024-${String(visits.length + 1).padStart(3, '0')}`,
@@ -394,11 +419,7 @@ const AllVisits: React.FC = () => {
     };
 
     console.log('New Visit Created:', newVisit);
-    
-    // Close modal
     setShowCreateModal(false);
-    
-    // Reset form
     setCreateFormData({
       visitDate: new Date().toISOString().split('T')[0],
       employeeName: '',
@@ -422,7 +443,6 @@ const AllVisits: React.FC = () => {
       checkInTime: '09:00 AM',
       checkOutTime: '05:00 PM'
     });
-    
     alert('Visit created successfully! (Demo)');
   }, [createFormData, visits.length]);
 
@@ -454,67 +474,89 @@ const AllVisits: React.FC = () => {
     URL.revokeObjectURL(url);
   }, [filteredVisits]);
 
-  const getStatusBadge = useCallback((status: string) => {
-    switch(status) {
-      case 'active':
-        return <span className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-700"><span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>Active</span>;
-      case 'completed':
-        return <span className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-green-100 text-green-700"><span className="w-1.5 h-1.5 rounded-full bg-green-500"></span>Completed</span>;
-      case 'cancelled':
-        return <span className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-red-100 text-red-600"><span className="w-1.5 h-1.5 rounded-full bg-red-500"></span>Cancelled</span>;
-      default:
-        return <span className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-600">{status}</span>;
-    }
-  }, []);
+  // Badge renderers
+  const renderStatusBadge = useCallback((status: string) => (
+    <span className={`inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full ${getStatusBadgeClass(status)}`}>
+      <span className={`w-1.5 h-1.5 rounded-full bg-${status === 'active' ? 'blue' : status === 'completed' ? 'green' : 'red'}-500`}></span>
+      {status.charAt(0).toUpperCase() + status.slice(1)}
+    </span>
+  ), []);
 
-  const getStageBadge = useCallback((stage: string) => {
-    const colors: Record<string, string> = {
-      'Lead Identified': 'bg-purple-100 text-purple-700',
-      'Initial Visit Done': 'bg-blue-100 text-blue-700',
-      'Requirement Discussion': 'bg-indigo-100 text-indigo-700',
-      'Proposal Shared': 'bg-cyan-100 text-cyan-700',
-      'Demo Conducted': 'bg-teal-100 text-teal-700',
-      'Commercial Negotiation': 'bg-orange-100 text-orange-700',
-      'Order Expected': 'bg-yellow-100 text-yellow-700',
-      'Won': 'bg-green-100 text-green-700',
-      'Lost': 'bg-red-100 text-red-600'
-    };
-    return <span className={`inline-flex px-2 py-1 text-xs rounded-full ${colors[stage] || 'bg-gray-100 text-gray-600'}`}>{stage}</span>;
-  }, []);
+  const renderStageBadge = useCallback((stage: string) => (
+    <span className={`inline-flex px-2 py-1 text-xs rounded-full ${stageColors[stage] || 'bg-gray-100 text-gray-600'}`}>{stage}</span>
+  ), []);
 
-  const getOutcomeBadge = useCallback((outcome: string) => {
-    const colors: Record<string, string> = {
-      'Lead Generated': 'bg-purple-100 text-purple-700',
-      'Requirement Collected': 'bg-blue-100 text-blue-700',
-      'Proposal Opportunity': 'bg-green-100 text-green-700',
-      'Demo Completed': 'bg-teal-100 text-teal-700',
-      'Order Received': 'bg-emerald-100 text-emerald-700',
-      'No Outcome': 'bg-gray-100 text-gray-600'
-    };
-    return <span className={`inline-flex px-2 py-1 text-xs rounded-full ${colors[outcome] || 'bg-gray-100 text-gray-600'}`}>{outcome}</span>;
-  }, []);
+  const renderOutcomeBadge = useCallback((outcome: string) => (
+    <span className={`inline-flex px-2 py-1 text-xs rounded-full ${outcomeColors[outcome] || 'bg-gray-100 text-gray-600'}`}>{outcome}</span>
+  ), []);
 
-  const hasActiveFilters = searchQuery || selectedStatus !== 'all' || selectedStage !== 'all' || selectedOutcome !== 'all' || dateRange !== 'all';
+  // Stat Card Component
+  const StatCard = ({ title, value, icon: Icon, color, subtitle }: any) => (
+    <div className="group bg-white rounded-xl sm:rounded-2xl p-3 sm:p-4 md:p-5 border border-gray-100 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5">
+      <div className="flex items-center justify-between">
+        <div className="space-y-0.5 sm:space-y-1 flex-1 min-w-0">
+          <p className="text-[10px] sm:text-xs font-semibold text-gray-400 uppercase tracking-wider">{title}</p>
+          <p className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent truncate">{value}</p>
+        </div>
+        <div className={`p-2 sm:p-2.5 md:p-3 bg-${color}-50 rounded-xl sm:rounded-2xl group-hover:bg-${color}-100 transition-colors duration-300 flex-shrink-0`}>
+          <Icon className={`w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-${color}-600`} />
+        </div>
+      </div>
+      <div className="mt-2 sm:mt-3 pt-1.5 sm:pt-2 border-t border-gray-100">
+        <p className="text-[10px] sm:text-xs text-gray-400 truncate">{subtitle}</p>
+      </div>
+    </div>
+  );
+
+  // Modal Header Component
+  const ModalHeader = ({ title, subtitle, onClose }: any) => (
+    <div className="sticky top-0 bg-white border-b border-gray-200 p-3 sm:p-4 flex justify-between items-center">
+      <div>
+        <h2 className="text-base sm:text-lg font-semibold text-gray-800">{title}</h2>
+        <p className="text-xs sm:text-sm text-gray-500">{subtitle}</p>
+      </div>
+      <button onClick={onClose} className="p-1 hover:bg-gray-100 rounded-lg">
+        <X className="w-4 h-4 sm:w-5 sm:h-5" />
+      </button>
+    </div>
+  );
+
+  // Info Row Component
+  const InfoRow = ({ label, value, icon: Icon }: any) => (
+    <div>
+      <p className="text-[10px] sm:text-xs text-gray-500">{label}</p>
+      {Icon ? (
+        <div className="flex items-center gap-1">
+          <Icon className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-gray-400" />
+          <p className="text-xs sm:text-sm font-medium">{value}</p>
+        </div>
+      ) : (
+        <p className="text-xs sm:text-sm font-medium">{value}</p>
+      )}
+    </div>
+  );
+
+  // Section Header Component
+  const SectionHeader = ({ title, icon: Icon }: any) => (
+    <h3 className="text-xs sm:text-sm font-semibold text-gray-700 mb-2 sm:mb-3 flex items-center gap-1.5 sm:gap-2">
+      <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> {title}
+    </h3>
+  );
 
   return (
     <div className="px-3 sm:px-4 md:px-6 py-4 sm:py-5 md:py-6 space-y-3 sm:space-y-4 md:space-y-6 bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
-      {/* Header - Optimized with smaller button and left alignment */}
+      {/* Header */}
       <div className="flex flex-col xs:flex-row xs:items-center justify-between gap-3 sm:gap-4">
         <div className="flex-1">
-         
-
-
-
-<h1 className="flex items-center gap-2 text-lg sm:text-xl md:text-2xl font-bold text-gray-800">
-  <ClipboardList size={24} className="text-blue-600" />
-  All Visits
-</h1>
+          <h1 className="flex items-center gap-2 text-lg sm:text-xl md:text-2xl font-bold text-gray-800">
+            <ClipboardList size={24} className="text-blue-600" />
+            All Visits
+          </h1>
           <p className="text-xs sm:text-sm text-gray-500 mt-0.5 sm:mt-1">All visits with detailed tracking</p>
         </div>
-        {/* Button */}
         <div className="flex justify-end xs:justify-start">
           <button
-            onClick={handleCreateVisit}
+            onClick={() => setShowCreateModal(true)}
             className="inline-flex items-center justify-center gap-1 px-2 py-1 sm:px-2.5 sm:py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200 shadow-sm text-[11px] sm:text-xs font-medium whitespace-nowrap active:scale-95"
           >
             <PlusCircle className="w-3 h-3 sm:w-3.5 sm:h-3.5 flex-shrink-0" />
@@ -524,87 +566,13 @@ const AllVisits: React.FC = () => {
         </div>
       </div>
 
-      {/* Stats Cards - Fully Responsive Grid */}
+      {/* Stats Cards */}
       <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4 md:gap-5">
-        {/* Total Visits Card */}
-        <div className="group bg-white rounded-xl sm:rounded-2xl p-3 sm:p-4 md:p-5 border border-gray-100 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5">
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5 sm:space-y-1 flex-1 min-w-0">
-              <p className="text-[10px] sm:text-xs font-semibold text-gray-400 uppercase tracking-wider">Total Visits</p>
-              <p className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent truncate">{stats.totalVisits}</p>
-            </div>
-            <div className="p-2 sm:p-2.5 md:p-3 bg-blue-50 rounded-xl sm:rounded-2xl group-hover:bg-blue-100 transition-colors duration-300 flex-shrink-0">
-              <Calendar className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-blue-600" />
-            </div>
-          </div>
-          <div className="mt-2 sm:mt-3 pt-1.5 sm:pt-2 border-t border-gray-100">
-            <p className="text-[10px] sm:text-xs text-gray-400 truncate">Total visits recorded</p>
-          </div>
-        </div>
-
-        {/* Total Expense Card */}
-        <div className="group bg-white rounded-xl sm:rounded-2xl p-3 sm:p-4 md:p-5 border border-gray-100 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5">
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5 sm:space-y-1 flex-1 min-w-0">
-              <p className="text-[10px] sm:text-xs font-semibold text-gray-400 uppercase tracking-wider">Total Expense</p>
-              <p className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold bg-gradient-to-r from-orange-600 to-orange-500 bg-clip-text text-transparent truncate">₹{stats.totalExpense.toLocaleString()}</p>
-            </div>
-            <div className="p-2 sm:p-2.5 md:p-3 bg-orange-50 rounded-xl sm:rounded-2xl group-hover:bg-orange-100 transition-colors duration-300 flex-shrink-0">
-              <DollarSign className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-orange-600" />
-            </div>
-          </div>
-          <div className="mt-2 sm:mt-3 pt-1.5 sm:pt-2 border-t border-gray-100">
-            <p className="text-[10px] sm:text-xs text-gray-400 truncate">Total travel & visit expenses</p>
-          </div>
-        </div>
-
-        {/* Pipeline Value Card */}
-        <div className="group bg-white rounded-xl sm:rounded-2xl p-3 sm:p-4 md:p-5 border border-gray-100 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5">
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5 sm:space-y-1 flex-1 min-w-0">
-              <p className="text-[10px] sm:text-xs font-semibold text-gray-400 uppercase tracking-wider">Pipeline Value</p>
-              <p className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold bg-gradient-to-r from-green-600 to-emerald-500 bg-clip-text text-transparent truncate">₹{(stats.totalPipelineValue / 100000).toFixed(1)}L</p>
-            </div>
-            <div className="p-2 sm:p-2.5 md:p-3 bg-green-50 rounded-xl sm:rounded-2xl group-hover:bg-green-100 transition-colors duration-300 flex-shrink-0">
-              <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-green-600" />
-            </div>
-          </div>
-          <div className="mt-2 sm:mt-3 pt-1.5 sm:pt-2 border-t border-gray-100">
-            <p className="text-[10px] sm:text-xs text-gray-400 truncate">Expected business value</p>
-          </div>
-        </div>
-
-        {/* Avg. Probability Card */}
-        <div className="group bg-white rounded-xl sm:rounded-2xl p-3 sm:p-4 md:p-5 border border-gray-100 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5">
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5 sm:space-y-1 flex-1 min-w-0">
-              <p className="text-[10px] sm:text-xs font-semibold text-gray-400 uppercase tracking-wider">Avg. Probability</p>
-              <p className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold bg-gradient-to-r from-purple-600 to-purple-500 bg-clip-text text-transparent truncate">{stats.avgProbability}%</p>
-            </div>
-            <div className="p-2 sm:p-2.5 md:p-3 bg-purple-50 rounded-xl sm:rounded-2xl group-hover:bg-purple-100 transition-colors duration-300 flex-shrink-0">
-              <Percent className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-purple-600" />
-            </div>
-          </div>
-          <div className="mt-2 sm:mt-3 pt-1.5 sm:pt-2 border-t border-gray-100">
-            <p className="text-[10px] sm:text-xs text-gray-400 truncate">Average success probability</p>
-          </div>
-        </div>
-
-        {/* Avg. Expense/Visit Card */}
-        <div className="group bg-white rounded-xl sm:rounded-2xl p-3 sm:p-4 md:p-5 border border-gray-100 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5">
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5 sm:space-y-1 flex-1 min-w-0">
-              <p className="text-[10px] sm:text-xs font-semibold text-gray-400 uppercase tracking-wider">Avg. Expense/Visit</p>
-              <p className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold bg-gradient-to-r from-cyan-600 to-blue-500 bg-clip-text text-transparent truncate">₹{stats.avgExpensePerVisit}</p>
-            </div>
-            <div className="p-2 sm:p-2.5 md:p-3 bg-cyan-50 rounded-xl sm:rounded-2xl group-hover:bg-cyan-100 transition-colors duration-300 flex-shrink-0">
-              <Car className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-cyan-600" />
-            </div>
-          </div>
-          <div className="mt-2 sm:mt-3 pt-1.5 sm:pt-2 border-t border-gray-100">
-            <p className="text-[10px] sm:text-xs text-gray-400 truncate">Average cost per visit</p>
-          </div>
-        </div>
+        <StatCard title="Total Visits" value={stats.totalVisits} icon={Calendar} color="blue" subtitle="Total visits recorded" />
+        <StatCard title="Total Expense" value={`₹${stats.totalExpense.toLocaleString()}`} icon={DollarSign} color="orange" subtitle="Total travel & visit expenses" />
+        <StatCard title="Pipeline Value" value={`₹${(stats.totalPipelineValue / 100000).toFixed(1)}L`} icon={TrendingUp} color="green" subtitle="Expected business value" />
+        <StatCard title="Avg. Probability" value={`${stats.avgProbability}%`} icon={Percent} color="purple" subtitle="Average success probability" />
+        <StatCard title="Avg. Expense/Visit" value={`₹${stats.avgExpensePerVisit}`} icon={Car} color="cyan" subtitle="Average cost per visit" />
       </div>
 
       {/* Filters Section */}
@@ -698,7 +666,7 @@ const AllVisits: React.FC = () => {
         )}
       </div>
 
-      {/* Visits Table - Responsive */}
+      {/* Visits Table */}
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
         {/* Desktop Table View */}
         <div className="hidden lg:block overflow-x-auto">
@@ -729,12 +697,12 @@ const AllVisits: React.FC = () => {
                   <td className="px-4 py-3"><div><p className="text-sm text-gray-800">{visit.companyName}</p><p className="text-xs text-gray-400">{visit.departmentName}</p></div></td>
                   <td className="px-4 py-3"><div className="flex items-center gap-1"><MapPin className="w-3 h-3 text-gray-400" /><span className="text-sm text-gray-600">{visit.location}</span></div></td>
                   <td className="px-4 py-3"><span className="text-sm text-gray-600 line-clamp-2">{visit.purposeOfVisit}</span></td>
-                  <td className="px-4 py-3">{getStageBadge(visit.funnelStage)}</td>
-                  <td className="px-4 py-3">{getOutcomeBadge(visit.outcomeType)}</td>
+                  <td className="px-4 py-3">{renderStageBadge(visit.funnelStage)}</td>
+                  <td className="px-4 py-3">{renderOutcomeBadge(visit.outcomeType)}</td>
                   <td className="px-4 py-3"><span className="text-sm font-semibold text-orange-600">₹{visit.totalExpense}</span></td>
                   <td className="px-4 py-3"><span className="text-sm font-semibold text-green-600">₹{(visit.expectedBusinessValue / 100000).toFixed(1)}L</span></td>
                   <td className="px-4 py-3"><div className="flex items-center gap-1"><span className="text-sm font-medium">{visit.probabilityPercentage}%</span><div className="w-12 h-1.5 bg-gray-200 rounded-full overflow-hidden"><div className="h-full bg-green-500 rounded-full" style={{ width: `${visit.probabilityPercentage}%` }}></div></div></div></td>
-                  <td className="px-4 py-3">{getStatusBadge(visit.status)}</td>
+                  <td className="px-4 py-3">{renderStatusBadge(visit.status)}</td>
                   <td className="px-4 py-3 text-center">
                     <button onClick={() => viewVisitDetails(visit)} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="View Details">
                       <Eye className="w-4 h-4" />
@@ -746,7 +714,7 @@ const AllVisits: React.FC = () => {
           </table>
         </div>
 
-        {/* Tablet View - Medium screens */}
+        {/* Tablet View */}
         <div className="hidden md:block lg:hidden overflow-x-auto">
           <table className="w-full min-w-[900px]">
             <thead className="bg-gray-50 border-b border-gray-200">
@@ -773,14 +741,14 @@ const AllVisits: React.FC = () => {
                     <div className="text-xs text-gray-500 flex items-center gap-0.5"><MapPin className="w-2.5 h-2.5" /> {visit.location}</div>
                   </td>
                   <td className="px-3 py-2">
-                    <div className="mb-1">{getStageBadge(visit.funnelStage)}</div>
-                    {getOutcomeBadge(visit.outcomeType)}
+                    <div className="mb-1">{renderStageBadge(visit.funnelStage)}</div>
+                    {renderOutcomeBadge(visit.outcomeType)}
                   </td>
                   <td className="px-3 py-2">
                     <div className="text-xs font-semibold text-orange-600">₹{visit.totalExpense}</div>
                     <div className="text-xs text-green-600">₹{(visit.expectedBusinessValue / 100000).toFixed(1)}L</div>
                   </td>
-                  <td className="px-3 py-2">{getStatusBadge(visit.status)}</td>
+                  <td className="px-3 py-2">{renderStatusBadge(visit.status)}</td>
                   <td className="px-3 py-2 text-center">
                     <button onClick={() => viewVisitDetails(visit)} className="p-1 text-blue-600 hover:bg-blue-50 rounded-lg">
                       <Eye className="w-3.5 h-3.5" />
@@ -801,7 +769,7 @@ const AllVisits: React.FC = () => {
                   <p className="text-xs sm:text-sm font-mono font-semibold text-gray-800">{visit.visitId}</p>
                   <p className="text-[10px] sm:text-xs text-gray-500 mt-0.5">{visit.visitDate}</p>
                 </div>
-                {getStatusBadge(visit.status)}
+                {renderStatusBadge(visit.status)}
               </div>
               <div className="grid grid-cols-2 gap-1.5 sm:gap-2 text-xs sm:text-sm mt-2">
                 <div><span className="text-gray-500">Employee:</span> {visit.employeeName}</div>
@@ -809,8 +777,8 @@ const AllVisits: React.FC = () => {
                 <div><span className="text-gray-500">Company:</span> {visit.companyName}</div>
                 <div><span className="text-gray-500">Expense:</span> <span className="text-orange-600 font-semibold">₹{visit.totalExpense}</span></div>
                 <div className="col-span-2"><span className="text-gray-500">Purpose:</span> <span className="text-xs sm:text-sm">{visit.purposeOfVisit}</span></div>
-                <div><span className="text-gray-500">Stage:</span> {getStageBadge(visit.funnelStage)}</div>
-                <div><span className="text-gray-500">Outcome:</span> {getOutcomeBadge(visit.outcomeType)}</div>
+                <div><span className="text-gray-500">Stage:</span> {renderStageBadge(visit.funnelStage)}</div>
+                <div><span className="text-gray-500">Outcome:</span> {renderOutcomeBadge(visit.outcomeType)}</div>
                 <div><span className="text-gray-500">Expected:</span> <span className="text-green-600 font-semibold">₹{(visit.expectedBusinessValue / 100000).toFixed(1)}L</span></div>
                 <div><span className="text-gray-500">Probability:</span> {visit.probabilityPercentage}%</div>
               </div>
@@ -864,41 +832,18 @@ const AllVisits: React.FC = () => {
       {showCreateModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-3 sm:p-4">
           <div className="bg-white rounded-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 bg-white border-b border-gray-200 p-3 sm:p-4 flex justify-between items-center">
-              <div>
-                <h2 className="text-base sm:text-lg font-semibold text-gray-800">Create New Visit</h2>
-                <p className="text-xs sm:text-sm text-gray-500">Fill in the details to create a new visit</p>
-              </div>
-              <button onClick={() => setShowCreateModal(false)} className="p-1 hover:bg-gray-100 rounded-lg">
-                <X className="w-4 h-4 sm:w-5 sm:h-5" />
-              </button>
-            </div>
+            <ModalHeader title="Create New Visit" subtitle="Fill in the details to create a new visit" onClose={() => setShowCreateModal(false)} />
 
             <div className="p-3 sm:p-4 md:p-6 space-y-3 sm:space-y-4 md:space-y-6">
               {/* Basic Information */}
               <div className="grid grid-cols-1 xs:grid-cols-2 gap-3 sm:gap-4">
                 <div>
                   <label className="block text-xs font-medium text-gray-700 mb-1">Visit Date *</label>
-                  <input
-                    type="date"
-                    name="visitDate"
-                    value={createFormData.visitDate}
-                    onChange={handleCreateFormChange}
-                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500"
-                    required
-                  />
+                  <input type="date" name="visitDate" value={createFormData.visitDate} onChange={handleCreateFormChange} className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500" required />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-700 mb-1">Employee Name *</label>
-                  <input
-                    type="text"
-                    name="employeeName"
-                    value={createFormData.employeeName}
-                    onChange={handleCreateFormChange}
-                    placeholder="Enter employee name"
-                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500"
-                    required
-                  />
+                  <input type="text" name="employeeName" value={createFormData.employeeName} onChange={handleCreateFormChange} placeholder="Enter employee name" className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500" required />
                 </div>
               </div>
 
@@ -906,26 +851,11 @@ const AllVisits: React.FC = () => {
               <div className="grid grid-cols-1 xs:grid-cols-2 gap-3 sm:gap-4">
                 <div>
                   <label className="block text-xs font-medium text-gray-700 mb-1">Company Name *</label>
-                  <input
-                    type="text"
-                    name="companyName"
-                    value={createFormData.companyName}
-                    onChange={handleCreateFormChange}
-                    placeholder="Enter company name"
-                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500"
-                    required
-                  />
+                  <input type="text" name="companyName" value={createFormData.companyName} onChange={handleCreateFormChange} placeholder="Enter company name" className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500" required />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-700 mb-1">Organization Name</label>
-                  <input
-                    type="text"
-                    name="organisationName"
-                    value={createFormData.organisationName}
-                    onChange={handleCreateFormChange}
-                    placeholder="Enter organization name"
-                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  />
+                  <input type="text" name="organisationName" value={createFormData.organisationName} onChange={handleCreateFormChange} placeholder="Enter organization name" className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500" />
                 </div>
               </div>
 
@@ -933,25 +863,11 @@ const AllVisits: React.FC = () => {
               <div className="grid grid-cols-1 xs:grid-cols-2 gap-3 sm:gap-4">
                 <div>
                   <label className="block text-xs font-medium text-gray-700 mb-1">Department</label>
-                  <input
-                    type="text"
-                    name="departmentName"
-                    value={createFormData.departmentName}
-                    onChange={handleCreateFormChange}
-                    placeholder="Enter department"
-                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  />
+                  <input type="text" name="departmentName" value={createFormData.departmentName} onChange={handleCreateFormChange} placeholder="Enter department" className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500" />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-700 mb-1">Contact Person</label>
-                  <input
-                    type="text"
-                    name="contactPerson"
-                    value={createFormData.contactPerson}
-                    onChange={handleCreateFormChange}
-                    placeholder="Enter contact person"
-                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  />
+                  <input type="text" name="contactPerson" value={createFormData.contactPerson} onChange={handleCreateFormChange} placeholder="Enter contact person" className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500" />
                 </div>
               </div>
 
@@ -959,27 +875,11 @@ const AllVisits: React.FC = () => {
               <div className="grid grid-cols-1 xs:grid-cols-2 gap-3 sm:gap-4">
                 <div>
                   <label className="block text-xs font-medium text-gray-700 mb-1">Location *</label>
-                  <input
-                    type="text"
-                    name="location"
-                    value={createFormData.location}
-                    onChange={handleCreateFormChange}
-                    placeholder="Enter location"
-                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500"
-                    required
-                  />
+                  <input type="text" name="location" value={createFormData.location} onChange={handleCreateFormChange} placeholder="Enter location" className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500" required />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-700 mb-1">Purpose of Visit *</label>
-                  <input
-                    type="text"
-                    name="purposeOfVisit"
-                    value={createFormData.purposeOfVisit}
-                    onChange={handleCreateFormChange}
-                    placeholder="Enter purpose"
-                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500"
-                    required
-                  />
+                  <input type="text" name="purposeOfVisit" value={createFormData.purposeOfVisit} onChange={handleCreateFormChange} placeholder="Enter purpose" className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500" required />
                 </div>
               </div>
 
@@ -987,81 +887,43 @@ const AllVisits: React.FC = () => {
               <div className="grid grid-cols-1 xs:grid-cols-2 gap-3 sm:gap-4">
                 <div>
                   <label className="block text-xs font-medium text-gray-700 mb-1">Check In Time</label>
-                  <input
-                    type="text"
-                    name="checkInTime"
-                    value={createFormData.checkInTime}
-                    onChange={handleCreateFormChange}
-                    placeholder="e.g., 09:00 AM"
-                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  />
+                  <input type="text" name="checkInTime" value={createFormData.checkInTime} onChange={handleCreateFormChange} placeholder="e.g., 09:00 AM" className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500" />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-700 mb-1">Check Out Time</label>
-                  <input
-                    type="text"
-                    name="checkOutTime"
-                    value={createFormData.checkOutTime}
-                    onChange={handleCreateFormChange}
-                    placeholder="e.g., 05:00 PM"
-                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  />
+                  <input type="text" name="checkOutTime" value={createFormData.checkOutTime} onChange={handleCreateFormChange} placeholder="e.g., 05:00 PM" className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500" />
                 </div>
               </div>
 
               {/* Travel Details */}
               <div className="border-t pt-4">
-                <h3 className="text-sm font-semibold text-gray-700 mb-3">Travel Details</h3>
+                <SectionHeader title="Travel Details" icon={Car} />
                 <div className="grid grid-cols-1 xs:grid-cols-3 gap-3 sm:gap-4">
                   <div>
                     <label className="block text-xs font-medium text-gray-700 mb-1">Vehicle Type</label>
-                    <select
-                      name="vehicleType"
-                      value={createFormData.vehicleType}
-                      onChange={handleCreateFormChange}
-                      className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500"
-                    >
+                    <select name="vehicleType" value={createFormData.vehicleType} onChange={handleCreateFormChange} className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500">
                       <option value="Two Wheeler">Two Wheeler</option>
                       <option value="Four Wheeler">Four Wheeler</option>
                     </select>
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-gray-700 mb-1">Distance (km)</label>
-                    <input
-                      type="number"
-                      name="distanceKm"
-                      value={createFormData.distanceKm}
-                      onChange={handleCreateFormChange}
-                      placeholder="Distance in km"
-                      className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500"
-                    />
+                    <input type="number" name="distanceKm" value={createFormData.distanceKm} onChange={handleCreateFormChange} placeholder="Distance in km" className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500" />
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-gray-700 mb-1">Rate per km (₹)</label>
-                    <input
-                      type="number"
-                      name="ratePerKm"
-                      value={createFormData.ratePerKm}
-                      onChange={handleCreateFormChange}
-                      placeholder="Rate per km"
-                      className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500"
-                    />
+                    <input type="number" name="ratePerKm" value={createFormData.ratePerKm} onChange={handleCreateFormChange} placeholder="Rate per km" className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500" />
                   </div>
                 </div>
               </div>
 
               {/* Business Tracking */}
               <div className="border-t pt-4">
-                <h3 className="text-sm font-semibold text-gray-700 mb-3">Business Tracking</h3>
+                <SectionHeader title="Business Tracking" icon={Target} />
                 <div className="grid grid-cols-1 xs:grid-cols-2 gap-3 sm:gap-4">
                   <div>
                     <label className="block text-xs font-medium text-gray-700 mb-1">Funnel Stage</label>
-                    <select
-                      name="funnelStage"
-                      value={createFormData.funnelStage}
-                      onChange={handleCreateFormChange}
-                      className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500"
-                    >
+                    <select name="funnelStage" value={createFormData.funnelStage} onChange={handleCreateFormChange} className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500">
                       {stageOptions.filter(opt => opt.value !== 'all').map(opt => (
                         <option key={opt.value} value={opt.value}>{opt.label}</option>
                       ))}
@@ -1069,12 +931,7 @@ const AllVisits: React.FC = () => {
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-gray-700 mb-1">Outcome Type</label>
-                    <select
-                      name="outcomeType"
-                      value={createFormData.outcomeType}
-                      onChange={handleCreateFormChange}
-                      className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500"
-                    >
+                    <select name="outcomeType" value={createFormData.outcomeType} onChange={handleCreateFormChange} className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500">
                       {outcomeOptions.filter(opt => opt.value !== 'all').map(opt => (
                         <option key={opt.value} value={opt.value}>{opt.label}</option>
                       ))}
@@ -1082,25 +939,11 @@ const AllVisits: React.FC = () => {
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-gray-700 mb-1">Expected Business Value (₹)</label>
-                    <input
-                      type="number"
-                      name="expectedBusinessValue"
-                      value={createFormData.expectedBusinessValue}
-                      onChange={handleCreateFormChange}
-                      placeholder="Expected value"
-                      className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500"
-                    />
+                    <input type="number" name="expectedBusinessValue" value={createFormData.expectedBusinessValue} onChange={handleCreateFormChange} placeholder="Expected value" className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500" />
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-gray-700 mb-1">Probability (%)</label>
-                    <input
-                      type="number"
-                      name="probabilityPercentage"
-                      value={createFormData.probabilityPercentage}
-                      onChange={handleCreateFormChange}
-                      placeholder="Probability percentage"
-                      className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500"
-                    />
+                    <input type="number" name="probabilityPercentage" value={createFormData.probabilityPercentage} onChange={handleCreateFormChange} placeholder="Probability percentage" className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500" />
                   </div>
                 </div>
               </div>
@@ -1110,64 +953,28 @@ const AllVisits: React.FC = () => {
                 <div className="space-y-3">
                   <div>
                     <label className="block text-xs font-medium text-gray-700 mb-1">Discussion Summary</label>
-                    <textarea
-                      name="discussionSummary"
-                      value={createFormData.discussionSummary}
-                      onChange={handleCreateFormChange}
-                      rows={3}
-                      placeholder="Enter discussion summary"
-                      className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500"
-                    />
+                    <textarea name="discussionSummary" value={createFormData.discussionSummary} onChange={handleCreateFormChange} rows={3} placeholder="Enter discussion summary" className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500" />
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-gray-700 mb-1">Next Action</label>
-                    <input
-                      type="text"
-                      name="nextAction"
-                      value={createFormData.nextAction}
-                      onChange={handleCreateFormChange}
-                      placeholder="Enter next action"
-                      className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500"
-                    />
+                    <input type="text" name="nextAction" value={createFormData.nextAction} onChange={handleCreateFormChange} placeholder="Enter next action" className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500" />
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-gray-700 mb-1">Next Follow-up Date</label>
-                    <input
-                      type="date"
-                      name="nextFollowUpDate"
-                      value={createFormData.nextFollowUpDate}
-                      onChange={handleCreateFormChange}
-                      className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500"
-                    />
+                    <input type="date" name="nextFollowUpDate" value={createFormData.nextFollowUpDate} onChange={handleCreateFormChange} className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500" />
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-gray-700 mb-1">Remarks</label>
-                    <textarea
-                      name="remarks"
-                      value={createFormData.remarks}
-                      onChange={handleCreateFormChange}
-                      rows={2}
-                      placeholder="Enter remarks"
-                      className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500"
-                    />
+                    <textarea name="remarks" value={createFormData.remarks} onChange={handleCreateFormChange} rows={2} placeholder="Enter remarks" className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500" />
                   </div>
                 </div>
               </div>
             </div>
 
             <div className="sticky bottom-0 bg-white border-t border-gray-200 p-3 sm:p-4 flex justify-end gap-2 sm:gap-3">
-              <button
-                onClick={() => setShowCreateModal(false)}
-                className="px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleSubmitCreateVisit}
-                className="px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-1.5 sm:gap-2"
-              >
-                <PlusCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                Create Visit
+              <button onClick={() => setShowCreateModal(false)} className="px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">Cancel</button>
+              <button onClick={handleSubmitCreateVisit} className="px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-1.5 sm:gap-2">
+                <PlusCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Create Visit
               </button>
             </div>
           </div>
@@ -1178,72 +985,50 @@ const AllVisits: React.FC = () => {
       {showViewModal && selectedVisit && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-3 sm:p-4">
           <div className="bg-white rounded-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 bg-white border-b border-gray-200 p-3 sm:p-4 flex justify-between items-center">
-              <div>
-                <h2 className="text-base sm:text-lg font-semibold text-gray-800">Visit Details</h2>
-                <p className="text-xs sm:text-sm text-gray-500">ID: {selectedVisit.visitId}</p>
-              </div>
-              <button onClick={() => setShowViewModal(false)} className="p-1 hover:bg-gray-100 rounded-lg">
-                <X className="w-4 h-4 sm:w-5 sm:h-5" />
-              </button>
-            </div>
+            <ModalHeader title="Visit Details" subtitle={`ID: ${selectedVisit.visitId}`} onClose={() => setShowViewModal(false)} />
 
             <div className="p-3 sm:p-4 md:p-6 space-y-3 sm:space-y-4 md:space-y-6">
               {/* Basic Info */}
               <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
-                <div className="bg-gray-50 rounded-lg p-2 sm:p-3">
-                  <p className="text-[10px] sm:text-xs text-gray-500">Visit Date</p>
-                  <p className="font-medium text-xs sm:text-sm">{selectedVisit.visitDate}</p>
-                </div>
-                <div className="bg-gray-50 rounded-lg p-2 sm:p-3">
-                  <p className="text-[10px] sm:text-xs text-gray-500">Check In/Out</p>
-                  <p className="font-medium text-xs sm:text-sm">{selectedVisit.checkInTime} - {selectedVisit.checkOutTime}</p>
-                </div>
-                <div className="bg-gray-50 rounded-lg p-2 sm:p-3">
-                  <p className="text-[10px] sm:text-xs text-gray-500">Status</p>
-                  {getStatusBadge(selectedVisit.status)}
-                </div>
-                <div className="bg-gray-50 rounded-lg p-2 sm:p-3">
-                  <p className="text-[10px] sm:text-xs text-gray-500">Attachment</p>
-                  {selectedVisit.attachment ? (
-                    <a href="#" className="text-[10px] sm:text-xs text-blue-600 hover:underline flex items-center gap-1"><Upload className="w-2.5 h-2.5 sm:w-3 sm:h-3" /> {selectedVisit.attachment}</a>
-                  ) : <span className="text-[10px] sm:text-xs text-gray-400">No attachment</span>}
-                </div>
+                <div className="bg-gray-50 rounded-lg p-2 sm:p-3"><p className="text-[10px] sm:text-xs text-gray-500">Visit Date</p><p className="font-medium text-xs sm:text-sm">{selectedVisit.visitDate}</p></div>
+                <div className="bg-gray-50 rounded-lg p-2 sm:p-3"><p className="text-[10px] sm:text-xs text-gray-500">Check In/Out</p><p className="font-medium text-xs sm:text-sm">{selectedVisit.checkInTime} - {selectedVisit.checkOutTime}</p></div>
+                <div className="bg-gray-50 rounded-lg p-2 sm:p-3"><p className="text-[10px] sm:text-xs text-gray-500">Status</p>{renderStatusBadge(selectedVisit.status)}</div>
+                <div className="bg-gray-50 rounded-lg p-2 sm:p-3"><p className="text-[10px] sm:text-xs text-gray-500">Attachment</p>{selectedVisit.attachment ? <a href="#" className="text-[10px] sm:text-xs text-blue-600 hover:underline flex items-center gap-1"><Upload className="w-2.5 h-2.5 sm:w-3 sm:h-3" /> {selectedVisit.attachment}</a> : <span className="text-[10px] sm:text-xs text-gray-400">No attachment</span>}</div>
               </div>
 
               {/* Employee & Location */}
               <div className="border-b pb-3 sm:pb-4">
-                <h3 className="text-xs sm:text-sm font-semibold text-gray-700 mb-2 sm:mb-3 flex items-center gap-1.5 sm:gap-2"><User className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Employee & Location</h3>
+                <SectionHeader title="Employee & Location" icon={User} />
                 <div className="grid grid-cols-1 xs:grid-cols-2 gap-2 sm:gap-4">
-                  <div><p className="text-[10px] sm:text-xs text-gray-500">Employee</p><p className="text-xs sm:text-sm font-medium">{selectedVisit.employeeName}</p></div>
-                  <div><p className="text-[10px] sm:text-xs text-gray-500">Location</p><p className="text-xs sm:text-sm flex items-center gap-1"><MapPin className="w-2.5 h-2.5 sm:w-3 sm:h-3" /> {selectedVisit.location}</p></div>
+                  <InfoRow label="Employee" value={selectedVisit.employeeName} />
+                  <InfoRow label="Location" value={selectedVisit.location} icon={MapPin} />
                 </div>
               </div>
 
               {/* Organization Details */}
               <div className="border-b pb-3 sm:pb-4">
-                <h3 className="text-xs sm:text-sm font-semibold text-gray-700 mb-2 sm:mb-3 flex items-center gap-1.5 sm:gap-2"><Building2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Organization Details</h3>
+                <SectionHeader title="Organization Details" icon={Building2} />
                 <div className="grid grid-cols-1 xs:grid-cols-2 gap-2 sm:gap-4">
-                  <div><p className="text-[10px] sm:text-xs text-gray-500">Company</p><p className="text-xs sm:text-sm font-medium">{selectedVisit.companyName}</p></div>
-                  <div><p className="text-[10px] sm:text-xs text-gray-500">Organisation</p><p className="text-xs sm:text-sm">{selectedVisit.organisationName}</p></div>
-                  <div><p className="text-[10px] sm:text-xs text-gray-500">Department</p><p className="text-xs sm:text-sm">{selectedVisit.departmentName}</p></div>
-                  <div><p className="text-[10px] sm:text-xs text-gray-500">Contact Person</p><p className="text-xs sm:text-sm">{selectedVisit.contactPerson}</p></div>
+                  <InfoRow label="Company" value={selectedVisit.companyName} />
+                  <InfoRow label="Organisation" value={selectedVisit.organisationName} />
+                  <InfoRow label="Department" value={selectedVisit.departmentName} />
+                  <InfoRow label="Contact Person" value={selectedVisit.contactPerson} />
                 </div>
               </div>
 
               {/* Visit Details */}
               <div className="border-b pb-3 sm:pb-4">
-                <h3 className="text-xs sm:text-sm font-semibold text-gray-700 mb-2 sm:mb-3 flex items-center gap-1.5 sm:gap-2"><FileText className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Visit Details</h3>
+                <SectionHeader title="Visit Details" icon={FileText} />
                 <div className="space-y-2 sm:space-y-3">
-                  <div><p className="text-[10px] sm:text-xs text-gray-500">Purpose of Visit</p><p className="text-xs sm:text-sm font-medium">{selectedVisit.purposeOfVisit}</p></div>
-                  <div><p className="text-[10px] sm:text-xs text-gray-500">Discussion Summary</p><p className="text-xs sm:text-sm">{selectedVisit.discussionSummary}</p></div>
-                  <div><p className="text-[10px] sm:text-xs text-gray-500">Remarks</p><p className="text-xs sm:text-sm">{selectedVisit.remarks || 'N/A'}</p></div>
+                  <InfoRow label="Purpose of Visit" value={selectedVisit.purposeOfVisit} />
+                  <InfoRow label="Discussion Summary" value={selectedVisit.discussionSummary} />
+                  <InfoRow label="Remarks" value={selectedVisit.remarks || 'N/A'} />
                 </div>
               </div>
 
               {/* Travel & Expense */}
               <div className="border-b pb-3 sm:pb-4">
-                <h3 className="text-xs sm:text-sm font-semibold text-gray-700 mb-2 sm:mb-3 flex items-center gap-1.5 sm:gap-2"><Car className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Travel & Expense</h3>
+                <SectionHeader title="Travel & Expense" icon={Car} />
                 <div className="grid grid-cols-2 xs:grid-cols-4 gap-2 sm:gap-3">
                   <div className="bg-gray-50 rounded-lg p-1.5 sm:p-2 text-center"><p className="text-[9px] sm:text-[10px] text-gray-500">Vehicle</p><p className="text-[10px] sm:text-xs font-medium">{selectedVisit.vehicleType}</p></div>
                   <div className="bg-gray-50 rounded-lg p-1.5 sm:p-2 text-center"><p className="text-[9px] sm:text-[10px] text-gray-500">Distance</p><p className="text-[10px] sm:text-xs font-medium">{selectedVisit.distanceKm} km</p></div>
@@ -1254,10 +1039,10 @@ const AllVisits: React.FC = () => {
 
               {/* Business Tracking */}
               <div className="border-b pb-3 sm:pb-4">
-                <h3 className="text-xs sm:text-sm font-semibold text-gray-700 mb-2 sm:mb-3 flex items-center gap-1.5 sm:gap-2"><Target className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Business Tracking</h3>
+                <SectionHeader title="Business Tracking" icon={Target} />
                 <div className="grid grid-cols-1 xs:grid-cols-2 gap-2 sm:gap-4">
-                  <div><p className="text-[10px] sm:text-xs text-gray-500">Funnel Stage</p>{getStageBadge(selectedVisit.funnelStage)}</div>
-                  <div><p className="text-[10px] sm:text-xs text-gray-500">Outcome</p>{getOutcomeBadge(selectedVisit.outcomeType)}</div>
+                  <div><p className="text-[10px] sm:text-xs text-gray-500">Funnel Stage</p>{renderStageBadge(selectedVisit.funnelStage)}</div>
+                  <div><p className="text-[10px] sm:text-xs text-gray-500">Outcome</p>{renderOutcomeBadge(selectedVisit.outcomeType)}</div>
                   <div><p className="text-[10px] sm:text-xs text-gray-500">Expected Business Value</p><p className="text-xs sm:text-sm font-semibold text-green-600">₹{selectedVisit.expectedBusinessValue.toLocaleString()}</p></div>
                   <div><p className="text-[10px] sm:text-xs text-gray-500">Probability</p><div className="flex items-center gap-1 sm:gap-2"><div className="flex-1 h-1 sm:h-1.5 bg-gray-200 rounded-full"><div className="h-full bg-green-500 rounded-full" style={{ width: `${selectedVisit.probabilityPercentage}%` }}></div></div><span className="text-xs sm:text-sm font-medium">{selectedVisit.probabilityPercentage}%</span></div></div>
                   {selectedVisit.actualBusinessValue && <div><p className="text-[10px] sm:text-xs text-gray-500">Actual Business Value</p><p className="text-xs sm:text-sm font-semibold text-emerald-600">₹{selectedVisit.actualBusinessValue.toLocaleString()}</p></div>}
@@ -1266,10 +1051,10 @@ const AllVisits: React.FC = () => {
 
               {/* Follow-up */}
               <div>
-                <h3 className="text-xs sm:text-sm font-semibold text-gray-700 mb-2 sm:mb-3 flex items-center gap-1.5 sm:gap-2"><ClockIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Follow-up</h3>
+                <SectionHeader title="Follow-up" icon={ClockIcon} />
                 <div className="grid grid-cols-1 xs:grid-cols-2 gap-2 sm:gap-4">
-                  <div><p className="text-[10px] sm:text-xs text-gray-500">Next Action</p><p className="text-xs sm:text-sm">{selectedVisit.nextAction}</p></div>
-                  <div><p className="text-[10px] sm:text-xs text-gray-500">Next Follow-up Date</p><div className="flex items-center gap-1"><Calendar className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-gray-400" /><p className="text-xs sm:text-sm font-medium">{selectedVisit.nextFollowUpDate}</p></div></div>
+                  <InfoRow label="Next Action" value={selectedVisit.nextAction} />
+                  <InfoRow label="Next Follow-up Date" value={selectedVisit.nextFollowUpDate} icon={Calendar} />
                 </div>
               </div>
             </div>
