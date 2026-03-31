@@ -140,7 +140,7 @@ const Login: React.FC = () => {
 
         if (error.message === 'Network Error' || error.code === 'ECONNABORTED') {
           nextErrorMessage +=
-            'Cannot connect to server. Please check if the backend server is running on http://localhost:7146 or the configured VITE_API_URL.';
+            'Cannot connect to server. Please check if the backend server is running on http://localhost: or the configured VITE_API_URL.';
         } else if (
           error.code === 'CERT_HAS_EXPIRED' ||
           error.code === 'UNABLE_TO_VERIFY_LEAF_SIGNATURE'

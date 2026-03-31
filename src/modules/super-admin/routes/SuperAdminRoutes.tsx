@@ -1,9 +1,4 @@
 // src/modules/super-admin/routes/SuperAdminRoutes.tsx
-import React from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
-import Layout from "../../../Layouts/Layout";
-import SuperAdminDashboard from "../pages/SuperAdminDashboard";
-import EmployeeRegistration from "../pages/employee-registration/EmployeeRegistration";
 
 import React from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
@@ -24,7 +19,7 @@ import FunnelStageMaster from '../pages/Master/Components/FunnelStageMaster';
 import OutcomeMaster from '../pages/Master/Components/OutcomeMaster';
 
 // User Management
-import UserManagement from "../pages/User/UserManagement";
+
 
 // Import User Management (Top level only for now)
 import UserManagement from '../pages/User/UserManagement';
