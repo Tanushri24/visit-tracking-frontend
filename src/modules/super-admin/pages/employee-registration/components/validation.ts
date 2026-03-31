@@ -57,6 +57,18 @@ export const validateRegistrationForm = (
         errors.location = 'Please select a work location';
     }
 
+    // Password
+    if (!formData.password) {
+        errors.password = 'Password is required';
+    } else if (formData.password.length < 6) {
+        errors.password = 'Password must be at least 6 characters';
+    }
+
+    // Confirm Password
+    if (formData.confirmPassword && formData.password !== formData.confirmPassword) {
+        errors.confirmPassword = 'Passwords do not match';
+    }
+
     // User Role
     if (!formData.role) {
         errors.role = 'Please select a user role';

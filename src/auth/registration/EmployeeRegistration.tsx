@@ -22,6 +22,9 @@ import type {
 } from './components/types';
 import { validateRegistrationForm } from './components/validation';
 
+// Import API service
+import { registrationApi } from '../../modules/super-admin/services/registrationApi';
+
 const EmployeeRegistration: React.FC = () => {
     const navigate = useNavigate();
 
@@ -195,16 +198,36 @@ const EmployeeRegistration: React.FC = () => {
         setIsLoading(true);
 
         try {
-            // Simulate API call
-            await new Promise(resolve => setTimeout(resolve, 2000));
+            // Prepare API request data for POST /Admin/create-employee (contract-mandated shape)
+            const apiData = {
+                fullName: `${formData.firstName} ${formData.lastName}`,
+                email: formData.email,
+                mobile: formData.mobile,
+                roleId: formData.roleId || 4, // default employee role
+                departmentId: formData.department ? Number(formData.department) : 0,
+                employeeCode: formData.employeeCode,
+                designationId: formData.designation ? Number(formData.designation) : 0,
+                reportingManagerId: formData.reportingManager ? Number(formData.reportingManager) : 0,
+                locationId: formData.location ? Number(formData.location) : 0
+            };
 
-            // Show success message
-            setRegistrationSuccess(true);
+            console.log('API Data before sending:', apiData);
 
-            // Auto redirect to login after 3 seconds
-            setTimeout(() => {
-                navigate('/login');
-            }, 3000);
+            // Call API
+            const response = await registrationApi.createEmployee(apiData);
+
+            if (response.success) {
+                // Show success message
+                setRegistrationSuccess(true);
+
+                // Auto redirect to login after 3 seconds
+                setTimeout(() => {
+                    navigate('/login');
+                }, 3000);
+            } else {
+                console.error('Registration API Error:', response);
+                alert(`Registration failed: ${response.message}\n\nDetails: ${response.error}`);
+            }
         } catch (error) {
             console.error('Registration failed:', error);
             alert('Registration failed. Please try again.');
