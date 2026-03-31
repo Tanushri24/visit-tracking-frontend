@@ -82,7 +82,7 @@ const EmployeeDetailsTab: React.FC<EmployeeDetailsTabProps> = ({
                             >
                                 <option value="" disabled>Select role</option>
                                 {userRoles.map(role => (
-                                    <option key={role.id} value={role.name.toLowerCase()}>{role.name}</option>
+                                    <option key={role.id} value={role.id}>{role.name}</option>
                                 ))}
                             </select>
                             <ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" />
@@ -205,8 +205,8 @@ const EmployeeDetailsTab: React.FC<EmployeeDetailsTabProps> = ({
                             >
                                 <option value="" disabled>Select designation</option>
                                 {designations.map(des => (
-                                    <option key={des.id} value={des.name}>{des.name}</option>
-                                ))}
+                                <option key={des.id} value={des.id}>{des.name}</option>
+                            ))}
                             </select>
                             <ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" />
                         </div>
@@ -239,7 +239,7 @@ const EmployeeDetailsTab: React.FC<EmployeeDetailsTabProps> = ({
                             >
                                 <option value="" disabled>Select department</option>
                                 {departments.map(dept => (
-                                    <option key={dept.id} value={dept.name}>{dept.name}</option>
+                                    <option key={dept.id} value={dept.id}>{dept.name}</option>
                                 ))}
                             </select>
                             <ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" />
@@ -273,7 +273,7 @@ const EmployeeDetailsTab: React.FC<EmployeeDetailsTabProps> = ({
                             >
                                 <option value="" disabled>Select manager</option>
                                 {managers.map(mgr => (
-                                    <option key={mgr.id} value={mgr.name}>{mgr.name}</option>
+                                    <option key={mgr.id} value={mgr.id}>{mgr.name}</option>
                                 ))}
                             </select>
                             <ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" />
@@ -307,7 +307,7 @@ const EmployeeDetailsTab: React.FC<EmployeeDetailsTabProps> = ({
                             >
                                 <option value="" disabled>Select location</option>
                                 {locations.map(loc => (
-                                    <option key={loc.id} value={loc.name}>{loc.name}</option>
+                                    <option key={loc.id} value={loc.id}>{loc.name}</option>
                                 ))}
                             </select>
                             <ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" />
@@ -321,7 +321,7 @@ const EmployeeDetailsTab: React.FC<EmployeeDetailsTabProps> = ({
                     </div>
 
                     {/* Password */}
-                    {/* <div className="space-y-1.5">
+                    <div className="space-y-1.5">
                         <label className="text-xs font-medium text-gray-600 flex items-center gap-1.5">
                             <Lock className="w-3.5 h-3.5 text-purple-500" />
                             Password <span className="text-red-500">*</span>
@@ -355,13 +355,10 @@ const EmployeeDetailsTab: React.FC<EmployeeDetailsTabProps> = ({
                                 {errors.password}
                             </p>
                         )}
-                        <p className="text-xs text-gray-400 mt-0.5">
-                            8+ chars, 1 uppercase, 1 number
-                        </p>
-                    </div> */}
+                    </div>
 
                     {/* Confirm Password */}
-                    {/* <div className="space-y-1.5">
+                    <div className="space-y-1.5">
                         <label className="text-xs font-medium text-gray-600 flex items-center gap-1.5">
                             <Lock className="w-3.5 h-3.5 text-purple-500" />
                             Confirm Password <span className="text-red-500">*</span>
@@ -395,7 +392,7 @@ const EmployeeDetailsTab: React.FC<EmployeeDetailsTabProps> = ({
                                 {errors.confirmPassword}
                             </p>
                         )}
-                    </div> */}
+                    </div>
                 </div>
             </div>
 

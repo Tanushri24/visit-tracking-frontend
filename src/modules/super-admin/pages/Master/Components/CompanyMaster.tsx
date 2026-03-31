@@ -1,5 +1,5 @@
 // src/modules/super-admin/pages/Master/CompanyMaster.tsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Search, 
   ChevronLeft,
@@ -11,23 +11,19 @@ import {
   Plus,
   Trash2
 } from 'lucide-react';
+import { companyApi } from '../../../services/companyApi';
 
 interface Company {
+  status: string;
   id: number;
   companyName: string;
+  companyType: string;
   industryType: string;
   address: string;
   city: string;
   state: string;
   pincode: string;
-  contactPerson: string;
-  contactEmail: string;
-  contactPhone: string;
-  website: string;
-  gstNo: string;
-  status: 'active' | 'inactive';
-  createdAt: string;
-  updatedAt: string;
+  isActive: boolean;
 }
 
 const CompanyMaster = () => {
@@ -186,16 +182,21 @@ const CompanyMaster = () => {
 
   // Filter companies based on search and filters
   const filteredCompanies = companies.filter(company => {
-    const matchesSearch = 
-      company.companyName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      company.city.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      company.contactPerson.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      company.contactEmail.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      company.industryType.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesStatus = filterStatus === 'all' || company.status === filterStatus;
-    const matchesIndustry = filterIndustry === 'all' || company.industryType === filterIndustry;
-    
+    const companyName = company.companyName ?? '';
+    const companyType = company.companyType ?? '';
+    const city = company.city ?? '';
+    const industryType = company.industryType ?? '';
+
+    const matchesSearch =
+      companyName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      companyType.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      city.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      industryType.toLowerCase().includes(searchTerm.toLowerCase());
+
+    const status = company.isActive ? 'active' : 'inactive';
+    const matchesStatus = filterStatus === 'all' || status === filterStatus;
+    const matchesIndustry = filterIndustry === 'all' || industryType === filterIndustry;
+
     return matchesSearch && matchesStatus && matchesIndustry;
   });
 
@@ -207,16 +208,15 @@ const CompanyMaster = () => {
 
   // Export to CSV
   const exportToCSV = () => {
-    const headers = ['Company Name', 'Industry', 'City', 'State', 'Contact Person', 'Email', 'Phone', 'Status'];
+    const headers = ['Company Name', 'Company Type', 'Industry', 'City', 'State', 'Pincode', 'Active'];
     const csvData = filteredCompanies.map(c => [
       c.companyName,
+      c.companyType,
       c.industryType,
       c.city,
       c.state,
-      c.contactPerson,
-      c.contactEmail,
-      c.contactPhone,
-      c.status
+      c.pincode,
+      c.isActive ? 'active' : 'inactive'
     ]);
     
     const csvContent = [headers, ...csvData]
@@ -477,10 +477,41 @@ const CompanyMaster = () => {
                     </div>
                   </td>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {currentItems.map((company, index) => (
+                  <tr key={company.id} className="hover:bg-gray-50">
+                    <td className="px-4 py-3 text-sm text-gray-600">
+                      {indexOfFirstItem + index + 1}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-600">{company.companyName || '-'}</td>
+                    <td className="px-4 py-3 text-sm text-gray-600">{company.companyType || '-'}</td>
+                    <td className="px-4 py-3 text-sm text-gray-600">{company.industryType || '-'}</td>
+                    <td className="px-4 py-3 text-sm text-gray-600">{company.city || '-'}</td>
+                    <td className="px-4 py-3 text-sm text-gray-600">{company.state || '-'}</td>
+                    <td className="px-4 py-3 text-sm text-gray-600">{company.pincode || '-'}</td>
+                    <td className="px-4 py-3">
+                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold ${
+                        company.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                      }`}>
+                        {company.isActive ? 'active' : 'inactive'}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <button
+                        onClick={() => viewCompanyDetails(company)}
+                        className="p-1 text-blue-600 hover:bg-blue-50 rounded flex items-center gap-1"
+                        title="View Details"
+                      >
+                        <Eye size={18} />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       {/* Pagination */}
@@ -530,85 +561,37 @@ const CompanyMaster = () => {
               </div>
 
               <div className="space-y-4">
-                {/* Company Information */}
                 <div className="border-b pb-4">
-                  <h3 className="text-lg font-semibold text-purple-600 mb-3">Basic Information</h3>
+                  <h3 className="text-lg font-semibold text-purple-600 mb-3">Company Information</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <p className="text-sm text-gray-500">Company Name</p>
                       <p className="font-medium">{selectedCompany.companyName}</p>
                     </div>
                     <div>
+                      <p className="text-sm text-gray-500">Company Type</p>
+                      <p className="font-medium">{selectedCompany.companyType}</p>
+                    </div>
+                    <div>
                       <p className="text-sm text-gray-500">Industry Type</p>
                       <p className="font-medium">{selectedCompany.industryType}</p>
                     </div>
                     <div>
-                      <p className="text-sm text-gray-500">GST No</p>
-                      <p className="font-medium">{selectedCompany.gstNo}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Website</p>
-                      <p className="font-medium text-blue-600">
-                        <a href={`https://${selectedCompany.website}`} target="_blank" rel="noopener noreferrer">
-                          {selectedCompany.website}
-                        </a>
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Status</p>
+                      <p className="text-sm text-gray-500">Active Status</p>
                       <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold ${
-                        selectedCompany.status === 'active' 
-                          ? 'bg-green-100 text-green-800' 
-                          : 'bg-red-100 text-red-800'
+                        selectedCompany.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                       }`}>
-                        {selectedCompany.status}
+                        {selectedCompany.isActive ? 'active' : 'inactive'}
                       </span>
                     </div>
                   </div>
                 </div>
 
-                {/* Address Information */}
                 <div className="border-b pb-4">
                   <h3 className="text-lg font-semibold text-purple-600 mb-3">Address</h3>
                   <div className="grid grid-cols-1 gap-2">
                     <p className="font-medium">{selectedCompany.address}</p>
                     <p>{selectedCompany.city}, {selectedCompany.state} - {selectedCompany.pincode}</p>
-                  </div>
-                </div>
-
-                {/* Contact Information */}
-                <div className="border-b pb-4">
-                  <h3 className="text-lg font-semibold text-purple-600 mb-3">Contact Information</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-sm text-gray-500">Contact Person</p>
-                      <p className="font-medium">{selectedCompany.contactPerson}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Email</p>
-                      <p className="font-medium text-blue-600">
-                        <a href={`mailto:${selectedCompany.contactEmail}`}>{selectedCompany.contactEmail}</a>
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Phone</p>
-                      <p className="font-medium">{selectedCompany.contactPhone}</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* System Information */}
-                <div>
-                  <h3 className="text-lg font-semibold text-purple-600 mb-3">System Information</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <p className="text-gray-500">Created At</p>
-                      <p className="font-medium">{new Date(selectedCompany.createdAt).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
-                    </div>
-                    <div>
-                      <p className="text-gray-500">Last Updated</p>
-                      <p className="font-medium">{new Date(selectedCompany.updatedAt).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
-                    </div>
                   </div>
                 </div>
               </div>

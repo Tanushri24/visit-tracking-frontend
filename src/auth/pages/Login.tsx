@@ -1,334 +1,374 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams, Link } from 'react-router-dom'; // Added Link
-import { 
-  Mail, Lock, Eye, EyeOff, ArrowRight, 
-  ChevronLeft, Shield, Crown, Users, Briefcase, BarChart3
+import React, { useEffect, useState } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import {
+  AlertCircle,
+  ArrowLeft,
+  ArrowRight,
+  BarChart3,
+  Briefcase,
+  Crown,
+  Eye,
+  EyeOff,
+  Loader2,
+  Lock,
+  Mail,
+  Shield,
+  Users,
 } from 'lucide-react';
+import authService from '../services/auth.service';
 
 type UserRole = 'super-admin' | 'admin' | 'manager' | 'employee' | 'management';
 
-const Login = () => {
+const roleOptions = [
+  { id: 1, key: 'super-admin' as UserRole, label: 'Super Admin', icon: Crown },
+  { id: 2, key: 'admin' as UserRole, label: 'Admin', icon: Shield },
+  { id: 3, key: 'manager' as UserRole, label: 'Manager', icon: Users },
+  { id: 4, key: 'employee' as UserRole, label: 'Employee', icon: Briefcase },
+  { id: 5, key: 'management' as UserRole, label: 'Management', icon: BarChart3 },
+];
+
+const Login: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const roleFromUrl = searchParams.get('role') as UserRole || 'employee';
-  
+  const roleFromUrl = (searchParams.get('role') as UserRole) || 'super-admin';
+
+  const [selectedRole, setSelectedRole] = useState<UserRole>(roleFromUrl);
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedRole, setSelectedRole] = useState<UserRole>(roleFromUrl);
+  const [errorMessage, setErrorMessage] = useState('');
   const [formData, setFormData] = useState({
     email: '',
     password: '',
-    rememberMe: false
+    rememberMe: false,
+    roleId: '',
   });
 
-  // Update selected role when URL changes
   useEffect(() => {
-    if (roleFromUrl) {
-      setSelectedRole(roleFromUrl);
-    }
+    const matchedRole = roleOptions.find((role) => role.key === roleFromUrl) ?? roleOptions[0];
+    setSelectedRole(matchedRole.key);
+    setFormData((prev) => ({
+      ...prev,
+      roleId: String(matchedRole.id),
+    }));
   }, [roleFromUrl]);
 
-  // Role-based configurations - All Purple
-  const roleConfig = {
-    'super-admin': {
-      icon: Crown,
-      label: 'Super Admin',
-      gradient: 'from-purple-600 to-indigo-600',
-      light: 'purple-100',
-      text: 'text-purple-600',
-      bg: 'bg-purple-50',
-      border: 'border-purple-200',
-      shadow: 'shadow-purple-500/30'
-    },
-    'admin': {
-      icon: Shield,
-      label: 'Admin',
-      gradient: 'from-purple-600 to-indigo-600',
-      light: 'purple-100',
-      text: 'text-purple-600',
-      bg: 'bg-purple-50',
-      border: 'border-purple-200',
-      shadow: 'shadow-purple-500/30'
-    },
-    'manager': {
-      icon: Users,
-      label: 'Manager',
-      gradient: 'from-purple-600 to-indigo-600',
-      light: 'purple-100',
-      text: 'text-purple-600',
-      bg: 'bg-purple-50',
-      border: 'border-purple-200',
-      shadow: 'shadow-purple-500/30'
-    },
-    'employee': {
-      icon: Briefcase,
-      label: 'Employee',
-      gradient: 'from-purple-600 to-indigo-600',
-      light: 'purple-100',
-      text: 'text-purple-600',
-      bg: 'bg-purple-50',
-      border: 'border-purple-200',
-      shadow: 'shadow-purple-500/30'
-    },
-    'management': {
-      icon: BarChart3,
-      label: 'Management',
-      gradient: 'from-purple-600 to-indigo-600',
-      light: 'purple-100',
-      text: 'text-purple-600',
-      bg: 'bg-purple-50',
-      border: 'border-purple-200',
-      shadow: 'shadow-purple-500/30'
-    }
-  };
-
-  const currentRole = roleConfig[selectedRole];
+  const currentRole = roleOptions.find((role) => role.key === selectedRole) ?? roleOptions[0];
+  const CurrentRoleIcon = currentRole.icon;
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value
+      [name]: type === 'checkbox' ? checked : value,
     }));
+    setErrorMessage('');
+  };
+
+  const handleRoleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const nextRoleId = e.target.value;
+    const matchedRole = roleOptions.find((role) => String(role.id) === nextRoleId);
+
+    setFormData((prev) => ({
+      ...prev,
+      roleId: nextRoleId,
+    }));
+
+    if (matchedRole) {
+      setSelectedRole(matchedRole.key);
+    }
+
+    setErrorMessage('');
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMessage('');
+
+    if (!formData.roleId || isNaN(Number(formData.roleId))) {
+      setErrorMessage('Please select a valid role');
+      return;
+    }
+
     setIsLoading(true);
-    
-    // Simulate API call
-    setTimeout(() => {
-      // Store auth data with selected role
-      const userNames = {
-        'super-admin': 'Super Admin',
-        'admin': 'Admin User',
-        'manager': 'Manager User',
-        'employee': 'John Employee',
-        'management': 'Management User'
-      };
 
-      localStorage.setItem('auth', JSON.stringify({
-        isAuthenticated: true,
-        userRole: selectedRole,
-        user: { 
-          name: userNames[selectedRole], 
-          email: formData.email, 
-          role: selectedRole 
+    authService
+      .login({ email: formData.email, password: formData.password })
+      .then((response) => {
+        const token = response?.data?.token;
+
+        if (!token) {
+          setErrorMessage('No token received');
+          setIsLoading(false);
+          return;
         }
-      }));
-      
-      // Navigate to respective dashboard
-      const dashboardPaths = {
-        'super-admin': '/super-admin/dashboard',
-        'admin': '/admin/dashboard',
-        'manager': '/manager/dashboard',
-        'employee': '/employee/dashboard',
-        'management': '/management/dashboard'
-      };
-      
-      navigate(dashboardPaths[selectedRole]);
-      setIsLoading(false);
-    }, 1500);
-  };
 
-  // Quick role selector (small dots)
-  const handleRoleSelect = (role: UserRole) => {
-    setSelectedRole(role);
-    // Update URL without reload
-    navigate(`/login?role=${role}`, { replace: true });
+        const base64Payload = token.split('.')[1];
+        let decodedPayload: any = {};
+
+        try {
+          decodedPayload = JSON.parse(atob(base64Payload));
+        } catch (decodeError) {
+          console.error('JWT decode failed:', decodeError);
+        }
+
+        const roleFromToken =
+          decodedPayload['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] ||
+          decodedPayload.role ||
+          '';
+
+        const formattedRole = roleFromToken.toLowerCase().replace(/\s+/g, '-');
+
+        localStorage.setItem('auth', token);
+        localStorage.setItem('role', formattedRole);
+
+        const roleRoutes: Record<string, string> = {
+          'super-admin': '/super-admin/dashboard',
+          admin: '/admin/dashboard',
+          manager: '/manager/dashboard',
+          employee: '/employee/dashboard',
+          management: '/management/dashboard',
+        };
+
+        navigate(roleRoutes[formattedRole] || '/super-admin/dashboard');
+        setIsLoading(false);
+      })
+      .catch((error) => {
+        const apiMessage = error.response?.data?.message || error.response?.data?.error;
+        const status = error.response?.status;
+
+        let nextErrorMessage = 'Login failed. ';
+
+        if (error.message === 'Network Error' || error.code === 'ECONNABORTED') {
+          nextErrorMessage +=
+            'Cannot connect to server. Please check if the backend server is running on http://localhost:7146 or the configured VITE_API_URL.';
+        } else if (
+          error.code === 'CERT_HAS_EXPIRED' ||
+          error.code === 'UNABLE_TO_VERIFY_LEAF_SIGNATURE'
+        ) {
+          nextErrorMessage += 'SSL certificate error. This is a development environment issue.';
+        } else if (apiMessage) {
+          nextErrorMessage = `Login failed (${status}): ${apiMessage}`;
+        } else if (error.response?.status === 0) {
+          nextErrorMessage += 'Network error - please check backend server connection.';
+        } else {
+          nextErrorMessage += error.message || 'Please check your credentials and try again.';
+        }
+
+        setErrorMessage(nextErrorMessage);
+        setIsLoading(false);
+      });
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-purple-50 flex flex-col items-center justify-center p-4 relative overflow-hidden">
-      
-      {/* Animated Floating Orbs */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-20 left-10 w-96 h-96 bg-purple-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-float-slow"></div>
-        <div className="absolute top-40 right-20 w-80 h-80 bg-purple-300 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-float-slower"></div>
-        <div className="absolute bottom-20 left-1/3 w-72 h-72 bg-purple-100 rounded-full mix-blend-multiply filter blur-3xl opacity-40 animate-float"></div>
-        
-        {/* Small decorative elements */}
-        {[...Array(15)].map((_, i) => (
-          <div
-            key={i}
-            className="absolute w-1 h-1 bg-purple-400 rounded-full animate-pulse"
-            style={{
-              top: `${Math.random() * 100}%`,
-              left: `${Math.random() * 100}%`,
-              animationDelay: `${Math.random() * 3}s`,
-              opacity: 0.2
-            }}
-          />
-        ))}
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-purple-50 py-8 px-4">
+      <div className="max-w-4xl mx-auto">
+        <div className="mb-6">
+          <div className="flex items-center justify-between bg-white/80 backdrop-blur-sm rounded-xl p-3 border border-purple-100 shadow-sm">
+            <button
+              onClick={() => navigate('/')}
+              className="inline-flex items-center gap-2 text-purple-600 hover:text-purple-800 transition-colors"
+            >
+              <ArrowLeft className="w-5 h-5" />
+              <span className="text-sm font-medium">Back</span>
+            </button>
+            <div className="flex items-center gap-2">
+              <CurrentRoleIcon className="w-4 h-4 text-purple-400" />
+              <span className="text-sm text-gray-600">Employee Login</span>
+            </div>
+          </div>
+        </div>
 
-      {/* Back Button - Left aligned on desktop, centered on mobile */}
-      <div className="w-full max-w-sm mb-4 relative z-10 flex justify-center sm:justify-start">
-        <button
-          onClick={() => navigate('/')}
-          className="inline-flex items-center gap-2 text-purple-600 hover:text-purple-800 transition-colors bg-white/80 backdrop-blur-sm px-4 py-2 rounded-full shadow-sm border border-purple-100 text-sm"
-        >
-          <ChevronLeft className="w-4 h-4" />
-          <span>Back </span>
-        </button>
-      </div>
-
-      {/* Main Card */}
-      <div className="relative w-full max-w-sm">
-        {/* Decorative elements with role color - All Purple */}
-        <div className={`absolute -top-4 -right-4 w-24 h-24 bg-gradient-to-br ${currentRole.gradient} rounded-2xl rotate-12 opacity-20 blur-xl`}></div>
-        <div className={`absolute -bottom-4 -left-4 w-24 h-24 bg-gradient-to-tr ${currentRole.gradient} rounded-2xl -rotate-12 opacity-20 blur-xl`}></div>
-        
-        <div className="bg-white/90 backdrop-blur-xl rounded-2xl shadow-2xl border border-purple-100 p-6 relative">
-          {/* Gradient accent based on role - All Purple */}
-          <div className={`absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r ${currentRole.gradient} rounded-t-2xl`}></div>
-          
-          {/* Icon with role color - All Purple */}
-          <div className="flex justify-center mb-4">
-            <div className={`w-16 h-16 bg-gradient-to-br ${currentRole.gradient} rounded-xl flex items-center justify-center shadow-lg transform hover:rotate-6 transition-transform`}>
-              {currentRole.icon && <currentRole.icon className="w-8 h-8 text-white" />}
+        <div className="bg-white rounded-2xl shadow-xl border border-purple-100 overflow-hidden">
+          <div className="bg-gradient-to-r from-purple-600 to-indigo-600 px-8 py-6">
+            <div className="flex items-center gap-4">
+              <div className="bg-white/20 p-3 rounded-xl">
+                <Shield className="w-8 h-8 text-white" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-white">Employee Login</h1>
+                <p className="text-purple-100 text-sm">
+                  Sign in with your registered credentials to access the dashboard
+                </p>
+              </div>
             </div>
           </div>
 
-          {/* Title with role - All Purple */}
-          <h2 className="text-2xl font-light text-center text-gray-800 mb-1">
-            Welcome Back
-          </h2>
-          <p className="text-center mb-3">
-            <span className={`inline-block px-3 py-0.5 bg-gradient-to-r ${currentRole.gradient} text-white text-xs font-medium rounded-full shadow-sm`}>
-              {currentRole.label}
-            </span>
-          </p>
-
-          {/* Quick role selector - All Purple */}
-          <div className="flex justify-center gap-1.5 mt-1 mb-4">
-            {Object.entries(roleConfig).map(([key, config]) => (
+          <div className="p-8">
+            <div className="mb-8 flex items-center gap-6 border-b border-gray-200">
               <button
-                key={key}
-                onClick={() => handleRoleSelect(key as UserRole)}
-                className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${
-                  selectedRole === key 
-                    ? `bg-gradient-to-r ${config.gradient} w-5` 
-                    : 'bg-purple-200 hover:bg-purple-400'
-                }`}
-                title={config.label}
-              />
-            ))}
-          </div>
-
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-3">
-            <div className="space-y-1">
-              <label className="text-xs font-medium text-gray-700 ml-1">Email</label>
-              <div className="relative group">
-                <Mail className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-${currentRole.text} group-focus-within:text-${currentRole.text} transition-colors`} />
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  className={`w-full pl-9 pr-3 py-2 text-sm ${currentRole.bg} border ${currentRole.border} rounded-lg focus:outline-none focus:ring-2 focus:ring-${currentRole.text} focus:border-transparent transition-all`}
-                  placeholder="your@email.com"
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="space-y-1">
-              <label className="text-xs font-medium text-gray-700 ml-1">Password</label>
-              <div className="relative group">
-                <Lock className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-${currentRole.text} group-focus-within:text-${currentRole.text} transition-colors`} />
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  name="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  className={`w-full pl-9 pr-9 py-2 text-sm ${currentRole.bg} border ${currentRole.border} rounded-lg focus:outline-none focus:ring-2 focus:ring-${currentRole.text} focus:border-transparent transition-all`}
-                  placeholder="••••••••"
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-purple-400 hover:text-purple-600 transition-colors"
-                >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <label className="flex items-center gap-1.5 cursor-pointer group">
-                <input 
-                  type="checkbox" 
-                  name="rememberMe"
-                  className={`w-3.5 h-3.5 text-${currentRole.text} bg-${currentRole.light} border-${currentRole.border} rounded focus:ring-${currentRole.text}`}
-                  checked={formData.rememberMe}
-                  onChange={handleChange}
-                />
-                <span className="text-xs text-gray-600 group-hover:text-purple-600 transition-colors">Remember me</span>
-              </label>
-              <button className={`text-xs ${currentRole.text} hover:${currentRole.text} transition-colors`}>
-                Forgot password?
+                type="button"
+                className="py-3 px-1 border-b-2 border-purple-600 text-purple-600 font-medium text-sm"
+              >
+                Login Details
+              </button>
+              <button
+                type="button"
+                disabled
+                className="py-3 px-1 border-b-2 border-transparent text-gray-400 font-medium text-sm"
+              >
+                Review Access
               </button>
             </div>
 
-            <button
-              type="submit"
-              disabled={isLoading}
-              className={`w-full bg-gradient-to-r ${currentRole.gradient} text-white py-2.5 rounded-lg text-sm font-medium hover:shadow-lg ${currentRole.shadow} transition-all transform hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 group relative overflow-hidden`}
-            >
-              <span className="absolute inset-0 bg-white/20 transform -translate-x-full group-hover:translate-x-0 transition-transform duration-300"></span>
-              {isLoading ? (
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              ) : (
-                <>
-                  <span>Sign In</span>
-                  <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-                </>
-              )}
-            </button>
-          </form>
+            <form onSubmit={handleSubmit}>
+              <div className="bg-white rounded-2xl border border-purple-100 p-6">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="bg-purple-100 p-2 rounded-lg">
+                    <Mail className="w-5 h-5 text-purple-600" />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-semibold text-gray-800">Account Information</h2>
+                    <p className="text-sm text-gray-500">Enter your login details below</p>
+                  </div>
+                </div>
 
-          {/* Register Now Link - UPDATED */}
-          <p className="text-center text-xs text-gray-500 mt-4">
-            Don't have an account?{' '}
-            <Link 
-              to="#" 
-              className={`font-medium ${currentRole.text} hover:${currentRole.text} transition-colors text-xs hover:underline`}
-            >
-              Register Now
-            </Link>
-          </p>
+                {errorMessage && (
+                  <div className="mb-5 flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                    <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                    <span>{errorMessage}</span>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Role <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      name="roleId"
+                      value={formData.roleId}
+                      onChange={handleRoleChange}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all"
+                    >
+                      <option value="">Select role</option>
+                      {roleOptions.map((role) => (
+                        <option key={role.id} value={role.id}>
+                          {role.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Email Address <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-purple-400" />
+                      <input
+                        type="email"
+                        name="email"
+                        value={formData.email}
+                        onChange={handleChange}
+                        placeholder="Enter email address"
+                        className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Password <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-purple-400" />
+                      <input
+                        type={showPassword ? 'text' : 'password'}
+                        name="password"
+                        value={formData.password}
+                        onChange={handleChange}
+                        placeholder="Enter password"
+                        className="w-full pl-12 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all"
+                        required
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword((prev) => !prev)}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-purple-600 transition-colors"
+                      >
+                        {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="flex items-end">
+                    <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        name="rememberMe"
+                        checked={formData.rememberMe}
+                        onChange={handleChange}
+                        className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                      />
+                      Remember me
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-purple-50 rounded-xl p-4 text-center border border-purple-100">
+                  <p className="text-xs font-medium text-purple-600 uppercase tracking-wide">Role</p>
+                  <p className="text-sm font-semibold text-gray-800 mt-1">{currentRole.label}</p>
+                </div>
+                <div className="bg-purple-50 rounded-xl p-4 text-center border border-purple-100">
+                  <p className="text-xs font-medium text-purple-600 uppercase tracking-wide">Email</p>
+                  <p className="text-sm font-semibold text-gray-800 mt-1">{formData.email || 'Not entered'}</p>
+                </div>
+                <div className="bg-purple-50 rounded-xl p-4 text-center border border-purple-100">
+                  <p className="text-xs font-medium text-purple-600 uppercase tracking-wide">Access</p>
+                  <p className="text-sm font-semibold text-gray-800 mt-1">Dashboard Login</p>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between mt-8 pt-6 border-t border-gray-200">
+                <div className="flex items-center gap-4 text-sm">
+                  <Link
+                    to="/forgot-password"
+                    className="text-purple-600 hover:text-purple-700 font-medium"
+                  >
+                    Forgot password?
+                  </Link>
+                  <Link
+                    to="/register"
+                    className="text-gray-600 hover:text-purple-700 font-medium"
+                  >
+                    Register now
+                  </Link>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className={`px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium inline-flex items-center gap-2 ${
+                    isLoading ? 'opacity-50 cursor-not-allowed' : ''
+                  }`}
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Signing In...
+                    </>
+                  ) : (
+                    <>
+                      Sign In
+                      <ArrowRight className="w-4 h-4" />
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
-      </div>
 
-      <style>{`
-        @keyframes float-slow {
-          0%, 100% { transform: translate(0px, 0px) scale(1); }
-          33% { transform: translate(30px, -30px) scale(1.1); }
-          66% { transform: translate(-20px, 20px) scale(0.9); }
-        }
-        @keyframes float-slower {
-          0%, 100% { transform: translate(0px, 0px) scale(1); }
-          33% { transform: translate(-30px, 20px) scale(1.1); }
-          66% { transform: translate(20px, -30px) scale(0.9); }
-        }
-        @keyframes float {
-          0%, 100% { transform: translate(0px, 0px) scale(1); }
-          33% { transform: translate(20px, -20px) scale(1.1); }
-          66% { transform: translate(-20px, 20px) scale(0.9); }
-        }
-        .animate-float-slow {
-          animation: float-slow 8s ease-in-out infinite;
-        }
-        .animate-float-slower {
-          animation: float-slower 10s ease-in-out infinite;
-        }
-        .animate-float {
-          animation: float 6s ease-in-out infinite;
-        }
-      `}</style>
+        <p className="text-center mt-6 text-gray-600">
+          Need a new account?{' '}
+          <Link to="/register" className="font-medium text-purple-600 hover:text-purple-700 hover:underline">
+            Register here
+          </Link>
+        </p>
+      </div>
     </div>
   );
 };

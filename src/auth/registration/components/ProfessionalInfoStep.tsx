@@ -75,7 +75,7 @@ const ProfessionalInfoStep: React.FC<ProfessionalInfoStepProps> = ({
                         >
                             <option value="">Select Designation</option>
                             {designations.map(des => (
-                                <option key={des.id} value={des.name}>{des.name}</option>
+                                <option key={des.id} value={des.id}>{des.name}</option>
                             ))}
                         </select>
                     </div>
@@ -107,7 +107,7 @@ const ProfessionalInfoStep: React.FC<ProfessionalInfoStepProps> = ({
                         >
                             <option value="">Select Department</option>
                             {departments.map(dept => (
-                                <option key={dept.id} value={dept.name}>{dept.name}</option>
+                                <option key={dept.id} value={dept.id}>{dept.name}</option>
                             ))}
                         </select>
                     </div>
@@ -139,7 +139,7 @@ const ProfessionalInfoStep: React.FC<ProfessionalInfoStepProps> = ({
                         >
                             <option value="">Select Manager</option>
                             {managers.map(mgr => (
-                                <option key={mgr.id} value={mgr.name}>{mgr.name}</option>
+                                <option key={mgr.id} value={mgr.id}>{mgr.name}</option>
                             ))}
                         </select>
                     </div>
@@ -171,7 +171,7 @@ const ProfessionalInfoStep: React.FC<ProfessionalInfoStepProps> = ({
                         >
                             <option value="">Select Location</option>
                             {locations.map(loc => (
-                                <option key={loc.id} value={loc.name}>{loc.name}</option>
+                                <option key={loc.id} value={loc.id}>{loc.name}</option>
                             ))}
                         </select>
                     </div>

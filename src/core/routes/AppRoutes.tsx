@@ -2,12 +2,11 @@
 
 import { Routes, Route, Navigate } from 'react-router-dom';
 import PrivateRoute from './PrivateRoute';
-import PublicRoute from './PublicRoute';
-import Welcome from '../../auth/pages/welcome';
+  import Welcome from '../../auth/pages/welcome';
 import Login from '../../auth/pages/Login';
-import AuthRoutes from '../../auth/routes/AuthRoutes';
-import EmployeeRegistration from '../../auth/registration/EmployeeRegistration';
-import ForgotPassword from '../../auth/pages/ForgotPassword';
+// import AuthRoutes from '../../auth/routes/AuthRoutes';
+// import EmployeeRegistration from '../../auth/registration/EmployeeRegistration';
+// import ForgotPassword from '../../auth/pages/ForgotPassword';
 
 // Import all role-based routes
 import SuperAdminRoutes from '../../modules/super-admin/routes/SuperAdminRoutes';
@@ -17,33 +16,59 @@ import EmployeeRoutes from '../../modules/employee/routes/EmployeeRoutes';
 import ManagementRoutes from "../../modules/management/routes/ManagementRoutes";
 
 const AppRoutes = () => {
-  const isAuthenticated = localStorage.getItem('auth') ? true : false;
-  const userRole = 'employee'; // This would come from auth context
+  const token = localStorage.getItem('authToken');
+  const isAuthenticated = !!token;
+
+  let userRole = 'employee';
+
+  if (token) {
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+
+      const role =
+        payload["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"] ||
+        payload["role"];
+
+      const clean = role?.replace(/\s/g, "").toLowerCase();
+
+      const map: Record<string, string> = {
+        superadmin: "super-admin",
+        admin: "admin",
+        manager: "manager",
+        employee: "employee",
+        management: "management"
+      };
+
+      userRole = map[clean] || "employee";
+    } catch (e) {
+      console.error("Role decode error:", e);
+    }
+  }
 
   return (
     <Routes>
-      {/* Public Routes */}
+      {/* Public */}
       <Route path="/" element={<Welcome />} />
       <Route path="/login" element={<Login />} />
-      <Route path="/auth/*" element={<AuthRoutes />} />
-      <Route path="/registration" element={<EmployeeRegistration />} />
-       <Route path="/forgotpassword" element={<ForgotPassword />} />
 
-      {/* Private Routes */}
+      {/* Private */}
       <Route element={<PrivateRoute />}>
         <Route path="/super-admin/*" element={<SuperAdminRoutes />} />
-        <Route path="/admin/*" element={<AdminRoutes />} />           {/* ✅ All admin routes handled here */}
+        <Route path="/admin/*" element={<AdminRoutes />} />
         <Route path="/manager/*" element={<ManagerRoutes />} />
         <Route path="/employee/*" element={<EmployeeRoutes />} />
         <Route path="/management/*" element={<ManagementRoutes />} />
       </Route>
 
       {/* Redirect */}
-      <Route path="*" element={
-        isAuthenticated 
-          ? <Navigate to={`/${userRole}/dashboard`} replace />
-          : <Navigate to="/" replace />
-      } />
+      <Route
+        path="*"
+        element={
+          isAuthenticated
+            ? <Navigate to={`/${userRole}/dashboard`} replace />
+            : <Navigate to="/" replace />
+        }
+      />
     </Routes>
   );
 };

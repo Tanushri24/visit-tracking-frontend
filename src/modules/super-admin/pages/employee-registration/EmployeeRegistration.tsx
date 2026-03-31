@@ -24,49 +24,43 @@ import type {
 import { validateRegistrationForm } from './components/validation';
 
 // Import API service
-import { createEmployee, type CreateEmployeeRequest } from '../../services/registrationApi';
+import { registrationApi, type CreateEmployeeRequest } from '../../services/registrationApi';
 
 const EmployeeRegistration: React.FC = () => {
     const navigate = useNavigate();
 
     // Form Data State
     const [formData, setFormData] = useState<EmployeeRegistrationData>({
-        // Employee Information
-        employeeCode: '',
-        fullName: '',
-        email: '',
-        mobile: '',
-        password: '',
-        confirmPassword: '',
-        designation: '',
-        department: '',
-        reportingManager: '',
-        location: '',
-        role: 'employee'
-    });
+    // Employee Information
+    employeeCode: '',
+    fullName: '',
+    email: '',
+    mobile: '',
+    password: '',
+    confirmPassword: '',
+    designation: '',
+    department: '',
+    reportingManager: '',
+    location: '',
+    role: ''
+}); // ✅ THIS WAS MISSING
 
-    // Dropdown Data States
-    const [designations] = useState<Designation[]>([
-        { id: 1, name: 'Software Developer' },
-        { id: 2, name: 'Senior Developer' },
-        { id: 3, name: 'Team Lead' },
-        { id: 4, name: 'Project Manager' },
-        { id: 5, name: 'Business Development Executive' },
-        { id: 6, name: 'Sales Manager' },
-        { id: 7, name: 'HR Executive' },
-        { id: 8, name: 'Accountant' }
-    ]);
-
-    const [departments] = useState<Department[]>([
-        { id: 1, name: 'Engineering' },
-        { id: 2, name: 'Sales' },
-        { id: 3, name: 'Marketing' },
-        { id: 4, name: 'Human Resources' },
-        { id: 5, name: 'Finance' },
-        { id: 6, name: 'Operations' },
-        { id: 7, name: 'Business Development' },
-        { id: 8, name: 'Project Management' }
-    ]);
+const [departments] = useState<Department[]>([
+    { id: 1, name: 'Engineering' },
+    { id: 2, name: 'Sales' },
+    { id: 3, name: 'Marketing' },
+    { id: 4, name: 'Human Resources' },
+    { id: 5, name: 'Finance' },
+    { id: 6, name: 'Operations' },
+    { id: 7, name: 'Business Development' },
+    { id: 8, name: 'Project Management' }
+]);
+const [designations] = useState<Designation[]>([
+    { id: 1, name: 'Software Engineer' },
+    { id: 2, name: 'Senior Developer' },
+    { id: 3, name: 'Team Lead' },
+    { id: 4, name: 'Manager' }
+]);
 
     const [managers] = useState<Manager[]>([
         { id: 1, name: 'Rahul Sharma', email: 'rahul.sharma@company.com' },
@@ -185,23 +179,24 @@ const EmployeeRegistration: React.FC = () => {
         setApiError(null);
 
         try {
-            // Prepare data for API
-            const apiData: CreateEmployeeRequest = {
-                fullName: formData.fullName,
-                email: formData.email,
-                mobile: formData.mobile,
-                // Convert string IDs to numbers, default to 0 if empty
-                roleId: formData.role ? parseInt(formData.role) : 0,
-                designationId: formData.designation ? parseInt(formData.designation) : 0,
-                departmentId: formData.department ? parseInt(formData.department) : 0,
-                reportingManagerId: formData.reportingManager ? parseInt(formData.reportingManager) : 0
+            // Prepare data for API with exact required keys
+            const payload: CreateEmployeeRequest = {
+                fullName: formData.fullName.trim(),
+                email: formData.email.trim(),
+                mobile: formData.mobile.trim(),
+                roleId: formData.role ? Number(formData.role) : 0,
+                departmentId: formData.department ? Number(formData.department) : 0,
+                employeeCode: formData.employeeCode.trim(),
+                designationId: formData.designation ? Number(formData.designation) : 0,
+                reportingManagerId: formData.reportingManager ? Number(formData.reportingManager) : 0,
+                locationId: formData.location ? Number(formData.location) : 0
             };
 
             // Log the data being sent (for debugging)
-            console.log('Sending data to API:', apiData);
+            console.log('Sending data to API:', payload);
 
             // Call API
-            const response = await createEmployee(apiData);
+            const response = await registrationApi.createEmployee(payload);
 
             if (response.success) {
                 setRegistrationSuccess(true);

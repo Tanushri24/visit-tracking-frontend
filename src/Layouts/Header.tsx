@@ -53,8 +53,6 @@ const themeColors = {
 
 const Header: React.FC<HeaderProps> = ({ 
   toggleMobileMenu, 
-  sidebarCollapsed,
-  isMobile,
   userInfo,
   theme = 'purple',
   role

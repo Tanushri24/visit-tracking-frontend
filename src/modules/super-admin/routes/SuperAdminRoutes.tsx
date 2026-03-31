@@ -1,4 +1,9 @@
 // src/modules/super-admin/routes/SuperAdminRoutes.tsx
+import React from "react";
+import { Routes, Route, Navigate } from "react-router-dom";
+import Layout from "../../../Layouts/Layout";
+import SuperAdminDashboard from "../pages/SuperAdminDashboard";
+import EmployeeRegistration from "../pages/employee-registration/EmployeeRegistration";
 
 import React from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
@@ -18,12 +23,8 @@ import ExpenseRateMaster from '../pages/Master/Components/ExpenseRateMaster';
 import FunnelStageMaster from '../pages/Master/Components/FunnelStageMaster';
 import OutcomeMaster from '../pages/Master/Components/OutcomeMaster';
 
-// Expense Configuration Pages
-import ExpenseConfig from '../pages/expense-configrution/ExpenseConfig';
-import RateManagement from '../pages/expense-configrution/RateManagement';
-import RateChangeHistory from '../pages/expense-configrution/RateChangeHistory';
-import VehicleTypes from '../pages/expense-configrution/VehicleTypes';
-import EffectiveDates from '../pages/expense-configrution/EffectiveDates';
+// User Management
+import UserManagement from "../pages/User/UserManagement";
 
 // Import User Management (Top level only for now)
 import UserManagement from '../pages/User/UserManagement';
@@ -73,7 +74,7 @@ import ProductivityScore from '../pages/Outcomes/Components/ProductivityScore';
 const SuperAdminRoutes = () => {
   return (
     <Routes>
-      {/* ========== DASHBOARD ========== */}
+      {/* Dashboard */}
       <Route
         path="dashboard"
         element={
@@ -82,8 +83,8 @@ const SuperAdminRoutes = () => {
           </Layout>
         }
       />
-      
-      {/* ========== EMPLOYEE REGISTRATION ========== */}
+
+      {/* Employee Registration */}
       <Route
         path="employee-registration"
         element={
@@ -92,9 +93,8 @@ const SuperAdminRoutes = () => {
           </Layout>
         }
       />
-      
-      {/* ========== MASTER MANAGEMENT (WITH DROPDOWN) ========== */}
-      {/* Master Management Overview */}
+
+      {/* Master Management */}
       <Route
         path="master-management"
         element={
@@ -103,8 +103,6 @@ const SuperAdminRoutes = () => {
           </Layout>
         }
       />
-      
-      {/* Master Management Sub-routes */}
       <Route
         path="master-management/company"
         element={
@@ -113,7 +111,6 @@ const SuperAdminRoutes = () => {
           </Layout>
         }
       />
-      
       <Route
         path="master-management/organization"
         element={
@@ -122,7 +119,6 @@ const SuperAdminRoutes = () => {
           </Layout>
         }
       />
-      
       <Route
         path="master-management/department"
         element={
@@ -131,7 +127,6 @@ const SuperAdminRoutes = () => {
           </Layout>
         }
       />
-      
       <Route
         path="master-management/contact-person"
         element={
@@ -196,8 +191,6 @@ const SuperAdminRoutes = () => {
           </Layout>
         }
       />
-      
-      {/* Expense Configuration Sub-routes */}
       <Route
         path="expense-config/rates"
         element={
@@ -206,7 +199,6 @@ const SuperAdminRoutes = () => {
           </Layout>
         }
       />
-      
       <Route
         path="expense-config/history"
         element={
@@ -215,7 +207,6 @@ const SuperAdminRoutes = () => {
           </Layout>
         }
       />
-      
       <Route
         path="expense-config/vehicles"
         element={
@@ -224,7 +215,6 @@ const SuperAdminRoutes = () => {
           </Layout>
         }
       />
-      
       <Route
         path="expense-config/effective-dates"
         element={
@@ -443,35 +433,24 @@ const SuperAdminRoutes = () => {
 
       {/* ========== REPORTS ========== */}
       <Route
-        path="reports"
+        path="visit-management/todays-visits"
         element={
           <Layout role="super_admin">
-            <div className="p-6">
-              <h1 className="text-2xl font-bold text-gray-800">Reports</h1>
-              <p className="text-gray-600 mt-2">Coming Soon</p>
-            </div>
+            <TodaysVisits />
           </Layout>
         }
       />
-      
-      {/* ========== AUDIT LOGS ========== */}
       <Route
-        path="audit"
+        path="visit-management/monthly-visits"
         element={
           <Layout role="super_admin">
-            <div className="p-6">
-              <h1 className="text-2xl font-bold text-gray-800">Audit Logs</h1>
-              <p className="text-gray-600 mt-2">Coming Soon</p>
-            </div>
+            <MonthlyVisits />
           </Layout>
         }
       />
-      
-      {/* ========== DEFAULT ROUTE ========== */}
-      <Route
-        path="*"
-        element={<Navigate to="/super-admin/dashboard" replace />}
-      />
+
+      {/* Default Route */}
+      <Route path="*" element={<Navigate to="/super-admin/dashboard" replace />} />
     </Routes>
   );
 };

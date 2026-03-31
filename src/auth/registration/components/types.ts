@@ -16,6 +16,9 @@ export interface EmployeeRegistrationData {
     reportingManager: string;
     location: string;
     joiningDate: string;
+
+    // Role
+    roleId: number;
     
     // Additional
     profilePicture?: File | null;

@@ -1,375 +1,574 @@
-// src/modules/admin/pages/registration/AdminEmployeeRegistration.tsx
-
-import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { 
-    ArrowLeft, ArrowRight, CheckCircle, Save,
-    User, FileText 
+import React, { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import {
+  AlertCircle,
+  ArrowLeft,
+  Building2,
+  CheckCircle,
+  Loader2,
+  MapPin,
+  Save,
+  Shield,
+  User,
+  Users,
 } from 'lucide-react';
+import {
+  createEmployee,
+  type CreateEmployeeRequest,
+} from '../../../super-admin/services/registrationApi';
 
-// Import types and validation (from shared registration folder)
-import type {
-    EmployeeRegistrationData,
-    Designation,
-    Department,
-    Manager,
-    Location,
-    RegistrationErrors,
-    UserRole
-} from '../../../super-admin/pages/employee-registration/components/types';
-import { validateRegistrationForm } from '../../../super-admin/pages/employee-registration/components/validation';
+type EmployeeCreateFormData = {
+  fullName: string;
+  email: string;
+  mobile: string;
+  roleId: string;
+  departmentId: string;
+  employeeCode: string;
+  designationId: string;
+  reportingManagerId: string;
+  locationId: string;
+};
 
-// Import components (from shared registration folder)
-import EmployeeDetailsTab from '../../../super-admin/pages/employee-registration/components/EmployeeDetailsTab';
-import ReviewTab from '../../../super-admin/pages/employee-registration/components/ReviewTab';
+type EmployeeCreateErrors = Partial<Record<keyof EmployeeCreateFormData, string>>;
+
+type SelectOption = {
+  id: number;
+  name: string;
+  helperText?: string;
+};
+
+const roleOptions: SelectOption[] = [
+  { id: 1, name: 'Manager' },
+  { id: 2, name: 'Employee' },
+  { id: 3, name: 'Management' },
+];
+
+const departmentOptions: SelectOption[] = [
+  { id: 1, name: 'Engineering' },
+  { id: 2, name: 'Sales' },
+  { id: 3, name: 'Marketing' },
+  { id: 4, name: 'Human Resources' },
+  { id: 5, name: 'Finance' },
+  { id: 6, name: 'Operations' },
+];
+
+const designationOptions: SelectOption[] = [
+  { id: 1, name: 'Software Developer' },
+  { id: 2, name: 'Senior Developer' },
+  { id: 3, name: 'Team Lead' },
+  { id: 4, name: 'Project Manager' },
+  { id: 5, name: 'HR Executive' },
+  { id: 6, name: 'Sales Executive' },
+];
+
+const managerOptions: SelectOption[] = [
+  { id: 1, name: 'Rahul Sharma', helperText: 'Engineering Head' },
+  { id: 2, name: 'Priya Patel', helperText: 'Sales Director' },
+  { id: 3, name: 'Amit Kumar', helperText: 'Operations Manager' },
+  { id: 4, name: 'Neha Singh', helperText: 'HR Manager' },
+];
+
+const locationOptions: SelectOption[] = [
+  { id: 1, name: 'Mumbai HQ' },
+  { id: 2, name: 'Delhi Office' },
+  { id: 3, name: 'Bangalore Branch' },
+  { id: 4, name: 'Pune Office' },
+];
+
+const initialFormData: EmployeeCreateFormData = {
+  fullName: '',
+  email: '',
+  mobile: '',
+  roleId: '',
+  departmentId: '',
+  employeeCode: '',
+  designationId: '',
+  reportingManagerId: '',
+  locationId: '',
+};
+
+const inputClassName =
+  'w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-700 outline-none transition focus:border-purple-500 focus:ring-2 focus:ring-purple-100';
+const labelClassName = 'mb-1.5 block text-sm font-medium text-gray-700';
 
 const AdminEmployeeRegistration: React.FC = () => {
-    const navigate = useNavigate();
+  const navigate = useNavigate();
+  const [formData, setFormData] = useState<EmployeeCreateFormData>(initialFormData);
+  const [errors, setErrors] = useState<EmployeeCreateErrors>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [apiMessage, setApiMessage] = useState<string>('');
+  const [apiError, setApiError] = useState<string>('');
+  const [isSuccess, setIsSuccess] = useState(false);
 
-    // Form Data State
-    const [formData, setFormData] = useState<EmployeeRegistrationData>({
-        employeeCode: '',
-        fullName: '',
-        email: '',
-        mobile: '',
-        password: '',
-        confirmPassword: '',
-        designation: '',
-        department: '',
-        reportingManager: '',
-        location: '',
-        role: 'employee'  // Default role
-    });
+  const formSections = useMemo(
+    () => [
+      {
+        title: 'Basic Details',
+        icon: <User className="h-4 w-4 text-purple-600" />,
+        fields: ['fullName', 'email', 'mobile', 'employeeCode'] as Array<keyof EmployeeCreateFormData>,
+      },
+      {
+        title: 'Organization Mapping',
+        icon: <Building2 className="h-4 w-4 text-purple-600" />,
+        fields: ['departmentId', 'designationId', 'locationId'] as Array<keyof EmployeeCreateFormData>,
+      },
+      {
+        title: 'Access & Reporting',
+        icon: <Shield className="h-4 w-4 text-purple-600" />,
+        fields: ['roleId', 'reportingManagerId'] as Array<keyof EmployeeCreateFormData>,
+      },
+    ],
+    []
+  );
 
-    // Dropdown Data States
-    const [designations] = useState<Designation[]>([
-        { id: 1, name: 'Software Developer' },
-        { id: 2, name: 'Senior Developer' },
-        { id: 3, name: 'Team Lead' },
-        { id: 4, name: 'Project Manager' },
-        { id: 5, name: 'Business Development Executive' },
-        { id: 6, name: 'Sales Manager' },
-        { id: 7, name: 'HR Executive' },
-        { id: 8, name: 'Accountant' }
-    ]);
+  const validateForm = (): EmployeeCreateErrors => {
+    const nextErrors: EmployeeCreateErrors = {};
 
-    const [departments] = useState<Department[]>([
-        { id: 1, name: 'Engineering' },
-        { id: 2, name: 'Sales' },
-        { id: 3, name: 'Marketing' },
-        { id: 4, name: 'Human Resources' },
-        { id: 5, name: 'Finance' },
-        { id: 6, name: 'Operations' },
-        { id: 7, name: 'Business Development' },
-        { id: 8, name: 'Project Management' }
-    ]);
-
-    const [managers] = useState<Manager[]>([
-        { id: 1, name: 'Rahul Sharma', email: 'rahul.sharma@company.com' },
-        { id: 2, name: 'Priya Patel', email: 'priya.patel@company.com' },
-        { id: 3, name: 'Amit Kumar', email: 'amit.kumar@company.com' },
-        { id: 4, name: 'Neha Singh', email: 'neha.singh@company.com' },
-        { id: 5, name: 'Vikram Mehta', email: 'vikram.mehta@company.com' }
-    ]);
-
-    const [locations] = useState<Location[]>([
-        { id: 1, name: 'Mumbai HQ', city: 'Mumbai' },
-        { id: 2, name: 'Delhi Office', city: 'Delhi' },
-        { id: 3, name: 'Bangalore Branch', city: 'Bangalore' },
-        { id: 4, name: 'Pune Office', city: 'Pune' },
-        { id: 5, name: 'Chennai Branch', city: 'Chennai' },
-        { id: 6, name: 'Kolkata Office', city: 'Kolkata' }
-    ]);
-
-    // ✅ FILTERED USER ROLES - Admin removed, only 3 roles
-    const [userRoles] = useState<UserRole[]>([
-        { id: 1, name: 'Manager' },
-        { id: 2, name: 'Employee' },
-        { id: 3, name: 'Management' }
-    ]);
-
-    // UI States
-    const [activeTab, setActiveTab] = useState(0);
-    const [errors, setErrors] = useState<RegistrationErrors>({});
-    const [showPassword, setShowPassword] = useState(false);
-    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-    const [isLoading, setIsLoading] = useState(false);
-    const [agreeToTerms, setAgreeToTerms] = useState(false);
-    const [touched, setTouched] = useState<Set<string>>(new Set());
-    const [registrationSuccess, setRegistrationSuccess] = useState(false);
-
-    // Validate on form data change
-    useEffect(() => {
-        if (touched.size > 0) {
-            const validationErrors = validateRegistrationForm(formData);
-            setErrors(validationErrors);
-        }
-    }, [formData, touched]);
-
-    // Handle Input Change
-    const handleInputChange = (
-        e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-    ) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: value
-        }));
-
-        setTouched(prev => new Set(prev).add(name));
-    };
-
-    // Handle Blur Event
-    const handleBlur = (
-        e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>
-    ) => {
-        const { name } = e.target;
-        setTouched(prev => new Set(prev).add(name));
-    };
-
-    // Handle Tab Change
-    const handleTabChange = (tabIndex: number) => {
-        if (tabIndex === 1) {
-            const validationErrors = validateRegistrationForm(formData);
-            setErrors(validationErrors);
-            
-            const allFields = [
-                'employeeCode', 'fullName', 'email', 'mobile', 
-                'password', 'confirmPassword', 'designation', 'department', 
-                'reportingManager', 'location', 'role'
-            ];
-            
-            setTouched(prev => {
-                const newSet = new Set(prev);
-                allFields.forEach(field => newSet.add(field));
-                return newSet;
-            });
-
-            if (Object.keys(validationErrors).length === 0) {
-                setActiveTab(tabIndex);
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            }
-        } else {
-            setActiveTab(tabIndex);
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-    };
-
-    // Handle Form Submit
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-
-        const validationErrors = validateRegistrationForm(formData);
-        setErrors(validationErrors);
-
-        if (Object.keys(validationErrors).length > 0) {
-            alert('Please fix the errors before submitting');
-            setActiveTab(0);
-            return;
-        }
-
-        if (!agreeToTerms) {
-            alert('Please agree to terms and conditions');
-            return;
-        }
-
-        setIsLoading(true);
-
-        try {
-            await new Promise(resolve => setTimeout(resolve, 2000));
-            setRegistrationSuccess(true);
-            setTimeout(() => {
-                navigate('/admin/employees');
-            }, 3000);
-        } catch (error) {
-            console.error('Registration failed:', error);
-            alert('Registration failed. Please try again.');
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    const getFieldError = useCallback((fieldName: keyof RegistrationErrors) => {
-        return touched.has(fieldName) ? errors[fieldName] : undefined;
-    }, [touched, errors]);
-
-    const togglePassword = () => setShowPassword(!showPassword);
-    const toggleConfirmPassword = () => setShowConfirmPassword(!showConfirmPassword);
-
-    // Success message
-    if (registrationSuccess) {
-        return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center p-2">
-                <div className="bg-white rounded-lg shadow-md p-6 max-w-md w-full text-center">
-                    <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                        <CheckCircle className="w-8 h-8 text-green-500" />
-                    </div>
-                    <h2 className="text-xl font-semibold text-gray-800 mb-2">Employee Created Successfully!</h2>
-                    <p className="text-sm text-gray-600 mb-4">
-                        New employee has been registered in the system.
-                    </p>
-                    <Link
-                        to="/admin/employees"
-                        className="inline-flex items-center gap-1 text-sm text-purple-600 hover:text-purple-700 font-medium"
-                    >
-                        <ArrowLeft className="w-3 h-3" />
-                        Go to Employee List
-                    </Link>
-                </div>
-            </div>
-        );
+    if (!formData.fullName.trim()) nextErrors.fullName = 'Full name is required';
+    if (!formData.email.trim()) {
+      nextErrors.email = 'Email is required';
+    } else if (!/^\S+@\S+\.\S+$/.test(formData.email)) {
+      nextErrors.email = 'Enter a valid email address';
     }
 
-    return (
-        <div className="min-h-screen bg-gray-50 py-6 px-4">
-            <div className="max-w-6xl mx-auto">
-                
-                {/* Header */}
-                <div className="mb-4">
-                    <button
-                        onClick={() => navigate('/admin/employees')}
-                        className="inline-flex items-center gap-1 text-sm text-gray-600 hover:text-purple-600 transition-colors"
-                    >
-                        <ArrowLeft className="w-4 h-4" />
-                        Back to Employee List
-                    </button>
-                </div>
+    if (!formData.mobile.trim()) {
+      nextErrors.mobile = 'Mobile number is required';
+    } else if (!/^[0-9]{10,15}$/.test(formData.mobile.trim())) {
+      nextErrors.mobile = 'Enter a valid mobile number';
+    }
 
-                {/* Main Card */}
-                <div className="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden">
-                    
-                    {/* Title */}
-                    <div className="px-6 py-4 border-b border-gray-200">
-                        <h1 className="text-lg font-semibold text-gray-800">Create New Employee</h1>
-                        <p className="text-xs text-gray-500 mt-0.5">Add a new employee to the system</p>
-                    </div>
+    if (!formData.employeeCode.trim()) nextErrors.employeeCode = 'Employee code is required';
+    if (!formData.roleId) nextErrors.roleId = 'Role is required';
+    if (!formData.departmentId) nextErrors.departmentId = 'Department is required';
+    if (!formData.designationId) nextErrors.designationId = 'Designation is required';
+    if (!formData.reportingManagerId) nextErrors.reportingManagerId = 'Reporting manager is required';
+    if (!formData.locationId) nextErrors.locationId = 'Location is required';
 
-                    {/* Tab Navigation */}
-                    <div className="border-b border-gray-200 px-6">
-                        <div className="flex space-x-6">
-                            <button
-                                onClick={() => handleTabChange(0)}
-                                className={`
-                                    py-3 px-1 border-b-2 font-medium text-xs flex items-center gap-1.5
-                                    transition-colors duration-200
-                                    ${activeTab === 0
-                                        ? 'border-purple-600 text-purple-600'
-                                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                                    }
-                                `}
-                            >
-                                <User className="w-3.5 h-3.5" />
-                                Employee Details
-                                {Object.keys(errors).length > 0 && activeTab === 0 && (
-                                    <span className="ml-1 w-1.5 h-1.5 bg-red-500 rounded-full"></span>
-                                )}
-                            </button>
-                            <button
-                                onClick={() => handleTabChange(1)}
-                                className={`
-                                    py-3 px-1 border-b-2 font-medium text-xs flex items-center gap-1.5
-                                    transition-colors duration-200
-                                    ${activeTab === 1
-                                        ? 'border-purple-600 text-purple-600'
-                                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                                    }
-                                `}
-                            >
-                                <FileText className="w-3.5 h-3.5" />
-                                Review & Submit
-                            </button>
-                        </div>
-                    </div>
+    return nextErrors;
+  };
 
-                    {/* Tab Content */}
-                    <div className="p-6">
-                        <form onSubmit={handleSubmit}>
-                            
-                            {activeTab === 0 && (
-                                <EmployeeDetailsTab
-                                    formData={formData}
-                                    errors={errors}
-                                    touched={touched}
-                                    designations={designations}
-                                    departments={departments}
-                                    managers={managers}
-                                    locations={locations}
-                                    userRoles={userRoles}  // ✅ Filtered roles passed here
-                                    showPassword={showPassword}
-                                    showConfirmPassword={showConfirmPassword}
-                                    onInputChange={handleInputChange}
-                                    onBlur={handleBlur}
-                                    onTogglePassword={togglePassword}
-                                    onToggleConfirmPassword={toggleConfirmPassword}
-                                    getFieldError={getFieldError}
-                                />
-                            )}
-                            
-                            {activeTab === 1 && (
-                                <ReviewTab
-                                    formData={formData}
-                                    agreeToTerms={agreeToTerms}
-                                    onTermsChange={setAgreeToTerms}
-                                />
-                            )}
+  const handleChange = (
+    event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = event.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
 
-                            {/* Navigation Buttons */}
-                            <div className="flex justify-between mt-6 pt-4 border-t border-gray-200">
-                                {activeTab === 1 ? (
-                                    <button
-                                        type="button"
-                                        onClick={() => setActiveTab(0)}
-                                        className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors text-xs font-medium inline-flex items-center gap-1.5"
-                                    >
-                                        <ArrowLeft className="w-3.5 h-3.5" />
-                                        Edit Details
-                                    </button>
-                                ) : (
-                                    <div></div>
-                                )}
+    setErrors((prev) => ({
+      ...prev,
+      [name]: '',
+    }));
 
-                                {activeTab === 0 ? (
-                                    <button
-                                        type="button"
-                                        onClick={() => handleTabChange(1)}
-                                        className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors text-xs font-medium inline-flex items-center gap-1.5"
-                                    >
-                                        Review & Continue
-                                        <ArrowRight className="w-3.5 h-3.5" />
-                                    </button>
-                                ) : (
-                                    <button
-                                        type="submit"
-                                        disabled={isLoading || !agreeToTerms}
-                                        className={`
-                                            px-5 py-2 bg-purple-600 text-white rounded-md text-xs font-medium
-                                            transition-all duration-200 inline-flex items-center gap-1.5
-                                            ${isLoading || !agreeToTerms
-                                                ? 'opacity-50 cursor-not-allowed'
-                                                : 'hover:bg-purple-700 hover:shadow-sm'
-                                            }
-                                        `}
-                                    >
-                                        {isLoading ? (
-                                            <>
-                                                <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                                                Creating...
-                                            </>
-                                        ) : (
-                                            <>
-                                                <Save className="w-3.5 h-3.5" />
-                                                Create Employee
-                                            </>
-                                        )}
-                                    </button>
-                                )}
-                            </div>
-                        </form>
-                    </div>
-                </div>
+    setApiError('');
+    setApiMessage('');
+  };
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    const validationErrors = validateForm();
+    setErrors(validationErrors);
+    setApiError('');
+    setApiMessage('');
+
+    if (Object.keys(validationErrors).length > 0) {
+      return;
+    }
+
+    const payload: CreateEmployeeRequest = {
+      fullName: formData.fullName.trim(),
+      email: formData.email.trim(),
+      mobile: formData.mobile.trim(),
+      roleId: Number(formData.roleId),
+      departmentId: Number(formData.departmentId),
+      employeeCode: formData.employeeCode.trim(),
+      designationId: Number(formData.designationId),
+      reportingManagerId: Number(formData.reportingManagerId),
+      locationId: Number(formData.locationId),
+    };
+
+    setIsSubmitting(true);
+
+    try {
+      const response = await createEmployee(payload);
+
+      if (response.success) {
+        setIsSuccess(true);
+        setApiMessage(response.message || 'Employee created successfully');
+        setFormData(initialFormData);
+
+        window.setTimeout(() => {
+          navigate('/admin/dashboard');
+        }, 1500);
+      } else {
+        setIsSuccess(false);
+        setApiError(response.message || 'Failed to create employee');
+      }
+    } catch (error) {
+      console.error('Create employee failed:', error);
+      setIsSuccess(false);
+      setApiError('Something went wrong while creating the employee.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const renderError = (field: keyof EmployeeCreateFormData) =>
+    errors[field] ? (
+      <p className="mt-1 text-xs font-medium text-red-600">{errors[field]}</p>
+    ) : null;
+
+  return (
+    <div className="min-h-screen bg-gray-50 px-4 py-6">
+      <div className="mx-auto max-w-6xl">
+        <button
+          onClick={() => navigate('/admin/dashboard')}
+          className="mb-4 inline-flex items-center gap-2 text-sm font-medium text-gray-600 transition hover:text-purple-600"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back to Dashboard
+        </button>
+
+        <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+          <div className="border-b border-gray-200 bg-gradient-to-r from-purple-600 via-purple-700 to-indigo-700 px-6 py-6 text-white">
+            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <div>
+                <h1 className="text-2xl font-semibold">Create Employee</h1>
+                <p className="mt-1 text-sm text-purple-100">
+                  Frontend integrated with <span className="font-semibold">POST /api/Admin/create-employee</span>
+                </p>
+              </div>
+              <div className="rounded-xl bg-white/10 px-4 py-3 text-sm backdrop-blur-sm">
+                <p className="font-medium">Required API fields</p>
+                <p className="mt-1 text-purple-100">
+                  fullName, email, mobile, roleId, departmentId, employeeCode, designationId,
+                  reportingManagerId, locationId
+                </p>
+              </div>
             </div>
+          </div>
+
+          <div className="grid gap-6 px-6 py-6 lg:grid-cols-[280px_1fr]">
+            <aside className="space-y-4">
+              <div className="rounded-xl border border-purple-100 bg-purple-50 p-4">
+                <h2 className="text-sm font-semibold text-purple-800">Integration Summary</h2>
+                <ul className="mt-3 space-y-2 text-sm text-purple-700">
+                  <li className="flex items-start gap-2">
+                    <CheckCircle className="mt-0.5 h-4 w-4" />
+                    Uses existing axios service in `registrationApi.ts`
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle className="mt-0.5 h-4 w-4" />
+                    Sends only API-supported parameters
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle className="mt-0.5 h-4 w-4" />
+                    Includes client-side validation and API error handling
+                  </li>
+                </ul>
+              </div>
+
+              <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+                <h2 className="text-sm font-semibold text-gray-800">Form Sections</h2>
+                <div className="mt-3 space-y-3">
+                  {formSections.map((section, index) => (
+                    <div key={section.title} className="flex items-start gap-3 rounded-lg bg-white p-3 shadow-sm">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-purple-100 text-xs font-semibold text-purple-700">
+                        {index + 1}
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          {section.icon}
+                          <p className="text-sm font-medium text-gray-800">{section.title}</p>
+                        </div>
+                        <p className="mt-1 text-xs text-gray-500">{section.fields.join(', ')}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </aside>
+
+            <section>
+              {(apiError || apiMessage) && (
+                <div
+                  className={`mb-5 flex items-start gap-3 rounded-xl border px-4 py-3 text-sm ${
+                    apiError
+                      ? 'border-red-200 bg-red-50 text-red-700'
+                      : 'border-green-200 bg-green-50 text-green-700'
+                  }`}
+                >
+                  {apiError ? (
+                    <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                  ) : (
+                    <CheckCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                  )}
+                  <span>{apiError || apiMessage}</span>
+                </div>
+              )}
+
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="grid gap-5 md:grid-cols-2">
+                  <div>
+                    <label htmlFor="fullName" className={labelClassName}>
+                      Full Name
+                    </label>
+                    <input
+                      id="fullName"
+                      name="fullName"
+                      type="text"
+                      value={formData.fullName}
+                      onChange={handleChange}
+                      placeholder="Enter employee full name"
+                      className={inputClassName}
+                    />
+                    {renderError('fullName')}
+                  </div>
+
+                  <div>
+                    <label htmlFor="employeeCode" className={labelClassName}>
+                      Employee Code
+                    </label>
+                    <input
+                      id="employeeCode"
+                      name="employeeCode"
+                      type="text"
+                      value={formData.employeeCode}
+                      onChange={handleChange}
+                      placeholder="EMP-1001"
+                      className={inputClassName}
+                    />
+                    {renderError('employeeCode')}
+                  </div>
+
+                  <div>
+                    <label htmlFor="email" className={labelClassName}>
+                      Email Address
+                    </label>
+                    <input
+                      id="email"
+                      name="email"
+                      type="email"
+                      value={formData.email}
+                      onChange={handleChange}
+                      placeholder="employee@company.com"
+                      className={inputClassName}
+                    />
+                    {renderError('email')}
+                  </div>
+
+                  <div>
+                    <label htmlFor="mobile" className={labelClassName}>
+                      Mobile Number
+                    </label>
+                    <input
+                      id="mobile"
+                      name="mobile"
+                      type="tel"
+                      value={formData.mobile}
+                      onChange={handleChange}
+                      placeholder="9876543210"
+                      className={inputClassName}
+                    />
+                    {renderError('mobile')}
+                  </div>
+
+                  <div>
+                    <label htmlFor="roleId" className={labelClassName}>
+                      Role
+                    </label>
+                    <div className="relative">
+                      <Shield className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                      <select
+                        id="roleId"
+                        name="roleId"
+                        value={formData.roleId}
+                        onChange={handleChange}
+                        className={`${inputClassName} pl-10`}
+                      >
+                        <option value="">Select role</option>
+                        {roleOptions.map((role) => (
+                          <option key={role.id} value={role.id}>
+                            {role.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    {renderError('roleId')}
+                  </div>
+
+                  <div>
+                    <label htmlFor="departmentId" className={labelClassName}>
+                      Department
+                    </label>
+                    <div className="relative">
+                      <Building2 className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                      <select
+                        id="departmentId"
+                        name="departmentId"
+                        value={formData.departmentId}
+                        onChange={handleChange}
+                        className={`${inputClassName} pl-10`}
+                      >
+                        <option value="">Select department</option>
+                        {departmentOptions.map((department) => (
+                          <option key={department.id} value={department.id}>
+                            {department.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    {renderError('departmentId')}
+                  </div>
+
+                  <div>
+                    <label htmlFor="designationId" className={labelClassName}>
+                      Designation
+                    </label>
+                    <div className="relative">
+                      <User className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                      <select
+                        id="designationId"
+                        name="designationId"
+                        value={formData.designationId}
+                        onChange={handleChange}
+                        className={`${inputClassName} pl-10`}
+                      >
+                        <option value="">Select designation</option>
+                        {designationOptions.map((designation) => (
+                          <option key={designation.id} value={designation.id}>
+                            {designation.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    {renderError('designationId')}
+                  </div>
+
+                  <div>
+                    <label htmlFor="reportingManagerId" className={labelClassName}>
+                      Reporting Manager
+                    </label>
+                    <div className="relative">
+                      <Users className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                      <select
+                        id="reportingManagerId"
+                        name="reportingManagerId"
+                        value={formData.reportingManagerId}
+                        onChange={handleChange}
+                        className={`${inputClassName} pl-10`}
+                      >
+                        <option value="">Select manager</option>
+                        {managerOptions.map((manager) => (
+                          <option key={manager.id} value={manager.id}>
+                            {manager.name}
+                            {manager.helperText ? ` - ${manager.helperText}` : ''}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    {renderError('reportingManagerId')}
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <label htmlFor="locationId" className={labelClassName}>
+                      Location
+                    </label>
+                    <div className="relative">
+                      <MapPin className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                      <select
+                        id="locationId"
+                        name="locationId"
+                        value={formData.locationId}
+                        onChange={handleChange}
+                        className={`${inputClassName} pl-10`}
+                      >
+                        <option value="">Select location</option>
+                        {locationOptions.map((location) => (
+                          <option key={location.id} value={location.id}>
+                            {location.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    {renderError('locationId')}
+                  </div>
+                </div>
+
+                <div className="rounded-xl border border-gray-200 bg-gray-50 px-4 py-4">
+                  <h3 className="text-sm font-semibold text-gray-800">API Payload Preview</h3>
+                  <pre className="mt-3 overflow-x-auto rounded-lg bg-slate-900 p-4 text-xs text-slate-100">
+{JSON.stringify(
+  {
+    fullName: formData.fullName || 'string',
+    email: formData.email || 'string',
+    mobile: formData.mobile || 'string',
+    roleId: Number(formData.roleId) || 0,
+    departmentId: Number(formData.departmentId) || 0,
+    employeeCode: formData.employeeCode || 'string',
+    designationId: Number(formData.designationId) || 0,
+    reportingManagerId: Number(formData.reportingManagerId) || 0,
+    locationId: Number(formData.locationId) || 0,
+  },
+  null,
+  2
+)}
+                  </pre>
+                </div>
+
+                <div className="flex flex-col gap-3 border-t border-gray-200 pt-5 sm:flex-row sm:items-center sm:justify-end">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFormData(initialFormData);
+                      setErrors({});
+                      setApiError('');
+                      setApiMessage('');
+                      setIsSuccess(false);
+                    }}
+                    className="rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-gray-100"
+                  >
+                    Reset
+                  </button>
+
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className={`inline-flex items-center justify-center gap-2 rounded-lg px-5 py-2.5 text-sm font-semibold text-white transition ${
+                      isSubmitting
+                        ? 'cursor-not-allowed bg-purple-400'
+                        : isSuccess
+                        ? 'bg-green-600 hover:bg-green-700'
+                        : 'bg-purple-600 hover:bg-purple-700'
+                    }`}
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Creating Employee...
+                      </>
+                    ) : isSuccess ? (
+                      <>
+                        <CheckCircle className="h-4 w-4" />
+                        Employee Created
+                      </>
+                    ) : (
+                      <>
+                        <Save className="h-4 w-4" />
+                        Create Employee
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
+            </section>
+          </div>
         </div>
-    );
+      </div>
+    </div>
+  );
 };
 
 export default AdminEmployeeRegistration;

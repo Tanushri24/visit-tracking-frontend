@@ -13,31 +13,20 @@ import {
   Trash2
 } from 'lucide-react';
 
-interface Department {
+import React, { useEffect, useState } from "react";
+import {
+  getDepartments,
+  createDepartment,
+  updateDepartment,
+  deleteDepartment
+} from "../../../services/department.service";
+
+export interface Department {
   id: number;
   departmentName: string;
-  organizationId: number;
-  organizationName: string;
-  companyId: number;
-  companyName: string;
-  departmentHead: string;
-  headDesignation: string;
-  headEmail: string;
-  headPhone: string;
-  employeeCount: number;
-  location: string;
-  city: string;
-  state: string;
-  pincode: string;
-  contactPerson: string;
-  contactEmail: string;
-  contactPhone: string;
-  extensionNumber: string;
-  workingHours: string;
-  workingDays: string;
-  status: 'active' | 'inactive';
-  createdAt: string;
-  updatedAt: string;
+  organisationId: number;
+  isActive: boolean;
+  insertedDate?: string;
 }
 
 // Sample data for dropdowns
@@ -247,13 +236,6 @@ const DepartmentMaster = () => {
     }
   ]);
 
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterStatus, setFilterStatus] = useState<string>('all');
-  const [filterCompany, setFilterCompany] = useState<string>('all');
-  const [filterOrganization, setFilterOrganization] = useState<string>('all');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(10);
-  const [showFilters, setShowFilters] = useState(false);
   const [selectedDepartment, setSelectedDepartment] = useState<Department | null>(null);
   const [showViewModal, setShowViewModal] = useState(false);
   const [showInsertModal, setShowInsertModal] = useState(false);
@@ -285,9 +267,9 @@ const DepartmentMaster = () => {
     status: 'active' as 'active' | 'inactive'
   });
 
-  // Get unique values for filters
-  const companies = ['all', ...new Set(departments.map(d => d.companyName))];
-  const organizations = ['all', ...new Set(departments.map(d => d.organizationName))];
+  useEffect(() => {
+    fetchDepartments();
+  }, []);
 
   // Filter departments
   const filteredDepartments = departments.filter(dept => {
@@ -304,11 +286,27 @@ const DepartmentMaster = () => {
     return matchesSearch && matchesStatus && matchesCompany && matchesOrganization;
   });
 
-  // Pagination
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = filteredDepartments.slice(indexOfFirstItem, indexOfLastItem);
-  const totalPages = Math.ceil(filteredDepartments.length / itemsPerPage);
+    try {
+      setLoading(true);
+      await createDepartment({
+        departmentName: newDepartment.departmentName.trim(),
+        organisationId: Number(newDepartment.organisationId),
+        isActive: newDepartment.isActive
+      });
+      await fetchDepartments();
+      setNewDepartment({ departmentName: "", organisationId: 0, isActive: true });
+    } catch (err: any) {
+      const validationErrors = err?.response?.data?.errors;
+      const validationMessage =
+        validationErrors && typeof validationErrors === "object"
+          ? Object.values(validationErrors).flat().join("\n")
+          : null;
+
+      alert(validationMessage || err?.response?.data?.message || err?.response?.data?.title || "Error creating department");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Export to CSV
   const exportToCSV = () => {
@@ -330,7 +328,7 @@ const DepartmentMaster = () => {
 
   const viewDepartmentDetails = (department: Department) => {
     setSelectedDepartment(department);
-    setShowViewModal(true);
+    setShowEditModal(true);
   };
 
   // Delete department

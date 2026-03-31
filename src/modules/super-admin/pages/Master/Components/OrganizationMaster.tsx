@@ -15,24 +15,13 @@ import {
 
 interface Organization {
   id: number;
-  organizationName: string;
+  organisationName: string;
   companyId: number;
-  companyName: string;
   address: string;
   city: string;
   state: string;
   pincode: string;
-  contactPerson: string;
-  contactEmail: string;
-  contactPhone: string;
-  website: string;
-  gstNo: string;
-  registrationNo: string;
-  establishedYear: string;
-  employeeCount: string;
-  status: 'active' | 'inactive';
-  createdAt: string;
-  updatedAt: string;
+  isActive: boolean;
 }
 
 // Sample company data for dropdown
@@ -198,8 +187,6 @@ const OrganizationMaster = () => {
   ]);
 
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterStatus, setFilterStatus] = useState<string>('all');
-  const [filterCompany, setFilterCompany] = useState<string>('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
   const [showFilters, setShowFilters] = useState(false);
@@ -247,42 +234,130 @@ const OrganizationMaster = () => {
     return matchesSearch && matchesStatus && matchesCompany;
   });
 
-  // Pagination
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = filteredOrganizations.slice(indexOfFirstItem, indexOfLastItem);
-  const totalPages = Math.ceil(filteredOrganizations.length / itemsPerPage);
+  const totalPages = Math.max(1, Math.ceil(filteredOrganizations.length / itemsPerPage));
 
-  // Export to CSV
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setNewOrganization((prev) => ({ ...prev, [name]: name === 'companyId' ? Number(value) : value }));
+  };
+
+  const handleInsertOrganization = async () => {
+    if (!newOrganization.organisationName || !newOrganization.companyId || !newOrganization.address || !newOrganization.city || !newOrganization.state || !newOrganization.pincode) {
+      alert('Organisation Name, Company Id, Address, City, State and Pincode are required');
+      return;
+    }
+
+    const payload = {
+      organisationName: newOrganization.organisationName.trim(),
+      companyId: Number(newOrganization.companyId),
+      address: newOrganization.address.trim(),
+      city: newOrganization.city.trim(),
+      state: newOrganization.state.trim(),
+      pincode: newOrganization.pincode.trim(),
+      isActive: newOrganization.isActive
+    };
+
+    console.log('Sending payload:', payload);
+
+    try {
+      setLoading(true);
+      const response = await axios.post('https://localhost:7146/api/Organisation', payload, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+
+      const createdOrganization = normalizeOrganization({
+        id: response?.data?.id ?? Date.now(),
+        organisationName: response?.data?.organisationName ?? payload.organisationName,
+        companyId: response?.data?.companyId ?? payload.companyId,
+        address: response?.data?.address ?? payload.address,
+        city: response?.data?.city ?? payload.city,
+        state: response?.data?.state ?? payload.state,
+        pincode: response?.data?.pincode ?? payload.pincode,
+        isActive: response?.data?.isActive ?? payload.isActive
+      });
+
+      setOrganizations((prev) => [createdOrganization, ...prev]);
+      setCurrentPage(1);
+      setShowInsertModal(false);
+      setNewOrganization({ organisationName: '', companyId: 0, address: '', city: '', state: '', pincode: '', isActive: true });
+      alert('Organization created successfully');
+    } catch (error: any) {
+      const refreshedOrganizations = await fetchOrganizations();
+      const normalizedOrganizationName = payload.organisationName.toLowerCase();
+      const normalizedAddress = payload.address.toLowerCase();
+      const normalizedCity = payload.city.toLowerCase();
+      const normalizedState = payload.state.toLowerCase();
+      const normalizedPincode = payload.pincode.toLowerCase();
+
+      const matchingOrganization = refreshedOrganizations.find((org) => {
+        const sameName = org.organisationName.trim().toLowerCase() === normalizedOrganizationName;
+        const sameCompany = org.companyId === payload.companyId;
+        const sameAddress = org.address.trim().toLowerCase() === normalizedAddress;
+        const sameCity = org.city.trim().toLowerCase() === normalizedCity;
+        const sameState = org.state.trim().toLowerCase() === normalizedState;
+        const samePincode = org.pincode.trim().toLowerCase() === normalizedPincode;
+
+        return sameName && (sameCompany || sameAddress || sameCity || sameState || samePincode);
+      });
+
+      if (matchingOrganization) {
+        setOrganizations((prev) => {
+          const alreadyExists = prev.some((org) => org.id === matchingOrganization.id);
+          return alreadyExists ? prev : [matchingOrganization, ...prev];
+        });
+        setCurrentPage(1);
+        setShowInsertModal(false);
+        setNewOrganization({ organisationName: '', companyId: 0, address: '', city: '', state: '', pincode: '', isActive: true });
+        alert('Organization created successfully');
+        return;
+      }
+
+      const validationErrors = error?.response?.data?.errors;
+      const validationMessage =
+        validationErrors && typeof validationErrors === 'object'
+          ? Object.values(validationErrors).flat().join('\n')
+          : null;
+
+      const errorMessage =
+        validationMessage ||
+        error?.response?.data?.message ||
+        error?.response?.data?.title ||
+        'Organization creation failed';
+      alert(typeof errorMessage === 'string' ? errorMessage : 'Organization creation failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const exportToCSV = () => {
-    const headers = ['Organization Name', 'Company', 'City', 'State', 'Contact Person', 'Email', 'Phone', 'Status'];
-    const csvData = filteredOrganizations.map(org => [
-      org.organizationName,
-      org.companyName,
-      org.city,
-      org.state,
-      org.contactPerson,
-      org.contactEmail,
-      org.contactPhone,
-      org.status
+    const headers = ['Id', 'Organisation Name', 'Company Id', 'Address', 'City', 'State', 'Pincode', 'Active'];
+    const rows = filteredOrganizations.map((org) => [
+      org.id,
+      org.organisationName || '',
+      org.companyId,
+      org.address || '',
+      org.city || '',
+      org.state || '',
+      org.pincode || '',
+      org.isActive ? 'active' : 'inactive'
     ]);
-    
-    const csvContent = [headers, ...csvData]
-      .map(row => row.join(','))
-      .join('\n');
-    
+    const csvContent = [headers, ...rows].map((row) => row.join(',')).join('\n');
     const blob = new Blob([csvContent], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
+    const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
     a.download = `organizations_${new Date().toISOString().split('T')[0]}.csv`;
     a.click();
+    URL.revokeObjectURL(url);
   };
 
-  // View organization details
   const viewOrganizationDetails = (organization: Organization) => {
-    setSelectedOrganization(organization);
-    setShowViewModal(true);
+    console.log('View organization', organization);
   };
 
   // Delete organization
@@ -352,36 +427,24 @@ const OrganizationMaster = () => {
 
   return (
     <div className="p-4 md:p-6 bg-gray-50 min-h-screen">
-      {/* Header */}
       <div className="mb-6">
         <h1 className="text-2xl md:text-3xl font-bold text-gray-800">Organization Master</h1>
         <p className="text-sm text-gray-600 mt-1">Manage organization details</p>
       </div>
 
-      {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <div className="bg-white rounded-lg shadow p-4 border-l-4 border-purple-500">
           <p className="text-sm text-gray-600">Total Organizations</p>
           <p className="text-2xl font-bold text-gray-800">{organizations.length}</p>
         </div>
-        <div className="bg-white rounded-lg shadow p-4 border-l-4 border-green-500">
-          <p className="text-sm text-gray-600">Active Organizations</p>
-          <p className="text-2xl font-bold text-green-600">{organizations.filter(o => o.status === 'active').length}</p>
-        </div>
-        <div className="bg-white rounded-lg shadow p-4 border-l-4 border-red-500">
-          <p className="text-sm text-gray-600">Inactive Organizations</p>
-          <p className="text-2xl font-bold text-red-600">{organizations.filter(o => o.status === 'inactive').length}</p>
-        </div>
         <div className="bg-white rounded-lg shadow p-4 border-l-4 border-blue-500">
-          <p className="text-sm text-gray-600">Companies</p>
-          <p className="text-2xl font-bold text-blue-600">{companies.length - 1}</p>
+          <p className="text-sm text-gray-600">Showing</p>
+          <p className="text-2xl font-bold text-blue-600">{filteredOrganizations.length}</p>
         </div>
       </div>
 
-      {/* Action Bar */}
       <div className="bg-white rounded-lg shadow mb-6">
         <div className="p-4 flex flex-col md:flex-row gap-4 items-center justify-between">
-          {/* Search */}
           <div className="w-full md:w-96 relative">
             <input
               type="text"
@@ -419,48 +482,19 @@ const OrganizationMaster = () => {
           </div>
         </div>
 
-        {/* Filters Panel */}
         {showFilters && (
           <div className="p-4 border-t border-gray-200 bg-gray-50">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                <select
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-                  value={filterStatus}
-                  onChange={(e) => setFilterStatus(e.target.value)}
-                >
-                  <option value="all">All Status</option>
-                  <option value="active">Active</option>
-                  <option value="inactive">Inactive</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Company</label>
-                <select
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-                  value={filterCompany}
-                  onChange={(e) => setFilterCompany(e.target.value)}
-                >
-                  {companies.map(company => (
-                    <option key={company} value={company}>{company === 'all' ? 'All Companies' : company}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="flex items-end">
-                <button
-                  onClick={() => {
-                    setFilterStatus('all');
-                    setFilterCompany('all');
-                    setSearchTerm('');
-                  }}
-                  className="px-4 py-2 text-gray-600 hover:text-gray-800 flex items-center gap-2"
-                >
-                  <RefreshCw size={16} />
-                  Clear Filters
-                </button>
-              </div>
-            </div>
+            <button
+              onClick={() => {
+                setSearchTerm('');
+                setCurrentPage(1);
+                setShowFilters(false);
+              }}
+              className="px-4 py-2 text-gray-600 hover:text-gray-800 flex items-center gap-2"
+            >
+              <RefreshCw size={16} />
+              Clear Filters
+            </button>
           </div>
         )}
       </div>
@@ -531,34 +565,53 @@ const OrganizationMaster = () => {
                     </div>
                   </td>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {currentItems.map((org, index) => (
+                  <tr key={org.id} className="hover:bg-gray-50">
+                    <td className="px-4 py-3 text-sm text-gray-600">{indexOfFirstItem + index + 1}</td>
+                    <td className="px-4 py-3 text-sm text-gray-600">{org.organisationName || '-'}</td>
+                    <td className="px-4 py-3 text-sm text-gray-600">{org.companyId}</td>
+                    <td className="px-4 py-3 text-sm text-gray-600">{org.address || '-'}</td>
+                    <td className="px-4 py-3 text-sm text-gray-600">{org.city || '-'}</td>
+                    <td className="px-4 py-3 text-sm text-gray-600">{org.state || '-'}</td>
+                    <td className="px-4 py-3 text-sm text-gray-600">{org.pincode || '-'}</td>
+                    <td className="px-4 py-3 text-sm text-gray-600">{org.isActive ? 'active' : 'inactive'}</td>
+                    <td className="px-4 py-3">
+                      <button
+                        onClick={() => viewOrganizationDetails(org)}
+                        className="p-1 text-blue-600 hover:bg-blue-50 rounded"
+                        title="View Details"
+                      >
+                        <Eye size={18} />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </div>
       </div>
 
-      {/* Pagination */}
       <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="text-sm text-gray-600">
           Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, filteredOrganizations.length)} of {filteredOrganizations.length} entries
         </div>
         <div className="flex gap-2">
           <button
-            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
             disabled={currentPage === 1}
-            className="px-3 py-1 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 flex items-center gap-1"
+            className="px-3 py-1 rounded border border-gray-300"
           >
-            <ChevronLeft size={16} /> Previous
+            <ChevronLeft size={16} />
           </button>
-          <span className="px-4 py-1 bg-purple-600 text-white rounded-lg">
-            Page {currentPage} of {totalPages}
-          </span>
           <button
-            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+            onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
             disabled={currentPage === totalPages}
-            className="px-3 py-1 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 flex items-center gap-1"
+            className="px-3 py-1 rounded border border-gray-300"
           >
-            Next <ChevronRight size={16} />
+            <ChevronRight size={16} />
           </button>
         </div>
       </div>
@@ -763,14 +816,6 @@ const OrganizationMaster = () => {
               </div>
             </div>
           </div>
-        </div>
-      )}
-
-      {/* No Results Message */}
-      {filteredOrganizations.length === 0 && (
-        <div className="text-center py-12 bg-white rounded-lg shadow">
-          <Building2 className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-          <p className="text-gray-500">No organizations found matching your criteria.</p>
         </div>
       )}
     </div>

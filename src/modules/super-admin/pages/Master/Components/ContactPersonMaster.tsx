@@ -332,44 +332,167 @@ const ContactPersonMaster = () => {
     return matchesSearch && matchesStatus && matchesCompany && matchesOrganization && matchesDepartment && matchesDecisionMaker;
   });
 
-  // Pagination
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = filteredContacts.slice(indexOfFirstItem, indexOfLastItem);
-  const totalPages = Math.ceil(filteredContacts.length / itemsPerPage);
+  const [editId, setEditId] = useState<number | null>(null);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [companies, setCompanies] = useState<CompanyOption[]>([]);
+  const [organizations, setOrganizations] = useState<OrganisationOption[]>([]);
+  const [departments, setDepartments] = useState<DepartmentOption[]>([]);
 
-  // Export to CSV
-  const exportToCSV = () => {
-    const headers = ['Name', 'Designation', 'Department', 'Organization', 'Company', 'Email', 'Mobile', 'City', 'Decision Maker', 'Status'];
-    const csvData = filteredContacts.map(contact => [
-      contact.name,
-      contact.designation,
-      contact.department,
-      contact.organizationName,
-      contact.companyName,
-      contact.email,
-      contact.mobile,
-      contact.city,
-      contact.isDecisionMaker ? 'Yes' : 'No',
-      contact.status
-    ]);
-    
-    const csvContent = [headers, ...csvData]
-      .map(row => row.join(','))
-      .join('\n');
-    
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `contact_persons_${new Date().toISOString().split('T')[0]}.csv`;
-    a.click();
+  const fetchContacts = async () => {
+    setLoading(true);
+    try {
+      const res = await contactService.getAll();
+      setContacts(res.data);
+    } catch (err) {
+      console.error("Error fetching contacts", err);
+    }
+    setLoading(false);
   };
 
-  // View contact details
-  const viewContactDetails = (contact: ContactPerson) => {
-    setSelectedContact(contact);
-    setShowViewModal(true);
+  const fetchLookupData = async () => {
+    setLookupLoading(true);
+    try {
+      const [companyData, organisationData, departmentData] = await Promise.all([
+        contactService.getCompanies(),
+        contactService.getOrganisations(),
+        contactService.getDepartments(),
+      ]);
+
+      setCompanies((companyData ?? []).filter((company) => company.isActive !== false));
+      setOrganizations((organisationData ?? []).filter((organisation) => organisation.isActive !== false));
+      setDepartments((departmentData ?? []).filter((department) => department.isActive !== false));
+    } catch (err) {
+      console.error("Error fetching contact master dependencies", err);
+      setErrorMessage("Unable to load company, organisation, or department master data.");
+    } finally {
+      setLookupLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchContacts();
+    fetchLookupData();
+  }, []);
+
+  const handleChange = (e: any) => {
+    const { name, value, type, checked } = e.target;
+
+    setForm({
+      ...form,
+      [name]:
+        type === "checkbox"
+          ? checked
+          : ["companyId", "organisationId", "departmentId"].includes(name)
+          ? Number(value) // ✅ FIX: convert to number
+          : value,
+    });
+  };
+
+  const handleSubmit = async () => {
+    if (!form.companyId || !form.organisationId || !form.departmentId) {
+      setErrorMessage("Please select company, organization, and department.");
+      return;
+    }
+
+    if (!form.name.trim() || !form.designation.trim() || !form.mobile.trim() || !form.email.trim()) {
+      setErrorMessage("Name, designation, mobile, and email are required.");
+      return;
+    }
+
+    const selectedCompany = companies.find((company) => company.id === form.companyId);
+    const selectedOrganisation = organizations.find((organisation) => organisation.id === form.organisationId);
+    const selectedDepartment = departments.find((department) => department.id === form.departmentId);
+
+    if (!selectedCompany || !selectedOrganisation || !selectedDepartment) {
+      setErrorMessage("Please select valid company, organization, and department values from master data.");
+      return;
+    }
+
+    if (selectedOrganisation.companyId !== selectedCompany.id) {
+      setErrorMessage("Selected organization does not belong to the selected company.");
+      return;
+    }
+
+    if (selectedDepartment.organisationId !== selectedOrganisation.id) {
+      setErrorMessage("Selected department does not belong to the selected organization.");
+      return;
+    }
+
+    const payload: ContactPersonPayload = {
+      companyId: form.companyId,
+      organisationId: form.organisationId,
+      departmentId: form.departmentId,
+      name: form.name.trim(),
+      designation: form.designation.trim(),
+      mobile: form.mobile.trim(),
+      email: form.email.trim(),
+      remark: form.remark.trim(),
+      isActive: form.isActive,
+    };
+
+    setErrorMessage("");
+
+    try {
+      if (editMode && editId !== null) {
+        await contactService.update(editId, { id: editId, ...payload });
+      } else {
+        await contactService.create(payload);
+      }
+
+      setShowModal(false);
+      resetForm();
+      fetchContacts();
+    } catch (err) {
+      console.error("Save error", err);
+      if (axios.isAxiosError(err)) {
+        const apiMessage =
+          (err.response?.data as { message?: string; title?: string })?.message ||
+          (err.response?.data as { message?: string; title?: string })?.title ||
+          `Request failed with status code ${err.response?.status ?? 500}`;
+        setErrorMessage(apiMessage);
+        return;
+      }
+
+      setErrorMessage("Unable to save contact person. Please try again.");
+    }
+  };
+
+  const handleEdit = (data: ContactPerson) => {
+    setEditMode(true);
+    setEditId(data.id);
+
+    setForm({
+      companyId: data.companyId,
+      organisationId: data.organisationId,
+      departmentId: data.departmentId,
+      name: data.name,
+      designation: data.designation,
+      mobile: data.mobile,
+      email: data.email,
+      remark: data.remark,
+      isActive: data.isActive,
+    });
+
+      setErrorMessage("");
+      setShowModal(true);
+  };
+
+  const resetForm = () => {
+    setForm({
+      companyId: 0,
+      organisationId: 0,
+      departmentId: 0,
+      name: "",
+      designation: "",
+      mobile: "",
+      email: "",
+      remark: "",
+      isActive: true,
+    });
+
+    setErrorMessage("");
+    setEditMode(false);
+    setEditId(null);
   };
 
   // Delete contact
@@ -664,10 +787,7 @@ const ContactPersonMaster = () => {
                   </td>
                 </tr>
               ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+            </select>
 
       {/* Pagination */}
       <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -873,14 +993,6 @@ const ContactPersonMaster = () => {
               </div>
             </div>
           </div>
-        </div>
-      )}
-
-      {/* No Results Message */}
-      {filteredContacts.length === 0 && (
-        <div className="text-center py-12 bg-white rounded-lg shadow">
-          <UserCircle className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-          <p className="text-gray-500">No contact persons found matching your criteria.</p>
         </div>
       )}
     </div>
