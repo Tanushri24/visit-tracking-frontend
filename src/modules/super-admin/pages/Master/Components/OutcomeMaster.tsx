@@ -12,7 +12,8 @@ import {
   Target,
   CheckCircle,
   XCircle,
-  Award
+  Award,
+  Trash2
 } from 'lucide-react';
 
 interface Outcome {
@@ -43,15 +44,10 @@ const OutcomeMaster = () => {
   const [selectedOutcome, setSelectedOutcome] = useState<Outcome | null>(null);
   const [showViewModal, setShowViewModal] = useState(false);
   const [showInsertModal, setShowInsertModal] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [editingOutcome, setEditingOutcome] = useState<Outcome | null>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [outcomeToDelete, setOutcomeToDelete] = useState<Outcome | null>(null);
   
   const [newOutcome, setNewOutcome] = useState({
-    outcomeName: '',
-    status: 'active' as 'active' | 'inactive'
-  });
-
-  const [editOutcome, setEditOutcome] = useState({
     outcomeName: '',
     status: 'active' as 'active' | 'inactive'
   });
@@ -78,16 +74,25 @@ const OutcomeMaster = () => {
   };
 
   const viewOutcomeDetails = (outcome: Outcome) => { setSelectedOutcome(outcome); setShowViewModal(true); };
-  const editOutcomeDetails = (outcome: Outcome) => { setEditingOutcome(outcome); setEditOutcome({ outcomeName: outcome.outcomeName, status: outcome.status }); setShowEditModal(true); };
+  
+  // Delete outcome
+  const handleDeleteOutcome = () => {
+    if (outcomeToDelete) {
+      setOutcomes(outcomes.filter(o => o.id !== outcomeToDelete.id));
+      setShowDeleteModal(false);
+      setOutcomeToDelete(null);
+    }
+  };
+
+  // Open delete confirmation modal
+  const openDeleteModal = (outcome: Outcome) => {
+    setOutcomeToDelete(outcome);
+    setShowDeleteModal(true);
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setNewOutcome(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleEditInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setEditOutcome(prev => ({ ...prev, [name]: value }));
   };
 
   const handleInsertOutcome = () => {
@@ -96,14 +101,6 @@ const OutcomeMaster = () => {
     setOutcomes([...outcomes, { id: newId, ...newOutcome, createdAt: currentDate, updatedAt: currentDate }]);
     setShowInsertModal(false);
     setNewOutcome({ outcomeName: '', status: 'active' });
-  };
-
-  const handleUpdateOutcome = () => {
-    if (!editingOutcome) return;
-    const currentDate = new Date().toISOString().split('T')[0];
-    setOutcomes(outcomes.map(outcome => outcome.id === editingOutcome.id ? { ...outcome, outcomeName: editOutcome.outcomeName, status: editOutcome.status, updatedAt: currentDate } : outcome));
-    setShowEditModal(false);
-    setEditingOutcome(null);
   };
 
   return (
@@ -220,7 +217,7 @@ const OutcomeMaster = () => {
                   {['S.No', 'Outcome ID', 'Outcome Name', 'Status', 'Actions'].map((h, i) => (
                     <th key={i} className="px-3 sm:px-4 py-2.5 sm:py-3 text-left text-[10px] sm:text-xs font-semibold text-gray-500 uppercase tracking-wider">{h}</th>
                   ))}
-                 </tr>
+                   </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {currentItems.map((outcome, index) => (
@@ -243,10 +240,8 @@ const OutcomeMaster = () => {
                         <button onClick={() => viewOutcomeDetails(outcome)} className="p-1.5 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-all" title="View Details">
                           <Eye size={13} />
                         </button>
-                        <button onClick={() => editOutcomeDetails(outcome)} className="p-1.5 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-all" title="Edit Outcome">
-                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                          </svg>
+                        <button onClick={() => openDeleteModal(outcome)} className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all" title="Delete Outcome">
+                          <Trash2 size={13} />
                         </button>
                       </div>
                     </td>
@@ -356,26 +351,40 @@ const OutcomeMaster = () => {
           </div>
         )}
 
-        {/* Edit Modal */}
-        {showEditModal && editingOutcome && (
+        {/* Delete Confirmation Modal */}
+        {showDeleteModal && outcomeToDelete && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-3">
-            <div className="bg-white rounded-lg shadow-xl w-full max-w-sm max-h-[85vh] overflow-y-auto">
-              <div className="sticky top-0 bg-white border-b px-4 py-3 flex justify-between items-center">
-                <h2 className="text-base font-bold">Edit Outcome</h2>
-                <button onClick={() => { setShowEditModal(false); setEditingOutcome(null); }} className="p-1 hover:bg-gray-100 rounded">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                </button>
+            <div className="bg-white rounded-lg shadow-xl w-full max-w-sm">
+              <div className="p-5 sm:p-6">
+                <div className="flex items-center justify-center mb-4">
+                  <div className="p-3 bg-red-100 rounded-full">
+                    <Trash2 className="w-6 h-6 sm:w-8 sm:h-8 text-red-600" />
+                  </div>
+                </div>
+                <h3 className="text-base sm:text-lg font-bold text-center text-gray-800 mb-2">Confirm Delete</h3>
+                <p className="text-xs sm:text-sm text-gray-600 text-center mb-4">
+                  Are you sure you want to delete the outcome <strong className="text-gray-800">{outcomeToDelete.outcomeName}</strong>?
+                  <br />
+                  This action cannot be undone.
+                </p>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => {
+                      setShowDeleteModal(false);
+                      setOutcomeToDelete(null);
+                    }}
+                    className="flex-1 px-3 py-1.5 sm:px-4 sm:py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition duration-200 text-sm"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleDeleteOutcome}
+                    className="flex-1 px-3 py-1.5 sm:px-4 sm:py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition duration-200 text-sm"
+                  >
+                    Delete
+                  </button>
+                </div>
               </div>
-              <form onSubmit={(e) => { e.preventDefault(); handleUpdateOutcome(); }}>
-                <div className="p-4 space-y-3">
-                  <div><label className="block text-xs font-medium text-gray-700 mb-1">Outcome Name *</label><input type="text" name="outcomeName" value={editOutcome.outcomeName} onChange={handleEditInputChange} required className="w-full px-3 py-1.5 text-sm border border-gray-200 rounded-lg" /></div>
-                  <div><label className="block text-xs font-medium text-gray-700 mb-1">Status</label><select name="status" value={editOutcome.status} onChange={handleEditInputChange} className="w-full px-3 py-1.5 text-sm border border-gray-200 rounded-lg"><option value="active">Active</option><option value="inactive">Inactive</option></select></div>
-                </div>
-                <div className="sticky bottom-0 bg-white border-t px-4 py-3 flex justify-end gap-2">
-                  <button type="button" onClick={() => { setShowEditModal(false); setEditingOutcome(null); }} className="px-3 py-1.5 text-xs border border-gray-200 rounded-lg hover:bg-gray-50">Cancel</button>
-                  <button type="submit" className="px-3 py-1.5 text-xs bg-purple-600 text-white rounded-lg hover:bg-purple-700">Update</button>
-                </div>
-              </form>
             </div>
           </div>
         )}

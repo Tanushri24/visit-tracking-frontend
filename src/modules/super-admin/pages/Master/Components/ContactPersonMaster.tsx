@@ -12,7 +12,8 @@ import {
   Mail,
   Building2,
   MapPin,
-  Plus
+  Plus,
+  Trash2
 } from 'lucide-react';
 
 interface ContactPerson {
@@ -272,6 +273,8 @@ const ContactPersonMaster = () => {
   const [selectedContact, setSelectedContact] = useState<ContactPerson | null>(null);
   const [showViewModal, setShowViewModal] = useState(false);
   const [showInsertModal, setShowInsertModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [contactToDelete, setContactToDelete] = useState<ContactPerson | null>(null);
   
   // Form state for new contact
   const [newContact, setNewContact] = useState({
@@ -367,6 +370,21 @@ const ContactPersonMaster = () => {
   const viewContactDetails = (contact: ContactPerson) => {
     setSelectedContact(contact);
     setShowViewModal(true);
+  };
+
+  // Delete contact
+  const handleDeleteContact = () => {
+    if (contactToDelete) {
+      setContacts(contacts.filter(c => c.id !== contactToDelete.id));
+      setShowDeleteModal(false);
+      setContactToDelete(null);
+    }
+  };
+
+  // Open delete confirmation modal
+  const openDeleteModal = (contact: ContactPerson) => {
+    setContactToDelete(contact);
+    setShowDeleteModal(true);
   };
 
   // Handle insert form input changes
@@ -466,7 +484,7 @@ const ContactPersonMaster = () => {
             />
           </div>
 
-          {/* Action Buttons - Add button moved to left side */}
+          {/* Action Buttons - Add button stays in same position */}
           <div className="flex gap-2">
             <button
               onClick={() => setShowInsertModal(true)}
@@ -635,9 +653,14 @@ const ContactPersonMaster = () => {
                     </span>
                   </td>
                   <td className="px-4 py-3">
-                    <button onClick={() => viewContactDetails(contact)} className="p-1 text-blue-600 hover:bg-blue-50 rounded" title="View Details">
-                      <Eye size={18} />
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button onClick={() => viewContactDetails(contact)} className="p-1 text-blue-600 hover:bg-blue-50 rounded" title="View Details">
+                        <Eye size={18} />
+                      </button>
+                      <button onClick={() => openDeleteModal(contact)} className="p-1 text-red-600 hover:bg-red-50 rounded" title="Delete Contact">
+                        <Trash2 size={18} />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -810,6 +833,44 @@ const ContactPersonMaster = () => {
                   <button type="submit" className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">Add Contact</button>
                 </div>
               </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && contactToDelete && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
+            <div className="p-6">
+              <div className="flex items-center justify-center mb-4">
+                <div className="p-3 bg-red-100 rounded-full">
+                  <Trash2 className="w-8 h-8 text-red-600" />
+                </div>
+              </div>
+              <h3 className="text-lg font-bold text-center text-gray-800 mb-2">Confirm Delete</h3>
+              <p className="text-sm text-gray-600 text-center mb-4">
+                Are you sure you want to delete the contact person <strong className="text-gray-800">{contactToDelete.name}</strong>?
+                <br />
+                This action cannot be undone.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    setShowDeleteModal(false);
+                    setContactToDelete(null);
+                  }}
+                  className="flex-1 px-5 py-2.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition duration-200"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDeleteContact}
+                  className="flex-1 px-5 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition duration-200"
+                >
+                  Delete
+                </button>
+              </div>
             </div>
           </div>
         </div>

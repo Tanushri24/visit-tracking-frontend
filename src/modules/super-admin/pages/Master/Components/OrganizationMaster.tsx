@@ -9,7 +9,8 @@ import {
   RefreshCw,
   Eye,
   Building2,
-  Plus
+  Plus,
+  Trash2
 } from 'lucide-react';
 
 interface Organization {
@@ -205,6 +206,8 @@ const OrganizationMaster = () => {
   const [selectedOrganization, setSelectedOrganization] = useState<Organization | null>(null);
   const [showViewModal, setShowViewModal] = useState(false);
   const [showInsertModal, setShowInsertModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [organizationToDelete, setOrganizationToDelete] = useState<Organization | null>(null);
   
   // Form state for new organization
   const [newOrganization, setNewOrganization] = useState({
@@ -280,6 +283,21 @@ const OrganizationMaster = () => {
   const viewOrganizationDetails = (organization: Organization) => {
     setSelectedOrganization(organization);
     setShowViewModal(true);
+  };
+
+  // Delete organization
+  const handleDeleteOrganization = () => {
+    if (organizationToDelete) {
+      setOrganizations(organizations.filter(o => o.id !== organizationToDelete.id));
+      setShowDeleteModal(false);
+      setOrganizationToDelete(null);
+    }
+  };
+
+  // Open delete confirmation modal
+  const openDeleteModal = (organization: Organization) => {
+    setOrganizationToDelete(organization);
+    setShowDeleteModal(true);
   };
 
   // Handle insert form input changes
@@ -375,7 +393,7 @@ const OrganizationMaster = () => {
             <Search className="absolute left-3 top-2.5 text-gray-400" size={20} />
           </div>
 
-          {/* Action Buttons */}
+          {/* Action Buttons - Add Organization moved to left of Filter and Export */}
           <div className="flex gap-2 w-full md:w-auto">
             <button
               onClick={() => setShowInsertModal(true)}
@@ -464,7 +482,7 @@ const OrganizationMaster = () => {
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Registration No</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-              </tr>
+               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
               {currentItems.map((org, index) => (
@@ -495,13 +513,22 @@ const OrganizationMaster = () => {
                     </span>
                   </td>
                   <td className="px-4 py-3">
-                    <button
-                      onClick={() => viewOrganizationDetails(org)}
-                      className="p-1 text-blue-600 hover:bg-blue-50 rounded"
-                      title="View Details"
-                    >
-                      <Eye size={18} />
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => viewOrganizationDetails(org)}
+                        className="p-1 text-blue-600 hover:bg-blue-50 rounded"
+                        title="View Details"
+                      >
+                        <Eye size={18} />
+                      </button>
+                      <button
+                        onClick={() => openDeleteModal(org)}
+                        className="p-1 text-red-600 hover:bg-red-50 rounded"
+                        title="Delete Organization"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -696,6 +723,44 @@ const OrganizationMaster = () => {
                   <button type="submit" className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">Add Organization</button>
                 </div>
               </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && organizationToDelete && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
+            <div className="p-6">
+              <div className="flex items-center justify-center mb-4">
+                <div className="p-3 bg-red-100 rounded-full">
+                  <Trash2 className="w-8 h-8 text-red-600" />
+                </div>
+              </div>
+              <h3 className="text-lg font-bold text-center text-gray-800 mb-2">Confirm Delete</h3>
+              <p className="text-sm text-gray-600 text-center mb-4">
+                Are you sure you want to delete the organization <strong className="text-gray-800">{organizationToDelete.organizationName}</strong>?
+                <br />
+                This action cannot be undone.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    setShowDeleteModal(false);
+                    setOrganizationToDelete(null);
+                  }}
+                  className="flex-1 px-5 py-2.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition duration-200"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDeleteOrganization}
+                  className="flex-1 px-5 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition duration-200"
+                >
+                  Delete
+                </button>
+              </div>
             </div>
           </div>
         </div>

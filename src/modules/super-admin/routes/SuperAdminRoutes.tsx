@@ -31,13 +31,42 @@ import UserManagement from '../pages/User/UserManagement';
 
 
 // Import other modules (commented out for now)
-// import FunnelManagement from '../pages/Funnel/FunnelManagement';
+
+
 import VisitManagement from '../pages/Visits/VisitManagement';
 import AllVisits from '../pages/Visits/Components/AllVisits';
 import TodaysVisits from '../pages/Visits/Components/TodaysVisits';
 import MonthlyVisits from '../pages/Visits/Components/MonthlyVisits';
+import PendingFollowUps from '../pages/Visits/Components/PendingFollowups';
+import ExpenseApprovals from '../pages/Visits/Components/ExpenseApprovals';
 
-// import BusinessOutcomes from '../pages/Outcomes/BusinessOutcomes';
+
+//Funnel Management
+
+import FunnelManagement from '../pages/Funnel/FunnelManagemet';
+import StageWiseFunnel from '../pages/Funnel/Components/StageWiseFunnel';
+import EmployeeWiseFunnel from '../pages/Funnel/Components/EmployeeWiseFunnel';
+import ClientWiseFunnel from '../pages/Funnel/Components/ClientWiseFunnel';
+import DepartmentWiseFunnel from '../pages/Funnel/Components/DepartmentWiseFunnel';
+import ConversionTracking from '../pages/Funnel/Components/ConversionTracking';
+import StalledOpportunities from '../pages/Funnel/Components/StalledOpportunities';
+
+
+
+
+
+import BusinessOutcomes from '../pages/Outcomes/BusinessOutcomes';
+import LeadsGenerated from '../pages/Outcomes/Components/LeadsGenerated';
+import ProposalsCreated from '../pages/Outcomes/Components/ProposalsCreated';
+import PipelineValue from '../pages/Outcomes/Components/PipelineValue';
+import ConfirmedBusiness from '../pages/Outcomes/Components/ConfirmedBusiness';
+import CostperLead from '../pages/Outcomes/Components/CostperLead';
+import ProductivityScore from '../pages/Outcomes/Components/ProductivityScore';
+
+
+
+
+
 // import Reports from '../pages/Reports/Reports';
 // import AuditLogs from '../pages/Audit/AuditLogs';
 
@@ -112,6 +141,7 @@ const SuperAdminRoutes = () => {
         }
       />
 
+    
       <Route
         path="master-management/Visit-Purpose"
         element={
@@ -157,7 +187,7 @@ const SuperAdminRoutes = () => {
       />
 
       {/* ========== EXPENSE CONFIGURATION (WITH DROPDOWN) ========== */}
-      {/* Expense Configuration Overview */}
+      
       <Route
         path="expense-config"
         element={
@@ -205,18 +235,73 @@ const SuperAdminRoutes = () => {
       />
       
       {/* ========== FUNNEL MANAGEMENT ========== */}
-      <Route
-        path="Funnel-management"
+     
+       <Route
+        path="funnel-management"
         element={
           <Layout role="super_admin">
-            <div className="p-6">
-              <h1 className="text-2xl font-bold text-gray-800">Funnel Management</h1>
-              <p className="text-gray-600 mt-2">Coming Soon</p>
-            </div>
+            <FunnelManagement/>
           </Layout>
         }
       />
       
+      <Route
+        path="funnel-management/stage-wise"
+        element={
+          <Layout role="super_admin">
+            <StageWiseFunnel />
+          </Layout>
+        }
+      />
+      <Route
+        path="funnel-management/Employee-wise"
+        element={
+          <Layout role="super_admin">
+            <EmployeeWiseFunnel />
+          </Layout>
+        }
+      />
+
+       <Route
+        path="funnel-management/Client-wise"
+        element={
+          <Layout role="super_admin">
+            <ClientWiseFunnel />
+          </Layout>
+        }
+      />
+
+      <Route
+        path="funnel-management/dept-wise"
+        element={
+          <Layout role="super_admin">
+            <DepartmentWiseFunnel />
+          </Layout>
+        }
+      />
+
+      <Route
+        path="funnel-management/conversion"
+        element={
+          <Layout role="super_admin">
+            <ConversionTracking />
+          </Layout>
+        }
+      />
+
+      <Route
+        path="funnel-management/stalled"
+        element={
+          <Layout role="super_admin">
+            <StalledOpportunities />
+          </Layout>
+        }
+      />
+
+
+
+
+
       {/* ========== USER MANAGEMENT ========== */}
       <Route
         path="users"
@@ -239,7 +324,7 @@ const SuperAdminRoutes = () => {
         }
       />
 
-      {/* All Visits - List all visits */}
+     
       <Route
         path="Visit-Management/all-visits"
         element={
@@ -274,20 +359,88 @@ const SuperAdminRoutes = () => {
           </Layout>
         }
       />
-      
-      {/* ========== BUSINESS OUTCOMES ========== */}
       <Route
-        path="outcomes"
+        path="Visit-Management/pending-follow-ups"
         element={
           <Layout role="super_admin">
-            <div className="p-6">
-              <h1 className="text-2xl font-bold text-gray-800">Business Outcomes</h1>
-              <p className="text-gray-600 mt-2">Coming Soon</p>
-            </div>
+            <PendingFollowUps />
+          </Layout>
+        }
+      />
+      <Route
+        path="Visit-Management/expense-approvals"
+        element={
+          <Layout role="super_admin">
+            <ExpenseApprovals />
+          </Layout>
+        }
+      />
+
+      {/* ========== BUSINESS OUTCOMES ========== */}
+       <Route
+        path="business-outcomes"
+        element={
+          <Layout role="super_admin">
+            <BusinessOutcomes />
+          </Layout>
+        }
+      />
+
+       <Route
+        path="business-outcomes/lead"
+        element={
+          <Layout role="super_admin">
+            <LeadsGenerated/>
           </Layout>
         }
       />
       
+      <Route
+        path="business-outcomes/proposals"
+        element={
+          <Layout role="super_admin">
+            <ProposalsCreated/>
+          </Layout>
+        }
+      />
+         
+       <Route
+        path="business-outcomes/pipeline"
+        element={
+          <Layout role="super_admin">
+            <PipelineValue/>
+          </Layout>
+        }
+      />
+      <Route
+        path="business-outcomes/confirmed"
+        element={
+          <Layout role="super_admin">
+            <ConfirmedBusiness/>
+          </Layout>
+        }
+      />
+  
+       <Route
+        path="business-outcomes/cost-per-lead"
+        element={
+          <Layout role="super_admin">
+            <CostperLead/>
+          </Layout>
+        }
+      />
+      <Route
+        path="business-outcomes/productivity"
+        element={
+          <Layout role="super_admin">
+            <ProductivityScore/>
+          </Layout>
+        }
+      />
+
+
+
+
       {/* ========== REPORTS ========== */}
       <Route
         path="reports"

@@ -12,7 +12,8 @@ import {
   Target,
   CheckCircle,
   XCircle,
-  Layers
+  Layers,
+  Trash2
 } from 'lucide-react';
 
 interface VisitPurpose {
@@ -45,6 +46,8 @@ const VisitPurposeMaster = () => {
   const [selectedPurpose, setSelectedPurpose] = useState<VisitPurpose | null>(null);
   const [showViewModal, setShowViewModal] = useState(false);
   const [showInsertModal, setShowInsertModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [purposeToDelete, setPurposeToDelete] = useState<VisitPurpose | null>(null);
   
   const [newPurpose, setNewPurpose] = useState({
     purposeName: '',
@@ -77,6 +80,21 @@ const VisitPurposeMaster = () => {
   const viewPurposeDetails = (purpose: VisitPurpose) => {
     setSelectedPurpose(purpose);
     setShowViewModal(true);
+  };
+
+  // Delete purpose
+  const handleDeletePurpose = () => {
+    if (purposeToDelete) {
+      setPurposes(purposes.filter(p => p.id !== purposeToDelete.id));
+      setShowDeleteModal(false);
+      setPurposeToDelete(null);
+    }
+  };
+
+  // Open delete confirmation modal
+  const openDeleteModal = (purpose: VisitPurpose) => {
+    setPurposeToDelete(purpose);
+    setShowDeleteModal(true);
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -256,13 +274,22 @@ const VisitPurposeMaster = () => {
                       </span>
                     </td>
                     <td className="px-4 py-3">
-                      <button
-                        onClick={() => viewPurposeDetails(purpose)}
-                        className="p-1.5 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
-                        title="View Details"
-                      >
-                        <Eye size={16} />
-                      </button>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => viewPurposeDetails(purpose)}
+                          className="p-1.5 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+                          title="View Details"
+                        >
+                          <Eye size={16} />
+                        </button>
+                        <button
+                          onClick={() => openDeleteModal(purpose)}
+                          className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          title="Delete Purpose"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -380,6 +407,44 @@ const VisitPurposeMaster = () => {
                   <button type="submit" className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors">Add Purpose</button>
                 </div>
               </form>
+            </div>
+          </div>
+        )}
+
+        {/* Delete Confirmation Modal */}
+        {showDeleteModal && purposeToDelete && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
+              <div className="p-6">
+                <div className="flex items-center justify-center mb-4">
+                  <div className="p-3 bg-red-100 rounded-full">
+                    <Trash2 className="w-8 h-8 text-red-600" />
+                  </div>
+                </div>
+                <h3 className="text-lg font-bold text-center text-gray-800 mb-2">Confirm Delete</h3>
+                <p className="text-sm text-gray-600 text-center mb-4">
+                  Are you sure you want to delete the visit purpose <strong className="text-gray-800">{purposeToDelete.purposeName}</strong>?
+                  <br />
+                  This action cannot be undone.
+                </p>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => {
+                      setShowDeleteModal(false);
+                      setPurposeToDelete(null);
+                    }}
+                    className="flex-1 px-5 py-2.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition duration-200"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleDeletePurpose}
+                    className="flex-1 px-5 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition duration-200"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         )}

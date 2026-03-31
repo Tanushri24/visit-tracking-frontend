@@ -9,7 +9,8 @@ import {
   RefreshCw,
   Eye,
   Layers,
-  Plus
+  Plus,
+  Trash2
 } from 'lucide-react';
 
 interface Department {
@@ -256,6 +257,8 @@ const DepartmentMaster = () => {
   const [selectedDepartment, setSelectedDepartment] = useState<Department | null>(null);
   const [showViewModal, setShowViewModal] = useState(false);
   const [showInsertModal, setShowInsertModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [departmentToDelete, setDepartmentToDelete] = useState<Department | null>(null);
   
   // Form state for new department
   const [newDepartment, setNewDepartment] = useState({
@@ -328,6 +331,21 @@ const DepartmentMaster = () => {
   const viewDepartmentDetails = (department: Department) => {
     setSelectedDepartment(department);
     setShowViewModal(true);
+  };
+
+  // Delete department
+  const handleDeleteDepartment = () => {
+    if (departmentToDelete) {
+      setDepartments(departments.filter(d => d.id !== departmentToDelete.id));
+      setShowDeleteModal(false);
+      setDepartmentToDelete(null);
+    }
+  };
+
+  // Open delete confirmation modal
+  const openDeleteModal = (department: Department) => {
+    setDepartmentToDelete(department);
+    setShowDeleteModal(true);
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -453,151 +471,207 @@ const DepartmentMaster = () => {
         <div className="overflow-x-auto">
           <table className="w-full min-w-[1600px] lg:min-w-full">
             <thead className="bg-gray-50 border-b">
-              <tr><th className="px-4 py-3 text-left text-xs font-medium uppercase">S.No</th><th className="px-4 py-3 text-left text-xs font-medium uppercase">Department Name</th><th className="px-4 py-3 text-left text-xs font-medium uppercase">Organization</th><th className="px-4 py-3 text-left text-xs font-medium uppercase">Company</th><th className="px-4 py-3 text-left text-xs font-medium uppercase">Department Head</th><th className="px-4 py-3 text-left text-xs font-medium uppercase">City</th><th className="px-4 py-3 text-left text-xs font-medium uppercase">Contact Person</th><th className="px-4 py-3 text-left text-xs font-medium uppercase">Email</th><th className="px-4 py-3 text-left text-xs font-medium uppercase">Phone</th><th className="px-4 py-3 text-left text-xs font-medium uppercase">Employees</th><th className="px-4 py-3 text-left text-xs font-medium uppercase">Status</th><th className="px-4 py-3 text-left text-xs font-medium uppercase">Actions</th></tr>
-            </thead>
-            <tbody className="divide-y">
-              {currentItems.map((dept, index) => (
-                <tr key={dept.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3 text-sm">{indexOfFirstItem + index + 1}</td>
-                  <td className="px-4 py-3"><p className="font-medium">{dept.departmentName}</p><p className="text-xs text-gray-500">Ext: {dept.extensionNumber}</p></td>
-                  <td className="px-4 py-3 text-sm">{dept.organizationName}</td>
-                  <td className="px-4 py-3 text-sm">{dept.companyName}</td>
-                  <td className="px-4 py-3"><p className="font-medium">{dept.departmentHead}</p><p className="text-xs text-gray-500">{dept.headDesignation}</p></td>
-                  <td className="px-4 py-3 text-sm">{dept.city}</td>
-                  <td className="px-4 py-3 text-sm">{dept.contactPerson}</td>
-                  <td className="px-4 py-3 text-sm"><a href={`mailto:${dept.contactEmail}`} className="text-blue-600 hover:underline">{dept.contactEmail}</a></td>
-                  <td className="px-4 py-3 text-sm">{dept.contactPhone}</td>
-                  <td className="px-4 py-3 text-sm">{dept.employeeCount}</td>
-                  <td className="px-4 py-3"><span className={`inline-flex px-2 py-1 rounded-full text-xs font-semibold ${dept.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>{dept.status}</span></td>
-                  <td className="px-4 py-3"><button onClick={() => viewDepartmentDetails(dept)} className="p-1 text-blue-600 hover:bg-blue-50 rounded"><Eye size={18} /></button></td>
+              <tr>
+                <th className="px-4 py-3 text-left text-xs font-medium uppercase">S.No</th>
+                <th className="px-4 py-3 text-left text-xs font-medium uppercase">Department Name</th>
+                <th className="px-4 py-3 text-left text-xs font-medium uppercase">Organization</th>
+                <th className="px-4 py-3 text-left text-xs font-medium uppercase">Company</th>
+                <th className="px-4 py-3 text-left text-xs font-medium uppercase">Department Head</th>
+                <th className="px-4 py-3 text-left text-xs font-medium uppercase">City</th>
+                <th className="px-4 py-3 text-left text-xs font-medium uppercase">Contact Person</th>
+                <th className="px-4 py-3 text-left text-xs font-medium uppercase">Email</th>
+                <th className="px-4 py-3 text-left text-xs font-medium uppercase">Phone</th>
+                <th className="px-4 py-3 text-left text-xs font-medium uppercase">Employees</th>
+                <th className="px-4 py-3 text-left text-xs font-medium uppercase">Status</th>
+                <th className="px-4 py-3 text-left text-xs font-medium uppercase">Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* Pagination */}
-      <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div className="text-sm text-gray-600">Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, filteredDepartments.length)} of {filteredDepartments.length} entries</div>
-        <div className="flex gap-2">
-          <button onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1} className="px-3 py-1 border rounded-lg disabled:opacity-50 hover:bg-gray-50 flex items-center gap-1"><ChevronLeft size={16} /> Previous</button>
-          <span className="px-4 py-1 bg-purple-600 text-white rounded-lg">Page {currentPage} of {totalPages}</span>
-          <button onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} disabled={currentPage === totalPages} className="px-3 py-1 border rounded-lg disabled:opacity-50 hover:bg-gray-50 flex items-center gap-1">Next <ChevronRight size={16} /></button>
-        </div>
-      </div>
-
-      {/* View Details Modal */}
-      {showViewModal && selectedDepartment && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto p-6">
-            <div className="flex justify-between items-center mb-4"><h2 className="text-xl font-bold">Department Details</h2><button onClick={() => setShowViewModal(false)} className="p-1 hover:bg-gray-100 rounded"><svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg></button></div>
-            <div className="space-y-4">
-              <div><h3 className="text-lg font-semibold text-purple-600 mb-3">Department Information</h3><div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div><p className="text-sm text-gray-500">Department Name</p><p className="font-medium">{selectedDepartment.departmentName}</p></div>
-                <div><p className="text-sm text-gray-500">Extension</p><p className="font-medium">{selectedDepartment.extensionNumber}</p></div>
-                <div><p className="text-sm text-gray-500">Organization</p><p className="font-medium">{selectedDepartment.organizationName}</p></div>
-                <div><p className="text-sm text-gray-500">Company</p><p className="font-medium">{selectedDepartment.companyName}</p></div>
-                <div><p className="text-sm text-gray-500">Employee Count</p><p className="font-medium">{selectedDepartment.employeeCount}</p></div>
-                <div><p className="text-sm text-gray-500">Status</p><span className={`inline-flex px-2 py-1 rounded-full text-xs font-semibold ${selectedDepartment.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>{selectedDepartment.status}</span></div>
-              </div></div>
-              <div><h3 className="text-lg font-semibold text-purple-600 mb-3">Department Head</h3><div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div><p className="text-sm text-gray-500">Name</p><p className="font-medium">{selectedDepartment.departmentHead}</p></div>
-                <div><p className="text-sm text-gray-500">Designation</p><p className="font-medium">{selectedDepartment.headDesignation}</p></div>
-                <div><p className="text-sm text-gray-500">Email</p><p className="font-medium text-blue-600">{selectedDepartment.headEmail}</p></div>
-                <div><p className="text-sm text-gray-500">Phone</p><p className="font-medium">{selectedDepartment.headPhone}</p></div>
-              </div></div>
-              <div><h3 className="text-lg font-semibold text-purple-600 mb-3">Contact & Location</h3><div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div><p className="text-sm text-gray-500">Contact Person</p><p className="font-medium">{selectedDepartment.contactPerson}</p></div>
-                <div><p className="text-sm text-gray-500">Email</p><p className="font-medium text-blue-600">{selectedDepartment.contactEmail}</p></div>
-                <div><p className="text-sm text-gray-500">Phone</p><p className="font-medium">{selectedDepartment.contactPhone}</p></div>
-                <div><p className="text-sm text-gray-500">Location</p><p className="font-medium">{selectedDepartment.location}</p></div>
-                <div><p className="text-sm text-gray-500">Address</p><p className="font-medium">{selectedDepartment.city}, {selectedDepartment.state} - {selectedDepartment.pincode}</p></div>
-                <div><p className="text-sm text-gray-500">Working Hours</p><p className="font-medium">{selectedDepartment.workingHours}</p></div>
-                <div><p className="text-sm text-gray-500">Working Days</p><p className="font-medium">{selectedDepartment.workingDays}</p></div>
-              </div></div>
-            </div>
-            <div className="flex justify-end mt-6"><button onClick={() => setShowViewModal(false)} className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">Close</button></div>
+              </thead>
+              <tbody className="divide-y">
+                {currentItems.map((dept, index) => (
+                  <tr key={dept.id} className="hover:bg-gray-50">
+                    <td className="px-4 py-3 text-sm">{indexOfFirstItem + index + 1}</td>
+                    <td className="px-4 py-3"><p className="font-medium">{dept.departmentName}</p><p className="text-xs text-gray-500">Ext: {dept.extensionNumber}</p></td>
+                    <td className="px-4 py-3 text-sm">{dept.organizationName}</td>
+                    <td className="px-4 py-3 text-sm">{dept.companyName}</td>
+                    <td className="px-4 py-3"><p className="font-medium">{dept.departmentHead}</p><p className="text-xs text-gray-500">{dept.headDesignation}</p></td>
+                    <td className="px-4 py-3 text-sm">{dept.city}</td>
+                    <td className="px-4 py-3 text-sm">{dept.contactPerson}</td>
+                    <td className="px-4 py-3 text-sm"><a href={`mailto:${dept.contactEmail}`} className="text-blue-600 hover:underline">{dept.contactEmail}</a></td>
+                    <td className="px-4 py-3 text-sm">{dept.contactPhone}</td>
+                    <td className="px-4 py-3 text-sm">{dept.employeeCount}</td>
+                    <td className="px-4 py-3"><span className={`inline-flex px-2 py-1 rounded-full text-xs font-semibold ${dept.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>{dept.status}</span></td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        <button onClick={() => viewDepartmentDetails(dept)} className="p-1 text-blue-600 hover:bg-blue-50 rounded"><Eye size={18} /></button>
+                        <button onClick={() => openDeleteModal(dept)} className="p-1 text-red-600 hover:bg-red-50 rounded"><Trash2 size={18} /></button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
-      )}
 
-      {/* Insert Department Modal */}
-      {showInsertModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto p-6">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold">Add New Department</h2>
-              <button onClick={() => setShowInsertModal(false)} className="p-1 hover:bg-gray-100 rounded"><svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg></button>
+        {/* Pagination */}
+        <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="text-sm text-gray-600">Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, filteredDepartments.length)} of {filteredDepartments.length} entries</div>
+          <div className="flex gap-2">
+            <button onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1} className="px-3 py-1 border rounded-lg disabled:opacity-50 hover:bg-gray-50 flex items-center gap-1"><ChevronLeft size={16} /> Previous</button>
+            <span className="px-4 py-1 bg-purple-600 text-white rounded-lg">Page {currentPage} of {totalPages}</span>
+            <button onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} disabled={currentPage === totalPages} className="px-3 py-1 border rounded-lg disabled:opacity-50 hover:bg-gray-50 flex items-center gap-1">Next <ChevronRight size={16} /></button>
+          </div>
+        </div>
+
+        {/* View Details Modal */}
+        {showViewModal && selectedDepartment && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg shadow-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto p-6">
+              <div className="flex justify-between items-center mb-4"><h2 className="text-xl font-bold">Department Details</h2><button onClick={() => setShowViewModal(false)} className="p-1 hover:bg-gray-100 rounded"><svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg></button></div>
+              <div className="space-y-4">
+                <div><h3 className="text-lg font-semibold text-purple-600 mb-3">Department Information</h3><div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div><p className="text-sm text-gray-500">Department Name</p><p className="font-medium">{selectedDepartment.departmentName}</p></div>
+                  <div><p className="text-sm text-gray-500">Extension</p><p className="font-medium">{selectedDepartment.extensionNumber}</p></div>
+                  <div><p className="text-sm text-gray-500">Organization</p><p className="font-medium">{selectedDepartment.organizationName}</p></div>
+                  <div><p className="text-sm text-gray-500">Company</p><p className="font-medium">{selectedDepartment.companyName}</p></div>
+                  <div><p className="text-sm text-gray-500">Employee Count</p><p className="font-medium">{selectedDepartment.employeeCount}</p></div>
+                  <div><p className="text-sm text-gray-500">Status</p><span className={`inline-flex px-2 py-1 rounded-full text-xs font-semibold ${selectedDepartment.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>{selectedDepartment.status}</span></div>
+                </div></div>
+                <div><h3 className="text-lg font-semibold text-purple-600 mb-3">Department Head</h3><div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div><p className="text-sm text-gray-500">Name</p><p className="font-medium">{selectedDepartment.departmentHead}</p></div>
+                  <div><p className="text-sm text-gray-500">Designation</p><p className="font-medium">{selectedDepartment.headDesignation}</p></div>
+                  <div><p className="text-sm text-gray-500">Email</p><p className="font-medium text-blue-600">{selectedDepartment.headEmail}</p></div>
+                  <div><p className="text-sm text-gray-500">Phone</p><p className="font-medium">{selectedDepartment.headPhone}</p></div>
+                </div></div>
+                <div><h3 className="text-lg font-semibold text-purple-600 mb-3">Contact & Location</h3><div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div><p className="text-sm text-gray-500">Contact Person</p><p className="font-medium">{selectedDepartment.contactPerson}</p></div>
+                  <div><p className="text-sm text-gray-500">Email</p><p className="font-medium text-blue-600">{selectedDepartment.contactEmail}</p></div>
+                  <div><p className="text-sm text-gray-500">Phone</p><p className="font-medium">{selectedDepartment.contactPhone}</p></div>
+                  <div><p className="text-sm text-gray-500">Location</p><p className="font-medium">{selectedDepartment.location}</p></div>
+                  <div><p className="text-sm text-gray-500">Address</p><p className="font-medium">{selectedDepartment.city}, {selectedDepartment.state} - {selectedDepartment.pincode}</p></div>
+                  <div><p className="text-sm text-gray-500">Working Hours</p><p className="font-medium">{selectedDepartment.workingHours}</p></div>
+                  <div><p className="text-sm text-gray-500">Working Days</p><p className="font-medium">{selectedDepartment.workingDays}</p></div>
+                </div></div>
+              </div>
+              <div className="flex justify-end mt-6"><button onClick={() => setShowViewModal(false)} className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">Close</button></div>
             </div>
+          </div>
+        )}
 
-            <form onSubmit={(e) => { e.preventDefault(); handleInsertDepartment(); }}>
-              {/* Basic Information */}
-              <div className="border-b pb-4 mb-4">
-                <h3 className="text-lg font-semibold text-purple-600 mb-3">Basic Information</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div><label className="block text-sm font-medium mb-1">Department Name *</label><input type="text" name="departmentName" value={newDepartment.departmentName} onChange={handleInputChange} required className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500" /></div>
-                  <div><label className="block text-sm font-medium mb-1">Organization *</label><select name="organizationId" value={newDepartment.organizationId} onChange={handleInputChange} required className="w-full px-3 py-2 border rounded-lg"><option value="">Select Organization</option>{sampleOrganizations.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}</select></div>
-                  <div><label className="block text-sm font-medium mb-1">Extension Number</label><input type="text" name="extensionNumber" value={newDepartment.extensionNumber} onChange={handleInputChange} className="w-full px-3 py-2 border rounded-lg" /></div>
-                  <div><label className="block text-sm font-medium mb-1">Employee Count</label><input type="number" name="employeeCount" value={newDepartment.employeeCount} onChange={handleInputChange} className="w-full px-3 py-2 border rounded-lg" /></div>
-                  <div><label className="block text-sm font-medium mb-1">Status</label><select name="status" value={newDepartment.status} onChange={handleInputChange} className="w-full px-3 py-2 border rounded-lg"><option value="active">Active</option><option value="inactive">Inactive</option></select></div>
-                </div>
+        {/* Insert Department Modal */}
+        {showInsertModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-bold">Add New Department</h2>
+                <button onClick={() => setShowInsertModal(false)} className="p-1 hover:bg-gray-100 rounded"><svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg></button>
               </div>
 
-              {/* Department Head */}
-              <div className="border-b pb-4 mb-4">
-                <h3 className="text-lg font-semibold text-purple-600 mb-3">Department Head</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div><label className="block text-sm font-medium mb-1">Head Name *</label><input type="text" name="departmentHead" value={newDepartment.departmentHead} onChange={handleInputChange} required className="w-full px-3 py-2 border rounded-lg" /></div>
-                  <div><label className="block text-sm font-medium mb-1">Designation</label><input type="text" name="headDesignation" value={newDepartment.headDesignation} onChange={handleInputChange} className="w-full px-3 py-2 border rounded-lg" /></div>
-                  <div><label className="block text-sm font-medium mb-1">Email</label><input type="email" name="headEmail" value={newDepartment.headEmail} onChange={handleInputChange} className="w-full px-3 py-2 border rounded-lg" /></div>
-                  <div><label className="block text-sm font-medium mb-1">Phone</label><input type="text" name="headPhone" value={newDepartment.headPhone} onChange={handleInputChange} className="w-full px-3 py-2 border rounded-lg" /></div>
-                </div>
-              </div>
-
-              {/* Address & Location */}
-              <div className="border-b pb-4 mb-4">
-                <h3 className="text-lg font-semibold text-purple-600 mb-3">Address & Location</h3>
-                <div className="grid grid-cols-1 gap-4">
-                  <div><label className="block text-sm font-medium mb-1">Location</label><input type="text" name="location" value={newDepartment.location} onChange={handleInputChange} className="w-full px-3 py-2 border rounded-lg" /></div>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div><label className="block text-sm font-medium mb-1">City</label><input type="text" name="city" value={newDepartment.city} onChange={handleInputChange} className="w-full px-3 py-2 border rounded-lg" /></div>
-                    <div><label className="block text-sm font-medium mb-1">State</label><input type="text" name="state" value={newDepartment.state} onChange={handleInputChange} className="w-full px-3 py-2 border rounded-lg" /></div>
-                    <div><label className="block text-sm font-medium mb-1">Pincode</label><input type="text" name="pincode" value={newDepartment.pincode} onChange={handleInputChange} className="w-full px-3 py-2 border rounded-lg" /></div>
+              <form onSubmit={(e) => { e.preventDefault(); handleInsertDepartment(); }}>
+                {/* Basic Information */}
+                <div className="border-b pb-4 mb-4">
+                  <h3 className="text-lg font-semibold text-purple-600 mb-3">Basic Information</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div><label className="block text-sm font-medium mb-1">Department Name *</label><input type="text" name="departmentName" value={newDepartment.departmentName} onChange={handleInputChange} required className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500" /></div>
+                    <div><label className="block text-sm font-medium mb-1">Organization *</label><select name="organizationId" value={newDepartment.organizationId} onChange={handleInputChange} required className="w-full px-3 py-2 border rounded-lg"><option value="">Select Organization</option>{sampleOrganizations.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}</select></div>
+                    <div><label className="block text-sm font-medium mb-1">Extension Number</label><input type="text" name="extensionNumber" value={newDepartment.extensionNumber} onChange={handleInputChange} className="w-full px-3 py-2 border rounded-lg" /></div>
+                    <div><label className="block text-sm font-medium mb-1">Employee Count</label><input type="number" name="employeeCount" value={newDepartment.employeeCount} onChange={handleInputChange} className="w-full px-3 py-2 border rounded-lg" /></div>
+                    <div><label className="block text-sm font-medium mb-1">Status</label><select name="status" value={newDepartment.status} onChange={handleInputChange} className="w-full px-3 py-2 border rounded-lg"><option value="active">Active</option><option value="inactive">Inactive</option></select></div>
                   </div>
                 </div>
-              </div>
 
-              {/* Contact & Working Hours */}
-              <div className="border-b pb-4 mb-4">
-                <h3 className="text-lg font-semibold text-purple-600 mb-3">Contact & Working Hours</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div><label className="block text-sm font-medium mb-1">Contact Person</label><input type="text" name="contactPerson" value={newDepartment.contactPerson} onChange={handleInputChange} className="w-full px-3 py-2 border rounded-lg" /></div>
-                  <div><label className="block text-sm font-medium mb-1">Contact Email</label><input type="email" name="contactEmail" value={newDepartment.contactEmail} onChange={handleInputChange} className="w-full px-3 py-2 border rounded-lg" /></div>
-                  <div><label className="block text-sm font-medium mb-1">Contact Phone</label><input type="text" name="contactPhone" value={newDepartment.contactPhone} onChange={handleInputChange} className="w-full px-3 py-2 border rounded-lg" /></div>
-                  <div><label className="block text-sm font-medium mb-1">Working Hours</label><input type="text" name="workingHours" value={newDepartment.workingHours} onChange={handleInputChange} placeholder="e.g., 9:00 AM - 6:00 PM" className="w-full px-3 py-2 border rounded-lg" /></div>
-                  <div><label className="block text-sm font-medium mb-1">Working Days</label><input type="text" name="workingDays" value={newDepartment.workingDays} onChange={handleInputChange} placeholder="e.g., Monday - Friday" className="w-full px-3 py-2 border rounded-lg" /></div>
+                {/* Department Head */}
+                <div className="border-b pb-4 mb-4">
+                  <h3 className="text-lg font-semibold text-purple-600 mb-3">Department Head</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div><label className="block text-sm font-medium mb-1">Head Name *</label><input type="text" name="departmentHead" value={newDepartment.departmentHead} onChange={handleInputChange} required className="w-full px-3 py-2 border rounded-lg" /></div>
+                    <div><label className="block text-sm font-medium mb-1">Designation</label><input type="text" name="headDesignation" value={newDepartment.headDesignation} onChange={handleInputChange} className="w-full px-3 py-2 border rounded-lg" /></div>
+                    <div><label className="block text-sm font-medium mb-1">Email</label><input type="email" name="headEmail" value={newDepartment.headEmail} onChange={handleInputChange} className="w-full px-3 py-2 border rounded-lg" /></div>
+                    <div><label className="block text-sm font-medium mb-1">Phone</label><input type="text" name="headPhone" value={newDepartment.headPhone} onChange={handleInputChange} className="w-full px-3 py-2 border rounded-lg" /></div>
+                  </div>
+                </div>
+
+                {/* Address & Location */}
+                <div className="border-b pb-4 mb-4">
+                  <h3 className="text-lg font-semibold text-purple-600 mb-3">Address & Location</h3>
+                  <div className="grid grid-cols-1 gap-4">
+                    <div><label className="block text-sm font-medium mb-1">Location</label><input type="text" name="location" value={newDepartment.location} onChange={handleInputChange} className="w-full px-3 py-2 border rounded-lg" /></div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div><label className="block text-sm font-medium mb-1">City</label><input type="text" name="city" value={newDepartment.city} onChange={handleInputChange} className="w-full px-3 py-2 border rounded-lg" /></div>
+                      <div><label className="block text-sm font-medium mb-1">State</label><input type="text" name="state" value={newDepartment.state} onChange={handleInputChange} className="w-full px-3 py-2 border rounded-lg" /></div>
+                      <div><label className="block text-sm font-medium mb-1">Pincode</label><input type="text" name="pincode" value={newDepartment.pincode} onChange={handleInputChange} className="w-full px-3 py-2 border rounded-lg" /></div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Contact & Working Hours */}
+                <div className="border-b pb-4 mb-4">
+                  <h3 className="text-lg font-semibold text-purple-600 mb-3">Contact & Working Hours</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div><label className="block text-sm font-medium mb-1">Contact Person</label><input type="text" name="contactPerson" value={newDepartment.contactPerson} onChange={handleInputChange} className="w-full px-3 py-2 border rounded-lg" /></div>
+                    <div><label className="block text-sm font-medium mb-1">Contact Email</label><input type="email" name="contactEmail" value={newDepartment.contactEmail} onChange={handleInputChange} className="w-full px-3 py-2 border rounded-lg" /></div>
+                    <div><label className="block text-sm font-medium mb-1">Contact Phone</label><input type="text" name="contactPhone" value={newDepartment.contactPhone} onChange={handleInputChange} className="w-full px-3 py-2 border rounded-lg" /></div>
+                    <div><label className="block text-sm font-medium mb-1">Working Hours</label><input type="text" name="workingHours" value={newDepartment.workingHours} onChange={handleInputChange} placeholder="e.g., 9:00 AM - 6:00 PM" className="w-full px-3 py-2 border rounded-lg" /></div>
+                    <div><label className="block text-sm font-medium mb-1">Working Days</label><input type="text" name="workingDays" value={newDepartment.workingDays} onChange={handleInputChange} placeholder="e.g., Monday - Friday" className="w-full px-3 py-2 border rounded-lg" /></div>
+                  </div>
+                </div>
+
+                <div className="flex justify-end gap-3 mt-6">
+                  <button type="button" onClick={() => setShowInsertModal(false)} className="px-4 py-2 border rounded-lg hover:bg-gray-50">Cancel</button>
+                  <button type="submit" className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">Add Department</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* Delete Confirmation Modal */}
+        {showDeleteModal && departmentToDelete && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
+              <div className="p-6">
+                <div className="flex items-center justify-center mb-4">
+                  <div className="p-3 bg-red-100 rounded-full">
+                    <Trash2 className="w-8 h-8 text-red-600" />
+                  </div>
+                </div>
+                <h3 className="text-lg font-bold text-center text-gray-800 mb-2">Confirm Delete</h3>
+                <p className="text-sm text-gray-600 text-center mb-4">
+                  Are you sure you want to delete the department <strong className="text-gray-800">{departmentToDelete.departmentName}</strong>?
+                  <br />
+                  This action cannot be undone.
+                </p>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => {
+                      setShowDeleteModal(false);
+                      setDepartmentToDelete(null);
+                    }}
+                    className="flex-1 px-5 py-2.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition duration-200"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleDeleteDepartment}
+                    className="flex-1 px-5 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition duration-200"
+                  >
+                    Delete
+                  </button>
                 </div>
               </div>
-
-              <div className="flex justify-end gap-3 mt-6">
-                <button type="button" onClick={() => setShowInsertModal(false)} className="px-4 py-2 border rounded-lg hover:bg-gray-50">Cancel</button>
-                <button type="submit" className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">Add Department</button>
-              </div>
-            </form>
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* No Results */}
-      {filteredDepartments.length === 0 && (
-        <div className="text-center py-12 bg-white rounded-lg shadow">
-          <Layers className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-          <p className="text-gray-500">No departments found matching your criteria.</p>
-        </div>
-      )}
-    </div>
-  );
-};
+        {/* No Results */}
+        {filteredDepartments.length === 0 && (
+          <div className="text-center py-12 bg-white rounded-lg shadow">
+            <Layers className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+            <p className="text-gray-500">No departments found matching your criteria.</p>
+          </div>
+        )}
+      </div>
+    );
+  };
 
 export default DepartmentMaster;
