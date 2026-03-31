@@ -1,9 +1,23 @@
-function App() {
+import React from "react";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import Login from "./auth/pages/Login";
+import SuperAdminRoutes from "./modules/super-admin/routes/SuperAdminRoutes";
+
+const App = () => {
   return (
-    <div className="bg-red-500 text-white p-10 text-3xl">
-       Visit Tracking 
-    </div>
+    <Router>
+      <Routes>
+        {/* Public Route */}
+        <Route path="/login" element={<Login />} />
+
+        {/* Super Admin Routes */}
+        <Route path="/super-admin/*" element={<SuperAdminRoutes />} />
+
+        {/* Default redirect */}
+        <Route path="*" element={<Navigate to="/login" replace />} />
+      </Routes>
+    </Router>
   );
-}
+};
 
 export default App;
