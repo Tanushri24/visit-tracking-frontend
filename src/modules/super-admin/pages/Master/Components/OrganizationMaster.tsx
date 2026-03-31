@@ -15,13 +15,24 @@ import {
 
 interface Organization {
   id: number;
-  organisationName: string;
+  organizationName: string;
   companyId: number;
+  companyName: string;
   address: string;
   city: string;
   state: string;
   pincode: string;
-  isActive: boolean;
+  contactPerson: string;
+  contactEmail: string;
+  contactPhone: string;
+  website: string;
+  gstNo: string;
+  registrationNo: string;
+  establishedYear: string;
+  employeeCount: string;
+  status: 'active' | 'inactive';
+  createdAt: string;
+  updatedAt: string;
 }
 
 // Sample company data for dropdown
@@ -42,7 +53,7 @@ const OrganizationMaster = () => {
       organizationName: 'Examination Wing - MP Board',
       companyId: 2,
       companyName: 'MP Board of Secondary Education',
-      address: 'Bhopal',
+      address: 'Board Headquarters, Shiva Ji Nagar',
       city: 'Bhopal',
       state: 'Madhya Pradesh',
       pincode: '462011',
@@ -63,7 +74,7 @@ const OrganizationMaster = () => {
       organizationName: 'University Campus Office',
       companyId: 4,
       companyName: 'Bhoj University',
-      address: 'Bhopal',
+      address: 'University Campus, Kolar Road',
       city: 'Bhopal',
       state: 'Madhya Pradesh',
       pincode: '462022',
@@ -105,7 +116,7 @@ const OrganizationMaster = () => {
       organizationName: 'Infosys - Electronic City Campus',
       companyId: 5,
       companyName: 'Infosys Limited',
-      address: 'Electronic City',
+      address: 'Building 12, Electronic City',
       city: 'Bangalore',
       state: 'Karnataka',
       pincode: '560100',
@@ -126,7 +137,7 @@ const OrganizationMaster = () => {
       organizationName: 'Tata Motors - Pimpri Plant',
       companyId: 6,
       companyName: 'Tata Motors',
-      address: 'Pimpri Chinchwad',
+      address: 'Pimpri Industrial Area',
       city: 'Pune',
       state: 'Maharashtra',
       pincode: '411018',
@@ -147,7 +158,7 @@ const OrganizationMaster = () => {
       organizationName: 'ICICI Bank - BKC Branch',
       companyId: 7,
       companyName: 'ICICI Bank',
-      address: 'Bandra Kurla Complex',
+      address: 'BKC Complex, Bandra East',
       city: 'Mumbai',
       state: 'Maharashtra',
       pincode: '400051',
@@ -187,6 +198,8 @@ const OrganizationMaster = () => {
   ]);
 
   const [searchTerm, setSearchTerm] = useState('');
+  const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [filterCompany, setFilterCompany] = useState<string>('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
   const [showFilters, setShowFilters] = useState(false);
@@ -195,6 +208,7 @@ const OrganizationMaster = () => {
   const [showInsertModal, setShowInsertModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [organizationToDelete, setOrganizationToDelete] = useState<Organization | null>(null);
+  const [loading, setLoading] = useState(false);
   
   // Form state for new organization
   const [newOrganization, setNewOrganization] = useState({
@@ -234,130 +248,40 @@ const OrganizationMaster = () => {
     return matchesSearch && matchesStatus && matchesCompany;
   });
 
+  // Pagination
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = filteredOrganizations.slice(indexOfFirstItem, indexOfLastItem);
   const totalPages = Math.max(1, Math.ceil(filteredOrganizations.length / itemsPerPage));
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setNewOrganization((prev) => ({ ...prev, [name]: name === 'companyId' ? Number(value) : value }));
-  };
-
-  const handleInsertOrganization = async () => {
-    if (!newOrganization.organisationName || !newOrganization.companyId || !newOrganization.address || !newOrganization.city || !newOrganization.state || !newOrganization.pincode) {
-      alert('Organisation Name, Company Id, Address, City, State and Pincode are required');
-      return;
-    }
-
-    const payload = {
-      organisationName: newOrganization.organisationName.trim(),
-      companyId: Number(newOrganization.companyId),
-      address: newOrganization.address.trim(),
-      city: newOrganization.city.trim(),
-      state: newOrganization.state.trim(),
-      pincode: newOrganization.pincode.trim(),
-      isActive: newOrganization.isActive
-    };
-
-    console.log('Sending payload:', payload);
-
-    try {
-      setLoading(true);
-      const response = await axios.post('https://localhost:7146/api/Organisation', payload, {
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
-
-      const createdOrganization = normalizeOrganization({
-        id: response?.data?.id ?? Date.now(),
-        organisationName: response?.data?.organisationName ?? payload.organisationName,
-        companyId: response?.data?.companyId ?? payload.companyId,
-        address: response?.data?.address ?? payload.address,
-        city: response?.data?.city ?? payload.city,
-        state: response?.data?.state ?? payload.state,
-        pincode: response?.data?.pincode ?? payload.pincode,
-        isActive: response?.data?.isActive ?? payload.isActive
-      });
-
-      setOrganizations((prev) => [createdOrganization, ...prev]);
-      setCurrentPage(1);
-      setShowInsertModal(false);
-      setNewOrganization({ organisationName: '', companyId: 0, address: '', city: '', state: '', pincode: '', isActive: true });
-      alert('Organization created successfully');
-    } catch (error: any) {
-      const refreshedOrganizations = await fetchOrganizations();
-      const normalizedOrganizationName = payload.organisationName.toLowerCase();
-      const normalizedAddress = payload.address.toLowerCase();
-      const normalizedCity = payload.city.toLowerCase();
-      const normalizedState = payload.state.toLowerCase();
-      const normalizedPincode = payload.pincode.toLowerCase();
-
-      const matchingOrganization = refreshedOrganizations.find((org) => {
-        const sameName = org.organisationName.trim().toLowerCase() === normalizedOrganizationName;
-        const sameCompany = org.companyId === payload.companyId;
-        const sameAddress = org.address.trim().toLowerCase() === normalizedAddress;
-        const sameCity = org.city.trim().toLowerCase() === normalizedCity;
-        const sameState = org.state.trim().toLowerCase() === normalizedState;
-        const samePincode = org.pincode.trim().toLowerCase() === normalizedPincode;
-
-        return sameName && (sameCompany || sameAddress || sameCity || sameState || samePincode);
-      });
-
-      if (matchingOrganization) {
-        setOrganizations((prev) => {
-          const alreadyExists = prev.some((org) => org.id === matchingOrganization.id);
-          return alreadyExists ? prev : [matchingOrganization, ...prev];
-        });
-        setCurrentPage(1);
-        setShowInsertModal(false);
-        setNewOrganization({ organisationName: '', companyId: 0, address: '', city: '', state: '', pincode: '', isActive: true });
-        alert('Organization created successfully');
-        return;
-      }
-
-      const validationErrors = error?.response?.data?.errors;
-      const validationMessage =
-        validationErrors && typeof validationErrors === 'object'
-          ? Object.values(validationErrors).flat().join('\n')
-          : null;
-
-      const errorMessage =
-        validationMessage ||
-        error?.response?.data?.message ||
-        error?.response?.data?.title ||
-        'Organization creation failed';
-      alert(typeof errorMessage === 'string' ? errorMessage : 'Organization creation failed');
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  // Export to CSV
   const exportToCSV = () => {
-    const headers = ['Id', 'Organisation Name', 'Company Id', 'Address', 'City', 'State', 'Pincode', 'Active'];
-    const rows = filteredOrganizations.map((org) => [
-      org.id,
-      org.organisationName || '',
-      org.companyId,
-      org.address || '',
-      org.city || '',
-      org.state || '',
-      org.pincode || '',
-      org.isActive ? 'active' : 'inactive'
+    const headers = ['Organization Name', 'Company', 'City', 'State', 'Contact Person', 'Email', 'Phone', 'Registration No', 'Status'];
+    const csvData = filteredOrganizations.map(org => [
+      org.organizationName,
+      org.companyName,
+      org.city,
+      org.state,
+      org.contactPerson,
+      org.contactEmail,
+      org.contactPhone,
+      org.registrationNo,
+      org.status
     ]);
-    const csvContent = [headers, ...rows].map((row) => row.join(',')).join('\n');
+    
+    const csvContent = [headers, ...csvData].map(row => row.join(',')).join('\n');
     const blob = new Blob([csvContent], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
+    const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
     a.download = `organizations_${new Date().toISOString().split('T')[0]}.csv`;
     a.click();
-    URL.revokeObjectURL(url);
+    window.URL.revokeObjectURL(url);
   };
 
   const viewOrganizationDetails = (organization: Organization) => {
-    console.log('View organization', organization);
+    setSelectedOrganization(organization);
+    setShowViewModal(true);
   };
 
   // Delete organization
@@ -398,7 +322,22 @@ const OrganizationMaster = () => {
     
     const organizationToAdd: Organization = {
       id: newId,
-      ...newOrganization,
+      organizationName: newOrganization.organizationName,
+      companyId: newOrganization.companyId,
+      companyName: newOrganization.companyName,
+      address: newOrganization.address,
+      city: newOrganization.city,
+      state: newOrganization.state,
+      pincode: newOrganization.pincode,
+      contactPerson: newOrganization.contactPerson,
+      contactEmail: newOrganization.contactEmail,
+      contactPhone: newOrganization.contactPhone,
+      website: newOrganization.website,
+      gstNo: newOrganization.gstNo,
+      registrationNo: newOrganization.registrationNo,
+      establishedYear: newOrganization.establishedYear,
+      employeeCount: newOrganization.employeeCount,
+      status: newOrganization.status,
       createdAt: currentDate,
       updatedAt: currentDate
     };
@@ -427,25 +366,38 @@ const OrganizationMaster = () => {
 
   return (
     <div className="p-4 md:p-6 bg-gray-50 min-h-screen">
+      {/* Header */}
       <div className="mb-6">
         <h1 className="text-2xl md:text-3xl font-bold text-gray-800">Organization Master</h1>
         <p className="text-sm text-gray-600 mt-1">Manage organization details</p>
       </div>
 
+      {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <div className="bg-white rounded-lg shadow p-4 border-l-4 border-purple-500">
           <p className="text-sm text-gray-600">Total Organizations</p>
           <p className="text-2xl font-bold text-gray-800">{organizations.length}</p>
         </div>
+        <div className="bg-white rounded-lg shadow p-4 border-l-4 border-green-500">
+          <p className="text-sm text-gray-600">Active Organizations</p>
+          <p className="text-2xl font-bold text-green-600">{organizations.filter(o => o.status === 'active').length}</p>
+        </div>
+        <div className="bg-white rounded-lg shadow p-4 border-l-4 border-red-500">
+          <p className="text-sm text-gray-600">Inactive Organizations</p>
+          <p className="text-2xl font-bold text-red-600">{organizations.filter(o => o.status === 'inactive').length}</p>
+        </div>
         <div className="bg-white rounded-lg shadow p-4 border-l-4 border-blue-500">
-          <p className="text-sm text-gray-600">Showing</p>
+          <p className="text-sm text-gray-600">Filtered Results</p>
           <p className="text-2xl font-bold text-blue-600">{filteredOrganizations.length}</p>
         </div>
       </div>
 
+      {/* Action Bar */}
       <div className="bg-white rounded-lg shadow mb-6">
         <div className="p-4 flex flex-col md:flex-row gap-4 items-center justify-between">
+          {/* Search */}
           <div className="w-full md:w-96 relative">
+            <Search className="absolute left-3 top-2.5 text-gray-400" size={20} />
             <input
               type="text"
               placeholder="Search organizations..."
@@ -453,10 +405,9 @@ const OrganizationMaster = () => {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
-            <Search className="absolute left-3 top-2.5 text-gray-400" size={20} />
           </div>
 
-          {/* Action Buttons - Add Organization moved to left of Filter and Export */}
+          {/* Action Buttons */}
           <div className="flex gap-2 w-full md:w-auto">
             <button
               onClick={() => setShowInsertModal(true)}
@@ -482,19 +433,48 @@ const OrganizationMaster = () => {
           </div>
         </div>
 
+        {/* Filters Panel */}
         {showFilters && (
           <div className="p-4 border-t border-gray-200 bg-gray-50">
-            <button
-              onClick={() => {
-                setSearchTerm('');
-                setCurrentPage(1);
-                setShowFilters(false);
-              }}
-              className="px-4 py-2 text-gray-600 hover:text-gray-800 flex items-center gap-2"
-            >
-              <RefreshCw size={16} />
-              Clear Filters
-            </button>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                <select
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  value={filterStatus}
+                  onChange={(e) => setFilterStatus(e.target.value)}
+                >
+                  <option value="all">All Status</option>
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Company</label>
+                <select
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  value={filterCompany}
+                  onChange={(e) => setFilterCompany(e.target.value)}
+                >
+                  {companies.map(company => (
+                    <option key={company} value={company}>{company === 'all' ? 'All Companies' : company}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex items-end">
+                <button
+                  onClick={() => {
+                    setFilterStatus('all');
+                    setFilterCompany('all');
+                    setSearchTerm('');
+                  }}
+                  className="px-4 py-2 text-gray-600 hover:text-gray-800 flex items-center gap-2"
+                >
+                  <RefreshCw size={16} />
+                  Clear Filters
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </div>
@@ -516,7 +496,7 @@ const OrganizationMaster = () => {
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Registration No</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-               </tr>
+              </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
               {currentItems.map((org, index) => (
@@ -565,56 +545,39 @@ const OrganizationMaster = () => {
                     </div>
                   </td>
                 </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {currentItems.map((org, index) => (
-                  <tr key={org.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 text-sm text-gray-600">{indexOfFirstItem + index + 1}</td>
-                    <td className="px-4 py-3 text-sm text-gray-600">{org.organisationName || '-'}</td>
-                    <td className="px-4 py-3 text-sm text-gray-600">{org.companyId}</td>
-                    <td className="px-4 py-3 text-sm text-gray-600">{org.address || '-'}</td>
-                    <td className="px-4 py-3 text-sm text-gray-600">{org.city || '-'}</td>
-                    <td className="px-4 py-3 text-sm text-gray-600">{org.state || '-'}</td>
-                    <td className="px-4 py-3 text-sm text-gray-600">{org.pincode || '-'}</td>
-                    <td className="px-4 py-3 text-sm text-gray-600">{org.isActive ? 'active' : 'inactive'}</td>
-                    <td className="px-4 py-3">
-                      <button
-                        onClick={() => viewOrganizationDetails(org)}
-                        className="p-1 text-blue-600 hover:bg-blue-50 rounded"
-                        title="View Details"
-                      >
-                        <Eye size={18} />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
 
-      <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div className="text-sm text-gray-600">
-          Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, filteredOrganizations.length)} of {filteredOrganizations.length} entries
+      {/* Pagination */}
+      {filteredOrganizations.length > 0 && (
+        <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="text-sm text-gray-600">
+            Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, filteredOrganizations.length)} of {filteredOrganizations.length} entries
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+              className="px-3 py-1 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 flex items-center gap-1"
+            >
+              <ChevronLeft size={16} /> Previous
+            </button>
+            <span className="px-4 py-1 bg-purple-600 text-white rounded-lg">
+              Page {currentPage} of {totalPages}
+            </span>
+            <button
+              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+              disabled={currentPage === totalPages}
+              className="px-3 py-1 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 flex items-center gap-1"
+            >
+              Next <ChevronRight size={16} />
+            </button>
+          </div>
         </div>
-        <div className="flex gap-2">
-          <button
-            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-            disabled={currentPage === 1}
-            className="px-3 py-1 rounded border border-gray-300"
-          >
-            <ChevronLeft size={16} />
-          </button>
-          <button
-            onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-            disabled={currentPage === totalPages}
-            className="px-3 py-1 rounded border border-gray-300"
-          >
-            <ChevronRight size={16} />
-          </button>
-        </div>
-      </div>
+      )}
 
       {/* View Details Modal */}
       {showViewModal && selectedOrganization && (
@@ -711,7 +674,7 @@ const OrganizationMaster = () => {
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Parent Company *</label>
                       <select name="companyId" value={newOrganization.companyId} onChange={handleInputChange} required className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500">
-                        <option value="">Select Company</option>
+                        <option value={0}>Select Company</option>
                         {sampleCompanies.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                       </select>
                     </div>
@@ -762,7 +725,7 @@ const OrganizationMaster = () => {
                 </div>
 
                 {/* Contact Information */}
-                <div className="mb-4">
+                <div>
                   <h3 className="text-lg font-semibold text-purple-600 mb-3">Contact Information</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div><label className="block text-sm font-medium text-gray-700 mb-1">Contact Person *</label><input type="text" name="contactPerson" value={newOrganization.contactPerson} onChange={handleInputChange} required className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500" /></div>
@@ -816,6 +779,14 @@ const OrganizationMaster = () => {
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* No Results Message */}
+      {filteredOrganizations.length === 0 && (
+        <div className="text-center py-12 bg-white rounded-lg shadow mt-6">
+          <Building2 className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+          <p className="text-gray-500">No organizations found matching your criteria.</p>
         </div>
       )}
     </div>

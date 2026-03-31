@@ -14,7 +14,6 @@ import {
 import { companyApi } from '../../../services/companyApi';
 
 interface Company {
-  status: string;
   id: number;
   companyName: string;
   companyType: string;
@@ -23,7 +22,15 @@ interface Company {
   city: string;
   state: string;
   pincode: string;
-  isActive: boolean;
+  contactPerson: string;
+  contactEmail: string;
+  contactPhone: string;
+  website: string;
+  gstNo: string;
+  status: 'active' | 'inactive';
+  isActive?: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
 const CompanyMaster = () => {
@@ -31,6 +38,7 @@ const CompanyMaster = () => {
     {
       id: 1,
       companyName: 'Agnigate Technologies Pvt. Ltd.',
+      companyType: 'Private Limited',
       industryType: 'IT Services',
       address: 'Plot No. 123, Scheme No. 74',
       city: 'Indore',
@@ -48,8 +56,9 @@ const CompanyMaster = () => {
     {
       id: 2,
       companyName: 'MP Board of Secondary Education',
+      companyType: 'Government',
       industryType: 'Education',
-      address: 'Bhopal',
+      address: 'Shiva Ji Nagar',
       city: 'Bhopal',
       state: 'Madhya Pradesh',
       pincode: '462011',
@@ -65,6 +74,7 @@ const CompanyMaster = () => {
     {
       id: 3,
       companyName: 'ITI Limited',
+      companyType: 'Public',
       industryType: 'Manufacturing',
       address: 'ITI Industrial Area',
       city: 'Rae Bareli',
@@ -82,8 +92,9 @@ const CompanyMaster = () => {
     {
       id: 4,
       companyName: 'Bhoj University',
+      companyType: 'University',
       industryType: 'Education',
-      address: 'Bhopal',
+      address: 'University Campus, Kolar Road',
       city: 'Bhopal',
       state: 'Madhya Pradesh',
       pincode: '462022',
@@ -99,6 +110,7 @@ const CompanyMaster = () => {
     {
       id: 5,
       companyName: 'Infosys Limited',
+      companyType: 'Public',
       industryType: 'IT Services',
       address: 'Electronic City',
       city: 'Bangalore',
@@ -116,6 +128,7 @@ const CompanyMaster = () => {
     {
       id: 6,
       companyName: 'Tata Motors',
+      companyType: 'Public',
       industryType: 'Automobile',
       address: 'Pimpri Chinchwad',
       city: 'Pune',
@@ -133,6 +146,7 @@ const CompanyMaster = () => {
     {
       id: 7,
       companyName: 'ICICI Bank',
+      companyType: 'Banking',
       industryType: 'Banking',
       address: 'Bandra Kurla Complex',
       city: 'Mumbai',
@@ -164,6 +178,7 @@ const CompanyMaster = () => {
   // Form state for new company
   const [newCompany, setNewCompany] = useState({
     companyName: '',
+    companyType: '',
     industryType: '',
     address: '',
     city: '',
@@ -182,21 +197,17 @@ const CompanyMaster = () => {
 
   // Filter companies based on search and filters
   const filteredCompanies = companies.filter(company => {
-    const companyName = company.companyName ?? '';
-    const companyType = company.companyType ?? '';
-    const city = company.city ?? '';
-    const industryType = company.industryType ?? '';
-
-    const matchesSearch =
-      companyName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      companyType.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      city.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      industryType.toLowerCase().includes(searchTerm.toLowerCase());
-
-    const status = company.isActive ? 'active' : 'inactive';
-    const matchesStatus = filterStatus === 'all' || status === filterStatus;
-    const matchesIndustry = filterIndustry === 'all' || industryType === filterIndustry;
-
+    const matchesSearch = 
+      company.companyName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      company.companyType.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      company.city.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      company.industryType.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      company.contactPerson.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      company.contactEmail.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesStatus = filterStatus === 'all' || company.status === filterStatus;
+    const matchesIndustry = filterIndustry === 'all' || company.industryType === filterIndustry;
+    
     return matchesSearch && matchesStatus && matchesIndustry;
   });
 
@@ -208,15 +219,16 @@ const CompanyMaster = () => {
 
   // Export to CSV
   const exportToCSV = () => {
-    const headers = ['Company Name', 'Company Type', 'Industry', 'City', 'State', 'Pincode', 'Active'];
+    const headers = ['Company Name', 'Industry', 'City', 'State', 'Contact Person', 'Email', 'Phone', 'Status'];
     const csvData = filteredCompanies.map(c => [
       c.companyName,
-      c.companyType,
       c.industryType,
       c.city,
       c.state,
-      c.pincode,
-      c.isActive ? 'active' : 'inactive'
+      c.contactPerson,
+      c.contactEmail,
+      c.contactPhone,
+      c.status
     ]);
     
     const csvContent = [headers, ...csvData]
@@ -229,6 +241,7 @@ const CompanyMaster = () => {
     a.href = url;
     a.download = `companies_${new Date().toISOString().split('T')[0]}.csv`;
     a.click();
+    window.URL.revokeObjectURL(url);
   };
 
   // View company details
@@ -265,7 +278,19 @@ const CompanyMaster = () => {
     
     const companyToAdd: Company = {
       id: newId,
-      ...newCompany,
+      companyName: newCompany.companyName,
+      companyType: newCompany.companyType,
+      industryType: newCompany.industryType,
+      address: newCompany.address,
+      city: newCompany.city,
+      state: newCompany.state,
+      pincode: newCompany.pincode,
+      contactPerson: newCompany.contactPerson,
+      contactEmail: newCompany.contactEmail,
+      contactPhone: newCompany.contactPhone,
+      website: newCompany.website,
+      gstNo: newCompany.gstNo,
+      status: newCompany.status,
       createdAt: currentDate,
       updatedAt: currentDate
     };
@@ -274,6 +299,7 @@ const CompanyMaster = () => {
     setShowInsertModal(false);
     setNewCompany({
       companyName: '',
+      companyType: '',
       industryType: '',
       address: '',
       city: '',
@@ -293,10 +319,10 @@ const CompanyMaster = () => {
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-2xl md:text-3xl font-bold text-gray-800">Company Master</h1>
-        <p className="text-sm text-gray-600 mt-1">View company details (Read Only)</p>
+        <p className="text-sm text-gray-600 mt-1">Manage company details</p>
       </div>
 
-      {/* Add Button Only - Delete button removed */}
+      {/* Add Button */}
       <div className="mb-6 flex justify-end">
         <button
           onClick={() => setShowInsertModal(true)}
@@ -332,6 +358,7 @@ const CompanyMaster = () => {
         <div className="p-4 flex flex-col md:flex-row gap-4 items-center justify-between">
           {/* Search */}
           <div className="w-full md:w-96 relative">
+            <Search className="absolute left-3 top-2.5 text-gray-400" size={20} />
             <input
               type="text"
               placeholder="Search companies..."
@@ -339,7 +366,6 @@ const CompanyMaster = () => {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
-            <Search className="absolute left-3 top-2.5 text-gray-400" size={20} />
           </div>
 
           {/* Action Buttons */}
@@ -349,14 +375,14 @@ const CompanyMaster = () => {
               className="flex-1 md:flex-none px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center justify-center gap-2"
             >
               <Filter size={18} />
-              <span className="md:hidden lg:inline">Filters</span>
+              <span className="hidden sm:inline">Filters</span>
             </button>
             <button
               onClick={exportToCSV}
               className="flex-1 md:flex-none px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center justify-center gap-2"
             >
               <Download size={18} />
-              <span className="md:hidden lg:inline">Export</span>
+              <span className="hidden sm:inline">Export</span>
             </button>
           </div>
         </div>
@@ -407,7 +433,7 @@ const CompanyMaster = () => {
         )}
       </div>
 
-      {/* Table with Horizontal Scroll - Works on all devices */}
+      {/* Table */}
       <div className="bg-white rounded-lg shadow overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[1200px] lg:min-w-full">
@@ -424,7 +450,7 @@ const CompanyMaster = () => {
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">GST No</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-               </tr>
+              </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
               {currentItems.map((company, index) => (
@@ -462,14 +488,14 @@ const CompanyMaster = () => {
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => viewCompanyDetails(company)}
-                        className="p-1 text-blue-600 hover:bg-blue-50 rounded flex items-center gap-1"
+                        className="p-1 text-blue-600 hover:bg-blue-50 rounded"
                         title="View Details"
                       >
                         <Eye size={18} />
                       </button>
                       <button
                         onClick={() => openDeleteModal(company)}
-                        className="p-1 text-red-600 hover:bg-red-50 rounded flex items-center gap-1"
+                        className="p-1 text-red-600 hover:bg-red-50 rounded"
                         title="Delete Company"
                       >
                         <Trash2 size={18} />
@@ -477,68 +503,39 @@ const CompanyMaster = () => {
                     </div>
                   </td>
                 </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {currentItems.map((company, index) => (
-                  <tr key={company.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 text-sm text-gray-600">
-                      {indexOfFirstItem + index + 1}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-600">{company.companyName || '-'}</td>
-                    <td className="px-4 py-3 text-sm text-gray-600">{company.companyType || '-'}</td>
-                    <td className="px-4 py-3 text-sm text-gray-600">{company.industryType || '-'}</td>
-                    <td className="px-4 py-3 text-sm text-gray-600">{company.city || '-'}</td>
-                    <td className="px-4 py-3 text-sm text-gray-600">{company.state || '-'}</td>
-                    <td className="px-4 py-3 text-sm text-gray-600">{company.pincode || '-'}</td>
-                    <td className="px-4 py-3">
-                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold ${
-                        company.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                      }`}>
-                        {company.isActive ? 'active' : 'inactive'}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <button
-                        onClick={() => viewCompanyDetails(company)}
-                        className="p-1 text-blue-600 hover:bg-blue-50 rounded flex items-center gap-1"
-                        title="View Details"
-                      >
-                        <Eye size={18} />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* Pagination */}
-      <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div className="text-sm text-gray-600">
-          Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, filteredCompanies.length)} of {filteredCompanies.length} entries
+      {filteredCompanies.length > 0 && (
+        <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="text-sm text-gray-600">
+            Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, filteredCompanies.length)} of {filteredCompanies.length} entries
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+              className="px-3 py-1 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 flex items-center gap-1"
+            >
+              <ChevronLeft size={16} /> Previous
+            </button>
+            <span className="px-4 py-1 bg-purple-600 text-white rounded-lg">
+              Page {currentPage} of {totalPages}
+            </span>
+            <button
+              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+              disabled={currentPage === totalPages}
+              className="px-3 py-1 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 flex items-center gap-1"
+            >
+              Next <ChevronRight size={16} />
+            </button>
+          </div>
         </div>
-        <div className="flex gap-2">
-          <button
-            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-            disabled={currentPage === 1}
-            className="px-3 py-1 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 flex items-center gap-1"
-          >
-            <ChevronLeft size={16} /> Previous
-          </button>
-          <span className="px-4 py-1 bg-purple-600 text-white rounded-lg">
-            Page {currentPage} of {totalPages}
-          </span>
-          <button
-            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-            disabled={currentPage === totalPages}
-            className="px-3 py-1 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 flex items-center gap-1"
-          >
-            Next <ChevronRight size={16} />
-          </button>
-        </div>
-      </div>
+      )}
 
       {/* View Details Modal */}
       {showViewModal && selectedCompany && (
@@ -577,11 +574,19 @@ const CompanyMaster = () => {
                       <p className="font-medium">{selectedCompany.industryType}</p>
                     </div>
                     <div>
-                      <p className="text-sm text-gray-500">Active Status</p>
+                      <p className="text-sm text-gray-500">GST Number</p>
+                      <p className="font-medium">{selectedCompany.gstNo}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Website</p>
+                      <p className="font-medium text-blue-600">{selectedCompany.website}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Status</p>
                       <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold ${
-                        selectedCompany.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                        selectedCompany.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                       }`}>
-                        {selectedCompany.isActive ? 'active' : 'inactive'}
+                        {selectedCompany.status}
                       </span>
                     </div>
                   </div>
@@ -592,6 +597,38 @@ const CompanyMaster = () => {
                   <div className="grid grid-cols-1 gap-2">
                     <p className="font-medium">{selectedCompany.address}</p>
                     <p>{selectedCompany.city}, {selectedCompany.state} - {selectedCompany.pincode}</p>
+                  </div>
+                </div>
+
+                <div className="border-b pb-4">
+                  <h3 className="text-lg font-semibold text-purple-600 mb-3">Contact Information</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm text-gray-500">Contact Person</p>
+                      <p className="font-medium">{selectedCompany.contactPerson}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Email</p>
+                      <p className="font-medium text-blue-600">{selectedCompany.contactEmail}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Phone</p>
+                      <p className="font-medium">{selectedCompany.contactPhone}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-semibold text-purple-600 mb-3">System Information</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm text-gray-500">Created At</p>
+                      <p className="text-sm">{new Date(selectedCompany.createdAt).toLocaleDateString()}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Last Updated</p>
+                      <p className="text-sm">{new Date(selectedCompany.updatedAt).toLocaleDateString()}</p>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -624,6 +661,7 @@ const CompanyMaster = () => {
                     setShowInsertModal(false);
                     setNewCompany({
                       companyName: '',
+                      companyType: '',
                       industryType: '',
                       address: '',
                       city: '',
@@ -663,6 +701,17 @@ const CompanyMaster = () => {
                         />
                       </div>
                       <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Company Type *</label>
+                        <input
+                          type="text"
+                          name="companyType"
+                          value={newCompany.companyType}
+                          onChange={handleInputChange}
+                          required
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        />
+                      </div>
+                      <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Industry Type *</label>
                         <input
                           type="text"
@@ -674,7 +723,7 @@ const CompanyMaster = () => {
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">GST No</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">GST Number</label>
                         <input
                           type="text"
                           name="gstNo"
@@ -763,7 +812,7 @@ const CompanyMaster = () => {
                   </div>
 
                   {/* Contact Information */}
-                  <div className="border-b pb-4">
+                  <div>
                     <h3 className="text-lg font-semibold text-purple-600 mb-3">Contact Information</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
@@ -810,6 +859,7 @@ const CompanyMaster = () => {
                       setShowInsertModal(false);
                       setNewCompany({
                         companyName: '',
+                        companyType: '',
                         industryType: '',
                         address: '',
                         city: '',
@@ -868,7 +918,7 @@ const CompanyMaster = () => {
                 </button>
                 <button
                   onClick={handleDeleteCompany}
-                  className="flex-1 px-5 py-2.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition duration-200"
+                  className="flex-1 px-5 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition duration-200"
                 >
                   Delete
                 </button>
@@ -880,7 +930,7 @@ const CompanyMaster = () => {
 
       {/* No Results Message */}
       {filteredCompanies.length === 0 && (
-        <div className="text-center py-12 bg-white rounded-lg shadow">
+        <div className="text-center py-12 bg-white rounded-lg shadow mt-6">
           <p className="text-gray-500">No companies found matching your criteria.</p>
         </div>
       )}
