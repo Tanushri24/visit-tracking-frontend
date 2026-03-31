@@ -178,7 +178,7 @@ const SuperAdminRoutes = () => {
 
       {/* ========== EXPENSE CONFIGURATION (WITH DROPDOWN) ========== */}
       
-      <Route
+      {/* <Route
         path="expense-config"
         element={
           <Layout role="super_admin">
@@ -218,7 +218,7 @@ const SuperAdminRoutes = () => {
           </Layout>
         }
       />
-      
+       */}
       {/* ========== FUNNEL MANAGEMENT ========== */}
      
        <Route
