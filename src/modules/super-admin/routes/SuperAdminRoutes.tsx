@@ -1,38 +1,42 @@
 // src/modules/super-admin/routes/SuperAdminRoutes.tsx
+import React from "react";
+import { Routes, Route, Navigate } from "react-router-dom";
+import Layout from "../../../Layouts/Layout";
+import SuperAdminDashboard from "../pages/SuperAdminDashboard";
+import EmployeeRegistration from "../pages/employee-registration/EmployeeRegistration";
 
-import { Navigate, Route, Routes } from 'react-router-dom';
-import Layout from '../../../Layouts/Layout';
-import SuperAdminDashboard from '../pages/SuperAdminDashboard';
-import EmployeeRegistration from '../pages/employee-registration/EmployeeRegistration';
+// Master Management
+import MasterManagement from "../pages/Master/MasterManagement";
+import CompanyMaster from "../pages/Master/Components/CompanyMaster";
+import OrganizationMaster from "../pages/Master/Components/OrganizationMaster";
+import DepartmentMaster from "../pages/Master/Components/DepartmentMaster";
+import ContactPersonMaster from "../pages/Master/Components/ContactPersonMaster";
+import VisitPurposeMaster from "../pages/Master/Components/VisitPurposeMaster";
+import VehicleTypesMater from "../pages/Master/Components/VehicleTypeMaster";
+import ExpenseRateMaster from "../pages/Master/Components/ExpenseRateMaster";
+import FunnelStageMaster from "../pages/Master/Components/FunnelStageMaster";
+import OutcomeMaster from "../pages/Master/Components/OutcomeMaster";
 
-// Master Management Pages
-import MasterManagement from '../pages/Master/MasterManagement';
-import CompanyMaster from '../pages/Master/Components/CompanyMaster';
-import OrganizationMaster from '../pages/Master/Components/OrganizationMaster';
-import DepartmentMaster from '../pages/Master/Components/DepartmentMaster';
-import ContactPersonMaster from '../pages/Master/Components/ContactPersonMaster';
+// Expense Config
+import ExpenseConfig from "../pages/expense-configrution/ExpenseConfig";
+import RateManagement from "../pages/expense-configrution/RateManagement";
+import RateChangeHistory from "../pages/expense-configrution/RateChangeHistory";
+import VehicleTypes from "../pages/expense-configrution/VehicleTypes";
+import EffectiveDates from "../pages/expense-configrution/EffectiveDates";
 
-// Expense Configuration Pages
-import ExpenseConfig from '../pages/expense-configrution/ExpenseConfig';
-import RateManagement from '../pages/expense-configrution/RateManagement';
-import RateChangeHistory from '../pages/expense-configrution/RateChangeHistory';
-import VehicleTypes from '../pages/expense-configrution/VehicleTypes';
-import EffectiveDates from '../pages/expense-configrution/EffectiveDates';
+// User Management
+import UserManagement from "../pages/User/UserManagement";
 
-// Import User Management (Top level only for now)
-import UserManagement from '../pages/User/UserManagement';
-
-// Import other modules (commented out for now)
-// import FunnelManagement from '../pages/Funnel/FunnelManagement';
-// import VisitManagement from '../pages/Visit/VisitManagement';
-// import BusinessOutcomes from '../pages/Outcomes/BusinessOutcomes';
-// import Reports from '../pages/Reports/Reports';
-// import AuditLogs from '../pages/Audit/AuditLogs';
+// Visit Management
+import VisitManagement from "../pages/Visits/VisitManagement";
+import AllVisits from "../pages/Visits/Components/AllVisits";
+import TodaysVisits from "../pages/Visits/Components/TodaysVisits";
+import MonthlyVisits from "../pages/Visits/Components/MonthlyVisits";
 
 const SuperAdminRoutes = () => {
   return (
     <Routes>
-      {/* ========== DASHBOARD ========== */}
+      {/* Dashboard */}
       <Route
         path="dashboard"
         element={
@@ -41,8 +45,8 @@ const SuperAdminRoutes = () => {
           </Layout>
         }
       />
-      
-      {/* ========== EMPLOYEE REGISTRATION ========== */}
+
+      {/* Employee Registration */}
       <Route
         path="employee-registration"
         element={
@@ -51,9 +55,8 @@ const SuperAdminRoutes = () => {
           </Layout>
         }
       />
-      
-      {/* ========== MASTER MANAGEMENT (WITH DROPDOWN) ========== */}
-      {/* Master Management Overview */}
+
+      {/* Master Management */}
       <Route
         path="master-management"
         element={
@@ -62,8 +65,6 @@ const SuperAdminRoutes = () => {
           </Layout>
         }
       />
-      
-      {/* Master Management Sub-routes */}
       <Route
         path="master-management/company"
         element={
@@ -72,7 +73,6 @@ const SuperAdminRoutes = () => {
           </Layout>
         }
       />
-      
       <Route
         path="master-management/organization"
         element={
@@ -81,7 +81,6 @@ const SuperAdminRoutes = () => {
           </Layout>
         }
       />
-      
       <Route
         path="master-management/department"
         element={
@@ -90,7 +89,6 @@ const SuperAdminRoutes = () => {
           </Layout>
         }
       />
-      
       <Route
         path="master-management/contact-person"
         element={
@@ -99,9 +97,48 @@ const SuperAdminRoutes = () => {
           </Layout>
         }
       />
-      
-      {/* ========== EXPENSE CONFIGURATION (WITH DROPDOWN) ========== */}
-      {/* Expense Configuration Overview */}
+      <Route
+        path="master-management/visit-purpose"
+        element={
+          <Layout role="super_admin">
+            <VisitPurposeMaster />
+          </Layout>
+        }
+      />
+      <Route
+        path="master-management/vehicle-type"
+        element={
+          <Layout role="super_admin">
+            <VehicleTypesMater />
+          </Layout>
+        }
+      />
+      <Route
+        path="master-management/expense-rate"
+        element={
+          <Layout role="super_admin">
+            <ExpenseRateMaster />
+          </Layout>
+        }
+      />
+      <Route
+        path="master-management/funnel-stage"
+        element={
+          <Layout role="super_admin">
+            <FunnelStageMaster />
+          </Layout>
+        }
+      />
+      <Route
+        path="master-management/outcome-master"
+        element={
+          <Layout role="super_admin">
+            <OutcomeMaster />
+          </Layout>
+        }
+      />
+
+      {/* Expense Config */}
       <Route
         path="expense-config"
         element={
@@ -110,8 +147,6 @@ const SuperAdminRoutes = () => {
           </Layout>
         }
       />
-      
-      {/* Expense Configuration Sub-routes */}
       <Route
         path="expense-config/rates"
         element={
@@ -120,7 +155,6 @@ const SuperAdminRoutes = () => {
           </Layout>
         }
       />
-      
       <Route
         path="expense-config/history"
         element={
@@ -129,7 +163,6 @@ const SuperAdminRoutes = () => {
           </Layout>
         }
       />
-      
       <Route
         path="expense-config/vehicles"
         element={
@@ -138,7 +171,6 @@ const SuperAdminRoutes = () => {
           </Layout>
         }
       />
-      
       <Route
         path="expense-config/effective-dates"
         element={
@@ -147,21 +179,8 @@ const SuperAdminRoutes = () => {
           </Layout>
         }
       />
-      
-      {/* ========== FUNNEL MANAGEMENT ========== */}
-      <Route
-        path="Funnel-management"
-        element={
-          <Layout role="super_admin">
-            <div className="p-6">
-              <h1 className="text-2xl font-bold text-gray-800">Funnel Management</h1>
-              <p className="text-gray-600 mt-2">Coming Soon</p>
-            </div>
-          </Layout>
-        }
-      />
-      
-      {/* ========== USER MANAGEMENT ========== */}
+
+      {/* User Management */}
       <Route
         path="users"
         element={
@@ -170,64 +189,43 @@ const SuperAdminRoutes = () => {
           </Layout>
         }
       />
-      
-      {/* ========== VISIT MANAGEMENT ========== */}
+
+      {/* Visit Management */}
       <Route
-        path="visits"
+        path="visit-management"
         element={
           <Layout role="super_admin">
-            <div className="p-6">
-              <h1 className="text-2xl font-bold text-gray-800">Visit Management</h1>
-              <p className="text-gray-600 mt-2">Coming Soon</p>
-            </div>
+            <VisitManagement />
           </Layout>
         }
       />
-      
-      {/* ========== BUSINESS OUTCOMES ========== */}
       <Route
-        path="outcomes"
+        path="visit-management/all-visits"
         element={
           <Layout role="super_admin">
-            <div className="p-6">
-              <h1 className="text-2xl font-bold text-gray-800">Business Outcomes</h1>
-              <p className="text-gray-600 mt-2">Coming Soon</p>
-            </div>
+            <AllVisits />
           </Layout>
         }
       />
-      
-      {/* ========== REPORTS ========== */}
       <Route
-        path="reports"
+        path="visit-management/todays-visits"
         element={
           <Layout role="super_admin">
-            <div className="p-6">
-              <h1 className="text-2xl font-bold text-gray-800">Reports</h1>
-              <p className="text-gray-600 mt-2">Coming Soon</p>
-            </div>
+            <TodaysVisits />
           </Layout>
         }
       />
-      
-      {/* ========== AUDIT LOGS ========== */}
       <Route
-        path="audit"
+        path="visit-management/monthly-visits"
         element={
           <Layout role="super_admin">
-            <div className="p-6">
-              <h1 className="text-2xl font-bold text-gray-800">Audit Logs</h1>
-              <p className="text-gray-600 mt-2">Coming Soon</p>
-            </div>
+            <MonthlyVisits />
           </Layout>
         }
       />
-      
-      {/* ========== DEFAULT ROUTE ========== */}
-      <Route
-        path="*"
-        element={<Navigate to="/super-admin/dashboard" replace />}
-      />
+
+      {/* Default Route */}
+      <Route path="*" element={<Navigate to="/super-admin/dashboard" replace />} />
     </Routes>
   );
 };

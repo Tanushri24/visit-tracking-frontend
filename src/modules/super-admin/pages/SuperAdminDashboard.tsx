@@ -19,8 +19,13 @@ import type {
   ChartData, 
   Visit, 
   Location, 
-  ScheduleItem 
+  ScheduleItem,
+  TimeRange
 } from '../types/super-admin.types';
+
+// Define Value type for Calendar
+type ValuePiece = Date | null;
+type CalendarValue = ValuePiece | [ValuePiece, ValuePiece];
 
 // Simple Stat Card Component with proper typing
 const StatCard = ({ stat }: { stat: StatCardType }) => (
@@ -138,7 +143,7 @@ const ScheduleItemComp = ({ item }: { item: ScheduleItem }) => (
 );
 
 // Main Dashboard Component
-const SuperAdminDashboard = () => {
+const SuperAdminDashboard: React.FC = () => {
   const {
     filterState,
     showDatePicker,
@@ -149,8 +154,8 @@ const SuperAdminDashboard = () => {
     setShowDatePicker
   } = useDashboardFilter();
 
-  const [showFilterMenu, setShowFilterMenu] = useState(false);
-  const [showCalendar, setShowCalendar] = useState(false);
+  const [showFilterMenu, setShowFilterMenu] = useState<boolean>(false);
+  const [showCalendar, setShowCalendar] = useState<boolean>(false);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
 
   // Refs for outside click detection
@@ -177,6 +182,14 @@ const SuperAdminDashboard = () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [setShowDatePicker]);
+
+  // Handle calendar date change with proper type
+  const handleCalendarChange = (value: CalendarValue) => {
+    if (value instanceof Date) {
+      setSelectedDate(value);
+      setShowCalendar(false);
+    }
+  };
 
   const timeRangeOptions = [
     { label: 'Today', value: 'today' },
@@ -226,7 +239,7 @@ const SuperAdminDashboard = () => {
                       if (option.value === 'custom') {
                         toggleDatePicker();
                       } else {
-                        handleTimeRangeChange(option.value as any);
+                        handleTimeRangeChange(option.value as TimeRange);
                       }
                       setShowFilterMenu(false);
                     }}
@@ -253,10 +266,7 @@ const SuperAdminDashboard = () => {
             {showCalendar && (
               <div className="absolute right-0 mt-2 z-50">
                 <Calendar
-                  onChange={(value) => {
-                    setSelectedDate(value as Date);
-                    setShowCalendar(false);
-                  }}
+                  onChange={handleCalendarChange}
                   value={selectedDate}
                   className="!w-64 sm:!w-auto rounded-lg shadow-xl border border-purple-100 text-xs sm:text-sm"
                 />
@@ -275,7 +285,7 @@ const SuperAdminDashboard = () => {
                 <label className="text-[10px] sm:text-xs text-gray-600 mb-1 block">Start Date</label>
                 <input
                   type="date"
-                  onChange={(e) => handleDateSelect(new Date(e.target.value), filterState.endDate)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleDateSelect(new Date(e.target.value), filterState.endDate)}
                   className="w-full p-1.5 sm:p-2 text-xs sm:text-sm border border-purple-200 rounded-lg focus:ring-2 focus:ring-purple-500"
                 />
               </div>
@@ -283,7 +293,7 @@ const SuperAdminDashboard = () => {
                 <label className="text-[10px] sm:text-xs text-gray-600 mb-1 block">End Date</label>
                 <input
                   type="date"
-                  onChange={(e) => handleDateSelect(filterState.startDate, new Date(e.target.value))}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleDateSelect(filterState.startDate, new Date(e.target.value))}
                   className="w-full p-1.5 sm:p-2 text-xs sm:text-sm border border-purple-200 rounded-lg focus:ring-2 focus:ring-purple-500"
                 />
               </div>
@@ -308,8 +318,8 @@ const SuperAdminDashboard = () => {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3">
-        {STATS_CARDS.map((stat, i) => (
-          <StatCard key={i} stat={stat} />
+        {STATS_CARDS.map((stat) => (
+          <StatCard key={stat.label} stat={stat} />
         ))}
       </div>
 
@@ -348,8 +358,8 @@ const SuperAdminDashboard = () => {
               </div>
             </div>
             <div className="divide-y divide-gray-100 max-h-[300px] sm:max-h-[350px] overflow-y-auto">
-              {RECENT_VISITS.map((visit) => (
-                <RecentVisitItem key={visit.id} visit={visit} />
+              {RECENT_VISITS.map((visit, index) => (
+                <RecentVisitItem key={index} visit={visit} />
               ))}
             </div>
           </div>
@@ -366,8 +376,8 @@ const SuperAdminDashboard = () => {
               <h2 className="text-xs sm:text-sm font-medium text-gray-700">Today's Schedule</h2>
             </div>
             <div className="space-y-1 sm:space-y-2">
-              {SCHEDULE_ITEMS.map((item, i) => (
-                <ScheduleItemComp key={i} item={item} />
+              {SCHEDULE_ITEMS.map((item, index) => (
+                <ScheduleItemComp key={index} item={item} />
               ))}
             </div>
           </div>
@@ -381,8 +391,8 @@ const SuperAdminDashboard = () => {
               <h2 className="text-xs sm:text-sm font-medium text-gray-700">Popular Locations</h2>
             </div>
             <div className="space-y-2 sm:space-y-3">
-              {POPULAR_LOCATIONS.map((loc, i) => (
-                <LocationItem key={i} location={loc} />
+              {POPULAR_LOCATIONS.map((loc, index) => (
+                <LocationItem key={index} location={loc} />
               ))}
             </div>
           </div>
