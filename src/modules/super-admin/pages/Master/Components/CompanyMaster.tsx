@@ -8,7 +8,8 @@ import {
   Download,
   RefreshCw,
   Eye,
-  Plus
+  Plus,
+  Trash2
 } from 'lucide-react';
 import { companyApi } from '../../../services/companyApi';
 
@@ -26,126 +27,127 @@ interface Company {
 }
 
 const CompanyMaster = () => {
-  const [companies, setCompanies] = useState<Company[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-
-  //     industryType: 'IT Services',
-  //     address: 'Plot No. 123, Scheme No. 74',
-  //     city: 'Indore',
-  //     state: 'Madhya Pradesh',
-  //     pincode: '452010',
-  //     contactPerson: 'Rajesh Sharma',
-  //     contactEmail: 'rajesh@agnigate.com',
-  //     contactPhone: '+91 9876543210',
-  //     website: 'www.agnigate.com',
-  //     gstNo: '23AAAAA0000A1Z5',
-  //     status: 'active',
-  //     createdAt: '2024-01-15',
-  //     updatedAt: '2024-02-20'
-  //   },
-  //   {
-  //     id: 2,
-  //     companyName: 'MP Board of Secondary Education',
-  //     industryType: 'Education',
-  //     address: 'Bhopal',
-  //     city: 'Bhopal',
-  //     state: 'Madhya Pradesh',
-  //     pincode: '462011',
-  //     contactPerson: 'Dr. S.K. Rao',
-  //     contactEmail: 'secretary@mpbse.com',
-  //     contactPhone: '+91 755 2551234',
-  //     website: 'www.mpbse.nic.in',
-  //     gstNo: '23BBBBB0000B2Z6',
-  //     status: 'active',
-  //     createdAt: '2024-01-20',
-  //     updatedAt: '2024-02-18'
-  //   },
-  //   {
-  //     id: 3,
-  //     companyName: 'ITI Limited',
-  //     industryType: 'Manufacturing',
-  //     address: 'ITI Industrial Area',
-  //     city: 'Rae Bareli',
-  //     state: 'Uttar Pradesh',
-  //     pincode: '229010',
-  //     contactPerson: 'A.K. Singh',
-  //     contactEmail: 'aksingh@iti.co.in',
-  //     contactPhone: '+91 535 2701234',
-  //     website: 'www.itiltd.in',
-  //     gstNo: '09CCCCC0000C3Z7',
-  //     status: 'inactive',
-  //     createdAt: '2024-01-25',
-  //     updatedAt: '2024-02-15'
-  //   },
-  //   {
-  //     id: 4,
-  //     companyName: 'Bhoj University',
-  //     industryType: 'Education',
-  //     address: 'Bhopal',
-  //     city: 'Bhopal',
-  //     state: 'Madhya Pradesh',
-  //     pincode: '462022',
-  //     contactPerson: 'Prof. V.K. Shrivastava',
-  //     contactEmail: 'registrar@bhojuni.ac.in',
-  //     contactPhone: '+91 755 2731234',
-  //     website: 'www.bhojuni.ac.in',
-  //     gstNo: '23DDDDD0000D4Z8',
-  //     status: 'active',
-  //     createdAt: '2024-02-01',
-  //     updatedAt: '2024-02-10'
-  //   },
-  //   {
-  //     id: 5,
-  //     companyName: 'Infosys Limited',
-  //     industryType: 'IT Services',
-  //     address: 'Electronic City',
-  //     city: 'Bangalore',
-  //     state: 'Karnataka',
-  //     pincode: '560100',
-  //     contactPerson: 'Sundar Rajan',
-  //     contactEmail: 'sundar@infosys.com',
-  //     contactPhone: '+91 80 4112 3456',
-  //     website: 'www.infosys.com',
-  //     gstNo: '29EEEEE0000E5Z9',
-  //     status: 'active',
-  //     createdAt: '2024-02-05',
-  //     updatedAt: '2024-02-12'
-  //   },
-  //   {
-  //     id: 6,
-  //     companyName: 'Tata Motors',
-  //     industryType: 'Automobile',
-  //     address: 'Pimpri Chinchwad',
-  //     city: 'Pune',
-  //     state: 'Maharashtra',
-  //     pincode: '411018',
-  //     contactPerson: 'Vikram Singh',
-  //     contactEmail: 'vikram.singh@tatamotors.com',
-  //     contactPhone: '+91 20 6732 1234',
-  //     website: 'www.tatamotors.com',
-  //     gstNo: '27FFFFF0000F6Z0',
-  //     status: 'active',
-  //     createdAt: '2024-02-08',
-  //     updatedAt: '2024-02-14'
-  //   },
-  //   {
-  //     id: 7,
-  //     companyName: 'ICICI Bank',
-  //     industryType: 'Banking',
-  //     address: 'Bandra Kurla Complex',
-  //     city: 'Mumbai',
-  //     state: 'Maharashtra',
-  //     pincode: '400051',
-  //     contactPerson: 'Priya Mehta',
-  //     contactEmail: 'priya.mehta@icicibank.com',
-  //     contactPhone: '+91 22 2653 1234',
-  //     website: 'www.icicibank.com',
-  //     gstNo: '27GGGGG0000G7Z1',
-  //     status: 'inactive',
-  //     createdAt: '2024-02-10',
-  //     updatedAt: '2024-02-16'
-  //   }
-  // ]);
+  const [companies, setCompanies] = useState<Company[]>([
+    {
+      id: 1,
+      companyName: 'Agnigate Technologies Pvt. Ltd.',
+      industryType: 'IT Services',
+      address: 'Plot No. 123, Scheme No. 74',
+      city: 'Indore',
+      state: 'Madhya Pradesh',
+      pincode: '452010',
+      contactPerson: 'Rajesh Sharma',
+      contactEmail: 'rajesh@agnigate.com',
+      contactPhone: '+91 9876543210',
+      website: 'www.agnigate.com',
+      gstNo: '23AAAAA0000A1Z5',
+      status: 'active',
+      createdAt: '2024-01-15',
+      updatedAt: '2024-02-20'
+    },
+    {
+      id: 2,
+      companyName: 'MP Board of Secondary Education',
+      industryType: 'Education',
+      address: 'Bhopal',
+      city: 'Bhopal',
+      state: 'Madhya Pradesh',
+      pincode: '462011',
+      contactPerson: 'Dr. S.K. Rao',
+      contactEmail: 'secretary@mpbse.com',
+      contactPhone: '+91 755 2551234',
+      website: 'www.mpbse.nic.in',
+      gstNo: '23BBBBB0000B2Z6',
+      status: 'active',
+      createdAt: '2024-01-20',
+      updatedAt: '2024-02-18'
+    },
+    {
+      id: 3,
+      companyName: 'ITI Limited',
+      industryType: 'Manufacturing',
+      address: 'ITI Industrial Area',
+      city: 'Rae Bareli',
+      state: 'Uttar Pradesh',
+      pincode: '229010',
+      contactPerson: 'A.K. Singh',
+      contactEmail: 'aksingh@iti.co.in',
+      contactPhone: '+91 535 2701234',
+      website: 'www.itiltd.in',
+      gstNo: '09CCCCC0000C3Z7',
+      status: 'inactive',
+      createdAt: '2024-01-25',
+      updatedAt: '2024-02-15'
+    },
+    {
+      id: 4,
+      companyName: 'Bhoj University',
+      industryType: 'Education',
+      address: 'Bhopal',
+      city: 'Bhopal',
+      state: 'Madhya Pradesh',
+      pincode: '462022',
+      contactPerson: 'Prof. V.K. Shrivastava',
+      contactEmail: 'registrar@bhojuni.ac.in',
+      contactPhone: '+91 755 2731234',
+      website: 'www.bhojuni.ac.in',
+      gstNo: '23DDDDD0000D4Z8',
+      status: 'active',
+      createdAt: '2024-02-01',
+      updatedAt: '2024-02-10'
+    },
+    {
+      id: 5,
+      companyName: 'Infosys Limited',
+      industryType: 'IT Services',
+      address: 'Electronic City',
+      city: 'Bangalore',
+      state: 'Karnataka',
+      pincode: '560100',
+      contactPerson: 'Sundar Rajan',
+      contactEmail: 'sundar@infosys.com',
+      contactPhone: '+91 80 4112 3456',
+      website: 'www.infosys.com',
+      gstNo: '29EEEEE0000E5Z9',
+      status: 'active',
+      createdAt: '2024-02-05',
+      updatedAt: '2024-02-12'
+    },
+    {
+      id: 6,
+      companyName: 'Tata Motors',
+      industryType: 'Automobile',
+      address: 'Pimpri Chinchwad',
+      city: 'Pune',
+      state: 'Maharashtra',
+      pincode: '411018',
+      contactPerson: 'Vikram Singh',
+      contactEmail: 'vikram.singh@tatamotors.com',
+      contactPhone: '+91 20 6732 1234',
+      website: 'www.tatamotors.com',
+      gstNo: '27FFFFF0000F6Z0',
+      status: 'active',
+      createdAt: '2024-02-08',
+      updatedAt: '2024-02-14'
+    },
+    {
+      id: 7,
+      companyName: 'ICICI Bank',
+      industryType: 'Banking',
+      address: 'Bandra Kurla Complex',
+      city: 'Mumbai',
+      state: 'Maharashtra',
+      pincode: '400051',
+      contactPerson: 'Priya Mehta',
+      contactEmail: 'priya.mehta@icicibank.com',
+      contactPhone: '+91 22 2653 1234',
+      website: 'www.icicibank.com',
+      gstNo: '27GGGGG0000G7Z1',
+      status: 'inactive',
+      createdAt: '2024-02-10',
+      updatedAt: '2024-02-16'
+    }
+  ]);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
@@ -156,46 +158,23 @@ const CompanyMaster = () => {
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
   const [showViewModal, setShowViewModal] = useState(false);
   const [showInsertModal, setShowInsertModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [companyToDelete, setCompanyToDelete] = useState<Company | null>(null);
   
-  // Fetch companies from backend
-  useEffect(() => {
-    const loadCompanies = async () => {
-      setIsLoading(true);
-      try {
-        const data = await companyApi.getCompanies();
-        const transformedData = data.map(company => ({
-          id: company.id,
-          companyName: company.companyName ?? '',
-          companyType: company.companyType ?? '',
-          industryType: company.industryType ?? '',
-          address: company.address ?? '',
-          city: company.city ?? '',
-          state: company.state ?? '',
-          pincode: company.pincode ?? '',
-          isActive: company.isActive ?? false,
-          status: company.isActive ? 'active' : 'inactive'
-        }));
-        setCompanies(transformedData);
-      } catch (error) {
-        console.error('Failed to fetch companies:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadCompanies();
-  }, []);
-
   // Form state for new company
   const [newCompany, setNewCompany] = useState({
     companyName: '',
-    companyType: '',
     industryType: '',
     address: '',
     city: '',
     state: '',
     pincode: '',
-    isActive: true
+    contactPerson: '',
+    contactEmail: '',
+    contactPhone: '',
+    website: '',
+    gstNo: '',
+    status: 'active' as 'active' | 'inactive'
   });
 
   // Get unique industry types for filter
@@ -258,6 +237,21 @@ const CompanyMaster = () => {
     setShowViewModal(true);
   };
 
+  // Delete company
+  const handleDeleteCompany = () => {
+    if (companyToDelete) {
+      setCompanies(companies.filter(c => c.id !== companyToDelete.id));
+      setShowDeleteModal(false);
+      setCompanyToDelete(null);
+    }
+  };
+
+  // Open delete confirmation modal
+  const openDeleteModal = (company: Company) => {
+    setCompanyToDelete(company);
+    setShowDeleteModal(true);
+  };
+
   // Handle insert form input changes
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -265,55 +259,33 @@ const CompanyMaster = () => {
   };
 
   // Handle form submission
-  const handleInsertCompany = async () => {
-    setIsLoading(true);
-
-    try {
-      const payload = {
-        companyName: newCompany.companyName,
-        companyType: newCompany.companyType,
-        industryType: newCompany.industryType,
-        address: newCompany.address,
-        city: newCompany.city,
-        state: newCompany.state,
-        pincode: newCompany.pincode,
-        isActive: newCompany.isActive
-      };
-
-      const created = await companyApi.createCompany(payload);
-
-      const normalizedCompany: Company = {
-        id: created?.id ?? Date.now(),
-        companyName: created?.companyName ?? payload.companyName,
-        companyType: created?.companyType ?? payload.companyType,
-        industryType: created?.industryType ?? payload.industryType,
-        address: created?.address ?? payload.address,
-        city: created?.city ?? payload.city,
-        state: created?.state ?? payload.state,
-        pincode: created?.pincode ?? payload.pincode,
-        isActive: created?.isActive ?? payload.isActive,
-        status: (created?.isActive ?? payload.isActive) ? 'active' : 'inactive'
-      };
-
-      setCompanies(prev => [normalizedCompany, ...prev]);
-      setCurrentPage(1);
-      setShowInsertModal(false);
-      setNewCompany({
-        companyName: '',
-        companyType: '',
-        industryType: '',
-        address: '',
-        city: '',
-        state: '',
-        pincode: '',
-        isActive: true
-      });
-    } catch (error) {
-      console.error('Create company failed:', error);
-      alert('Failed to create company. Please try again.');
-    } finally {
-      setIsLoading(false);
-    }
+  const handleInsertCompany = () => {
+    const newId = Math.max(...companies.map(c => c.id), 0) + 1;
+    const currentDate = new Date().toISOString().split('T')[0];
+    
+    const companyToAdd: Company = {
+      id: newId,
+      ...newCompany,
+      createdAt: currentDate,
+      updatedAt: currentDate
+    };
+    
+    setCompanies([...companies, companyToAdd]);
+    setShowInsertModal(false);
+    setNewCompany({
+      companyName: '',
+      industryType: '',
+      address: '',
+      city: '',
+      state: '',
+      pincode: '',
+      contactPerson: '',
+      contactEmail: '',
+      contactPhone: '',
+      website: '',
+      gstNo: '',
+      status: 'active'
+    });
   };
 
   return (
@@ -324,7 +296,7 @@ const CompanyMaster = () => {
         <p className="text-sm text-gray-600 mt-1">View company details (Read Only)</p>
       </div>
 
-      {/* Add Company Button - Moved above KPI Cards */}
+      {/* Add Button Only - Delete button removed */}
       <div className="mb-6 flex justify-end">
         <button
           onClick={() => setShowInsertModal(true)}
@@ -437,24 +409,73 @@ const CompanyMaster = () => {
 
       {/* Table with Horizontal Scroll - Works on all devices */}
       <div className="bg-white rounded-lg shadow overflow-hidden">
-        {isLoading ? (
-          <div className="flex items-center justify-center py-12">
-            <p className="text-gray-500">Loading companies...</p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[1200px] lg:min-w-full">
-              <thead className="bg-gray-50 border-b border-gray-200">
-                <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">S.No</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Company Name</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Company Type</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Industry</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">City</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">State</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pincode</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Active</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[1200px] lg:min-w-full">
+            <thead className="bg-gray-50 border-b border-gray-200">
+              <tr>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">S.No</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Company Name</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Industry</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">City</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">State</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact Person</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phone</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">GST No</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+               </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-200">
+              {currentItems.map((company, index) => (
+                <tr key={company.id} className="hover:bg-gray-50">
+                  <td className="px-4 py-3 text-sm text-gray-600">
+                    {indexOfFirstItem + index + 1}
+                  </td>
+                  <td className="px-4 py-3">
+                    <div>
+                      <p className="font-medium text-gray-900">{company.companyName}</p>
+                      <p className="text-xs text-gray-500">{company.website}</p>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 text-sm text-gray-600">{company.industryType}</td>
+                  <td className="px-4 py-3 text-sm text-gray-600">{company.city}</td>
+                  <td className="px-4 py-3 text-sm text-gray-600">{company.state}</td>
+                  <td className="px-4 py-3 text-sm text-gray-600">{company.contactPerson}</td>
+                  <td className="px-4 py-3 text-sm text-gray-600">
+                    <a href={`mailto:${company.contactEmail}`} className="text-blue-600 hover:underline">
+                      {company.contactEmail}
+                    </a>
+                  </td>
+                  <td className="px-4 py-3 text-sm text-gray-600">{company.contactPhone}</td>
+                  <td className="px-4 py-3 text-sm text-gray-600">{company.gstNo}</td>
+                  <td className="px-4 py-3">
+                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold ${
+                      company.status === 'active' 
+                        ? 'bg-green-100 text-green-800' 
+                        : 'bg-red-100 text-red-800'
+                    }`}>
+                      {company.status}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => viewCompanyDetails(company)}
+                        className="p-1 text-blue-600 hover:bg-blue-50 rounded flex items-center gap-1"
+                        title="View Details"
+                      >
+                        <Eye size={18} />
+                      </button>
+                      <button
+                        onClick={() => openDeleteModal(company)}
+                        className="p-1 text-red-600 hover:bg-red-50 rounded flex items-center gap-1"
+                        title="Delete Company"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    </div>
+                  </td>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
@@ -603,13 +624,17 @@ const CompanyMaster = () => {
                     setShowInsertModal(false);
                     setNewCompany({
                       companyName: '',
-                      companyType: '',
                       industryType: '',
                       address: '',
                       city: '',
                       state: '',
                       pincode: '',
-                      isActive: true
+                      contactPerson: '',
+                      contactEmail: '',
+                      contactPhone: '',
+                      website: '',
+                      gstNo: '',
+                      status: 'active'
                     });
                   }}
                   className="p-1 hover:bg-gray-100 rounded"
@@ -638,17 +663,6 @@ const CompanyMaster = () => {
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Company Type *</label>
-                        <input
-                          type="text"
-                          name="companyType"
-                          value={newCompany.companyType}
-                          onChange={handleInputChange}
-                          required
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-                        />
-                      </div>
-                      <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Industry Type *</label>
                         <input
                           type="text"
@@ -660,15 +674,36 @@ const CompanyMaster = () => {
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Active Status *</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">GST No</label>
+                        <input
+                          type="text"
+                          name="gstNo"
+                          value={newCompany.gstNo}
+                          onChange={handleInputChange}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Website</label>
+                        <input
+                          type="text"
+                          name="website"
+                          value={newCompany.website}
+                          onChange={handleInputChange}
+                          placeholder="www.example.com"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
                         <select
-                          name="isActive"
-                          value={newCompany.isActive ? 'true' : 'false'}
-                          onChange={(e) => setNewCompany(prev => ({ ...prev, isActive: e.target.value === 'true' }))}
+                          name="status"
+                          value={newCompany.status}
+                          onChange={handleInputChange}
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                         >
-                          <option value="true">Active</option>
-                          <option value="false">Inactive</option>
+                          <option value="active">Active</option>
+                          <option value="inactive">Inactive</option>
                         </select>
                       </div>
                     </div>
@@ -727,7 +762,45 @@ const CompanyMaster = () => {
                     </div>
                   </div>
 
-
+                  {/* Contact Information */}
+                  <div className="border-b pb-4">
+                    <h3 className="text-lg font-semibold text-purple-600 mb-3">Contact Information</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Contact Person *</label>
+                        <input
+                          type="text"
+                          name="contactPerson"
+                          value={newCompany.contactPerson}
+                          onChange={handleInputChange}
+                          required
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Email *</label>
+                        <input
+                          type="email"
+                          name="contactEmail"
+                          value={newCompany.contactEmail}
+                          onChange={handleInputChange}
+                          required
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Phone *</label>
+                        <input
+                          type="tel"
+                          name="contactPhone"
+                          value={newCompany.contactPhone}
+                          onChange={handleInputChange}
+                          required
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        />
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
                 <div className="flex justify-end gap-3 mt-6">
@@ -737,13 +810,17 @@ const CompanyMaster = () => {
                       setShowInsertModal(false);
                       setNewCompany({
                         companyName: '',
-                        companyType: '',
                         industryType: '',
                         address: '',
                         city: '',
                         state: '',
                         pincode: '',
-                        isActive: true
+                        contactPerson: '',
+                        contactEmail: '',
+                        contactPhone: '',
+                        website: '',
+                        gstNo: '',
+                        status: 'active'
                       });
                     }}
                     className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
@@ -758,6 +835,44 @@ const CompanyMaster = () => {
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && companyToDelete && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
+            <div className="p-6">
+              <div className="flex items-center justify-center mb-4">
+                <div className="p-3 bg-red-100 rounded-full">
+                  <Trash2 className="w-8 h-8 text-red-600" />
+                </div>
+              </div>
+              <h3 className="text-lg font-bold text-center text-gray-800 mb-2">Confirm Delete</h3>
+              <p className="text-sm text-gray-600 text-center mb-4">
+                Are you sure you want to delete the company <strong className="text-gray-800">{companyToDelete.companyName}</strong>?
+                <br />
+                This action cannot be undone.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    setShowDeleteModal(false);
+                    setCompanyToDelete(null);
+                  }}
+                  className="flex-1 px-5 py-2.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition duration-200"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDeleteCompany}
+                  className="flex-1 px-5 py-2.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition duration-200"
+                >
+                  Delete
+                </button>
+              </div>
             </div>
           </div>
         </div>

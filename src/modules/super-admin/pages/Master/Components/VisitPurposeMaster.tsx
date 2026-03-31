@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
-import {
-  Search,
+// src/modules/super-admin/pages/Master/VisitPurposeMaster.tsx
+import React, { useState } from 'react';
+import { 
+  Search, 
   ChevronLeft,
   ChevronRight,
   Filter,
@@ -12,22 +12,32 @@ import {
   Target,
   CheckCircle,
   XCircle,
-  Layers
+  Layers,
+  Trash2
 } from 'lucide-react';
 
 interface VisitPurpose {
   id: number;
   purposeName: string;
-  isActive: boolean;
-  createdAt?: string;
-  updatedAt?: string;
+  status: 'active' | 'inactive';
+  createdAt: string;
+  updatedAt: string;
 }
 
-const API_URL = 'https://localhost:7146/api/VisitPurpose';
-
 const VisitPurposeMaster = () => {
-  const [purposes, setPurposes] = useState<VisitPurpose[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [purposes, setPurposes] = useState<VisitPurpose[]>([
+    { id: 1, purposeName: 'Product Demo', status: 'active', createdAt: '2024-01-15', updatedAt: '2024-02-20' },
+    { id: 2, purposeName: 'Proposal Discussion', status: 'active', createdAt: '2024-01-20', updatedAt: '2024-02-18' },
+    { id: 3, purposeName: 'Requirement Collection', status: 'active', createdAt: '2024-01-25', updatedAt: '2024-02-15' },
+    { id: 4, purposeName: 'Tender Discussion', status: 'active', createdAt: '2024-02-01', updatedAt: '2024-02-10' },
+    { id: 5, purposeName: 'Relationship Meeting', status: 'active', createdAt: '2024-02-05', updatedAt: '2024-02-12' },
+    { id: 6, purposeName: 'Technical Support', status: 'inactive', createdAt: '2024-02-08', updatedAt: '2024-02-14' },
+    { id: 7, purposeName: 'Training Session', status: 'active', createdAt: '2024-02-10', updatedAt: '2024-02-16' },
+    { id: 8, purposeName: 'Payment Follow-up', status: 'active', createdAt: '2024-02-12', updatedAt: '2024-02-18' },
+    { id: 9, purposeName: 'Contract Renewal', status: 'inactive', createdAt: '2024-02-15', updatedAt: '2024-02-20' },
+    { id: 10, purposeName: 'Feedback Session', status: 'active', createdAt: '2024-02-18', updatedAt: '2024-02-22' }
+  ]);
+
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [currentPage, setCurrentPage] = useState(1);
@@ -36,67 +46,35 @@ const VisitPurposeMaster = () => {
   const [selectedPurpose, setSelectedPurpose] = useState<VisitPurpose | null>(null);
   const [showViewModal, setShowViewModal] = useState(false);
   const [showInsertModal, setShowInsertModal] = useState(false);
-
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [purposeToDelete, setPurposeToDelete] = useState<VisitPurpose | null>(null);
+  
   const [newPurpose, setNewPurpose] = useState({
     purposeName: '',
-    isActive: true
+    status: 'active' as 'active' | 'inactive'
   });
 
-  const normalizePurpose = (purpose: Partial<VisitPurpose>): VisitPurpose => ({
-    id: Number(purpose.id ?? 0),
-    purposeName: purpose.purposeName ?? '',
-    isActive: Boolean(purpose.isActive ?? true),
-    createdAt: purpose.createdAt ?? '',
-    updatedAt: purpose.updatedAt ?? ''
-  });
-
-  const fetchPurposes = async (): Promise<VisitPurpose[]> => {
-    try {
-      setLoading(true);
-      const response = await axios.get<VisitPurpose[]>(API_URL);
-      const normalizedPurposes = (response.data ?? []).map((purpose) => normalizePurpose(purpose));
-      setPurposes(normalizedPurposes);
-      return normalizedPurposes;
-    } catch (error) {
-      console.error('Failed to fetch visit purposes:', error);
-      return [];
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchPurposes();
-  }, []);
-
-  const filteredPurposes = purposes.filter((purpose) => {
+  const filteredPurposes = purposes.filter(purpose => {
     const matchesSearch = purpose.purposeName.toLowerCase().includes(searchTerm.toLowerCase());
-    const status = purpose.isActive ? 'active' : 'inactive';
-    const matchesStatus = filterStatus === 'all' || status === filterStatus;
+    const matchesStatus = filterStatus === 'all' || purpose.status === filterStatus;
     return matchesSearch && matchesStatus;
   });
 
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = filteredPurposes.slice(indexOfFirstItem, indexOfLastItem);
-  const totalPages = Math.max(1, Math.ceil(filteredPurposes.length / itemsPerPage));
+  const totalPages = Math.ceil(filteredPurposes.length / itemsPerPage);
 
   const exportToCSV = () => {
     const headers = ['Purpose Name', 'Status', 'Created At', 'Updated At'];
-    const csvData = filteredPurposes.map((purpose) => [
-      purpose.purposeName,
-      purpose.isActive ? 'active' : 'inactive',
-      purpose.createdAt || '',
-      purpose.updatedAt || ''
-    ]);
-    const csvContent = [headers, ...csvData].map((row) => row.join(',')).join('\n');
+    const csvData = filteredPurposes.map(p => [p.purposeName, p.status, p.createdAt, p.updatedAt]);
+    const csvContent = [headers, ...csvData].map(row => row.join(',')).join('\n');
     const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
     a.download = `visit_purposes_${new Date().toISOString().split('T')[0]}.csv`;
     a.click();
-    window.URL.revokeObjectURL(url);
   };
 
   const viewPurposeDetails = (purpose: VisitPurpose) => {
@@ -104,73 +82,50 @@ const VisitPurposeMaster = () => {
     setShowViewModal(true);
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setNewPurpose((prev) => ({
-      ...prev,
-      [name]: name === 'isActive' ? value === 'true' : value
-    }));
+  // Delete purpose
+  const handleDeletePurpose = () => {
+    if (purposeToDelete) {
+      setPurposes(purposes.filter(p => p.id !== purposeToDelete.id));
+      setShowDeleteModal(false);
+      setPurposeToDelete(null);
+    }
   };
 
-  const handleInsertPurpose = async () => {
-    if (!newPurpose.purposeName.trim()) {
-      alert('Purpose Name is required');
-      return;
-    }
+  // Open delete confirmation modal
+  const openDeleteModal = (purpose: VisitPurpose) => {
+    setPurposeToDelete(purpose);
+    setShowDeleteModal(true);
+  };
 
-    const payload = {
-      purposeName: newPurpose.purposeName.trim(),
-      isActive: newPurpose.isActive
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setNewPurpose(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleInsertPurpose = () => {
+    const newId = Math.max(...purposes.map(p => p.id), 0) + 1;
+    const currentDate = new Date().toISOString().split('T')[0];
+    const purposeToAdd: VisitPurpose = {
+      id: newId,
+      ...newPurpose,
+      createdAt: currentDate,
+      updatedAt: currentDate
     };
-
-    try {
-      setLoading(true);
-      const response = await axios.post(API_URL, payload, {
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
-
-      const createdPurpose = normalizePurpose({
-        id: response?.data?.id ?? Date.now(),
-        purposeName: response?.data?.purposeName ?? payload.purposeName,
-        isActive: response?.data?.isActive ?? payload.isActive,
-        createdAt: response?.data?.createdAt ?? new Date().toISOString(),
-        updatedAt: response?.data?.updatedAt ?? new Date().toISOString()
-      });
-
-      setPurposes((prev) => [createdPurpose, ...prev]);
-      setCurrentPage(1);
-      setShowInsertModal(false);
-      setNewPurpose({ purposeName: '', isActive: true });
-      alert('Visit purpose created successfully');
-    } catch (error: any) {
-      const validationErrors = error?.response?.data?.errors;
-      const validationMessage =
-        validationErrors && typeof validationErrors === 'object'
-          ? Object.values(validationErrors).flat().join('\n')
-          : null;
-
-      const errorMessage =
-        validationMessage ||
-        error?.response?.data?.message ||
-        error?.response?.data?.title ||
-        'Failed to create visit purpose';
-
-      alert(typeof errorMessage === 'string' ? errorMessage : 'Failed to create visit purpose');
-    } finally {
-      setLoading(false);
-    }
+    setPurposes([...purposes, purposeToAdd]);
+    setShowInsertModal(false);
+    setNewPurpose({ purposeName: '', status: 'active' });
   };
 
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="p-4 sm:p-6 lg:p-8">
+        {/* Header */}
         <div className="mb-6">
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Visit Purpose Master</h1>
           <p className="text-sm text-gray-500 mt-1">Manage visit purposes for tracking</p>
         </div>
 
+        {/* Stats Cards */}
         <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           <div className="bg-white rounded-xl shadow-sm p-4 border-l-4 border-purple-500 hover:shadow-md transition-shadow">
             <div className="flex items-center justify-between">
@@ -183,31 +138,31 @@ const VisitPurposeMaster = () => {
               </div>
             </div>
           </div>
-
+          
           <div className="bg-white rounded-xl shadow-sm p-4 border-l-4 border-green-500 hover:shadow-md transition-shadow">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs sm:text-sm text-gray-500">Active Purposes</p>
-                <p className="text-xl sm:text-2xl font-bold text-green-600">{purposes.filter((p) => p.isActive).length}</p>
+                <p className="text-xl sm:text-2xl font-bold text-green-600">{purposes.filter(p => p.status === 'active').length}</p>
               </div>
               <div className="bg-green-100 rounded-xl p-2 sm:p-2.5">
                 <CheckCircle size={20} className="text-green-600 sm:w-6 sm:h-6" />
               </div>
             </div>
           </div>
-
+          
           <div className="bg-white rounded-xl shadow-sm p-4 border-l-4 border-red-500 hover:shadow-md transition-shadow">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs sm:text-sm text-gray-500">Inactive Purposes</p>
-                <p className="text-xl sm:text-2xl font-bold text-red-600">{purposes.filter((p) => !p.isActive).length}</p>
+                <p className="text-xl sm:text-2xl font-bold text-red-600">{purposes.filter(p => p.status === 'inactive').length}</p>
               </div>
               <div className="bg-red-100 rounded-xl p-2 sm:p-2.5">
                 <XCircle size={20} className="text-red-600 sm:w-6 sm:h-6" />
               </div>
             </div>
           </div>
-
+          
           <div className="bg-white rounded-xl shadow-sm p-4 border-l-4 border-blue-500 hover:shadow-md transition-shadow">
             <div className="flex items-center justify-between">
               <div>
@@ -221,6 +176,7 @@ const VisitPurposeMaster = () => {
           </div>
         </div>
 
+        {/* Action Bar */}
         <div className="bg-white rounded-xl shadow-sm mb-6">
           <div className="p-4 flex flex-col sm:flex-row gap-4 items-stretch sm:items-center justify-between">
             <div className="relative flex-1 max-w-full sm:max-w-md">
@@ -291,37 +247,34 @@ const VisitPurposeMaster = () => {
           )}
         </div>
 
+        {/* Table */}
         <div className="bg-white rounded-xl shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
-            {loading ? (
-              <div className="p-8 text-center text-gray-500">Loading visit purposes...</div>
-            ) : (
-              <table className="w-full">
-                <thead className="bg-gray-100 border-b border-gray-100">
-                  <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">S.No</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Purpose Name</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                  {currentItems.map((purpose, index) => (
-                    <tr key={purpose.id} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-4 py-3 text-sm text-gray-500">{indexOfFirstItem + index + 1}</td>
-                      <td className="px-4 py-3">
-                        <p className="font-medium text-gray-900">{purpose.purposeName}</p>
-                      </td>
-                      <td className="px-4 py-3">
-                        <span
-                          className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium ${
-                            purpose.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                          }`}
-                        >
-                          {purpose.isActive ? 'active' : 'inactive'}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3">
+            <table className="w-full">
+              <thead className="bg-gray-100 border-b border-gray-100">
+                <tr>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">S.No</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Purpose Name</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                 </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {currentItems.map((purpose, index) => (
+                  <tr key={purpose.id} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-4 py-3 text-sm text-gray-500">{indexOfFirstItem + index + 1}</td>
+                    <td className="px-4 py-3">
+                      <p className="font-medium text-gray-900">{purpose.purposeName}</p>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium ${
+                        purpose.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                      }`}>
+                        {purpose.status}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2">
                         <button
                           onClick={() => viewPurposeDetails(purpose)}
                           className="p-1.5 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
@@ -329,16 +282,24 @@ const VisitPurposeMaster = () => {
                         >
                           <Eye size={16} />
                         </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
+                        <button
+                          onClick={() => openDeleteModal(purpose)}
+                          className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          title="Delete Purpose"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
 
-        {filteredPurposes.length > 0 && !loading && (
+        {/* Pagination */}
+        {filteredPurposes.length > 0 && (
           <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="text-sm text-gray-500">
               Showing <span className="font-medium">{indexOfFirstItem + 1}</span> to{' '}
@@ -347,7 +308,7 @@ const VisitPurposeMaster = () => {
             </div>
             <div className="flex gap-2">
               <button
-                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                 disabled={currentPage === 1}
                 className="px-3 py-1.5 border border-gray-200 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors flex items-center gap-1 text-sm"
               >
@@ -357,7 +318,7 @@ const VisitPurposeMaster = () => {
                 Page {currentPage} of {totalPages}
               </span>
               <button
-                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                 disabled={currentPage === totalPages}
                 className="px-3 py-1.5 border border-gray-200 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors flex items-center gap-1 text-sm"
               >
@@ -367,6 +328,7 @@ const VisitPurposeMaster = () => {
           </div>
         )}
 
+        {/* View Modal */}
         {showViewModal && selectedPurpose && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -382,41 +344,15 @@ const VisitPurposeMaster = () => {
                 <div>
                   <h3 className="text-lg font-semibold text-purple-600 mb-3">Purpose Information</h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-sm text-gray-500">Purpose Name</p>
-                      <p className="font-medium text-gray-900">{selectedPurpose.purposeName}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Status</p>
-                      <span
-                        className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium ${
-                          selectedPurpose.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                        }`}
-                      >
-                        {selectedPurpose.isActive ? 'active' : 'inactive'}
-                      </span>
-                    </div>
+                    <div><p className="text-sm text-gray-500">Purpose Name</p><p className="font-medium text-gray-900">{selectedPurpose.purposeName}</p></div>
+                    <div><p className="text-sm text-gray-500">Status</p><span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium ${selectedPurpose.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>{selectedPurpose.status}</span></div>
                   </div>
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold text-purple-600 mb-3">System Information</h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <p className="text-gray-500">Created At</p>
-                      <p className="font-medium text-gray-900">
-                        {selectedPurpose.createdAt
-                          ? new Date(selectedPurpose.createdAt).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' })
-                          : '-'}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-gray-500">Last Updated</p>
-                      <p className="font-medium text-gray-900">
-                        {selectedPurpose.updatedAt
-                          ? new Date(selectedPurpose.updatedAt).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' })
-                          : '-'}
-                      </p>
-                    </div>
+                    <div><p className="text-gray-500">Created At</p><p className="font-medium text-gray-900">{new Date(selectedPurpose.createdAt).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' })}</p></div>
+                    <div><p className="text-gray-500">Last Updated</p><p className="font-medium text-gray-900">{new Date(selectedPurpose.updatedAt).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' })}</p></div>
                   </div>
                 </div>
               </div>
@@ -427,6 +363,7 @@ const VisitPurposeMaster = () => {
           </div>
         )}
 
+        {/* Insert Modal */}
         {showInsertModal && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
@@ -438,12 +375,7 @@ const VisitPurposeMaster = () => {
                   </svg>
                 </button>
               </div>
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  handleInsertPurpose();
-                }}
-              >
+              <form onSubmit={(e) => { e.preventDefault(); handleInsertPurpose(); }}>
                 <div className="p-6 space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Purpose Name *</label>
@@ -460,47 +392,72 @@ const VisitPurposeMaster = () => {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
                     <select
-                      name="isActive"
-                      value={newPurpose.isActive ? 'true' : 'false'}
+                      name="status"
+                      value={newPurpose.status}
                       onChange={handleInputChange}
                       className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                     >
-                      <option value="true">Active</option>
-                      <option value="false">Inactive</option>
+                      <option value="active">Active</option>
+                      <option value="inactive">Inactive</option>
                     </select>
                   </div>
                 </div>
                 <div className="sticky bottom-0 bg-white border-t border-gray-100 px-6 py-4 flex justify-end gap-3">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowInsertModal(false);
-                      setNewPurpose({ purposeName: '', isActive: true });
-                    }}
-                    className="px-4 py-2 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  <button type="submit" className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors">
-                    Add Purpose
-                  </button>
+                  <button type="button" onClick={() => setShowInsertModal(false)} className="px-4 py-2 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">Cancel</button>
+                  <button type="submit" className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors">Add Purpose</button>
                 </div>
               </form>
             </div>
           </div>
         )}
 
-        {filteredPurposes.length === 0 && !loading && (
+        {/* Delete Confirmation Modal */}
+        {showDeleteModal && purposeToDelete && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
+              <div className="p-6">
+                <div className="flex items-center justify-center mb-4">
+                  <div className="p-3 bg-red-100 rounded-full">
+                    <Trash2 className="w-8 h-8 text-red-600" />
+                  </div>
+                </div>
+                <h3 className="text-lg font-bold text-center text-gray-800 mb-2">Confirm Delete</h3>
+                <p className="text-sm text-gray-600 text-center mb-4">
+                  Are you sure you want to delete the visit purpose <strong className="text-gray-800">{purposeToDelete.purposeName}</strong>?
+                  <br />
+                  This action cannot be undone.
+                </p>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => {
+                      setShowDeleteModal(false);
+                      setPurposeToDelete(null);
+                    }}
+                    className="flex-1 px-5 py-2.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition duration-200"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleDeletePurpose}
+                    className="flex-1 px-5 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition duration-200"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* No Results */}
+        {filteredPurposes.length === 0 && (
           <div className="text-center py-12 bg-white rounded-xl shadow-sm">
             <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-4">
               <Search className="w-8 h-8 text-gray-400" />
             </div>
             <p className="text-gray-500">No visit purposes found matching your criteria.</p>
             <button
-              onClick={() => {
-                setSearchTerm('');
-                setFilterStatus('all');
-              }}
+              onClick={() => { setSearchTerm(''); setFilterStatus('all'); }}
               className="mt-3 text-purple-600 hover:text-purple-700 text-sm font-medium"
             >
               Clear all filters

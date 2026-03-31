@@ -23,16 +23,17 @@ const superAdminMenu: NavItem[] = [
     label: 'Master Management',
     href: '/super-admin/master-management',
     children: [
-      { icon: 'Building2', label: 'Companies', href: '/super-admin/master-management/company' },
-      { icon: 'Building', label: 'Organisations', href: '/super-admin/master-management/organization' },
-      { icon: 'Layers', label: 'Departments', href: '/super-admin/master-management/department' },
-      { icon: 'Users2', label: 'Contact Persons', href: '/super-admin/master-management/contact-person' },
-      { icon: 'Tag', label: 'Visit Purposes', href: '/super-admin/master-management/visit-purpose' },
-      { icon: 'GitMerge', label: 'Funnel Stages', href: '/super-admin/master-management/funnel-stage' },
-      { icon: 'Target', label: 'Outcomes', href: '/super-admin/master-management/outcome-master' },
-      { icon: 'Car', label: 'Vehicle Types', href: '/super-admin/master-management/vehicle-type' },
-      { icon: 'DollarSign', label: 'Expense Rates', href: '/super-admin/master-management/expense-rate' }
+      { icon: 'Building2', label: 'Company Master', href: '/super-admin/master-management/company' },
+      { icon: 'Building', label: 'Organization Master', href: '/super-admin/master-management/organization' },
+      { icon: 'Layers', label: 'Department Master', href: '/super-admin/master-management/department' },
+      { icon: 'Users', label: 'Contact Person Master', href: '/super-admin/master-management/contact-person' },
+      { icon: 'Target', label: 'Visit Purpose Master', href: '/super-admin/master-management/visit-purpose' },
+      { icon: 'Truck', label: 'Vehicle Type Master', href: '/super-admin/master-management/vehicle-type' }, 
+      { icon: 'DollarSign', label: 'Expense Rate Master', href: '/super-admin/master-management/expense-rate' }, 
+      { icon: 'Funnel', label: 'Funnel Stage Master', href: '/super-admin/master-management/funnel-stage' }, 
+      { icon: 'CheckCircle', label: 'Outcome Master', href: '/super-admin/master-management/outcome-master' }, 
     ]
+    
   },
   {
     icon: 'UserPlus',
@@ -53,17 +54,66 @@ const superAdminMenu: NavItem[] = [
   {
     icon: 'MapPin',
     label: 'Visit Management',
-    href: '/super-admin/visit-management',
+    href: '/super-admin/Visit-Management',
     children: [
-      { icon: 'List', label: 'All Visits', href: '/super-admin/visit-management/all-visits' },
-      { icon: 'Calendar', label: 'Todays Visits', href: '/super-admin/visit-management/todays-visits' },
-      { icon: 'CalendarRange', label: 'Monthly Visits', href: '/super-admin/visit-management/monthly-visits' }
+      {icon: 'List', label: 'All Visits', href: '/super-admin/Visit-Management/all-visits'},
+      { icon: 'Calendar', label: 'Todays Visits', href: '/super-admin/Visit-Management/Todays-visits'},
+      { icon: 'CalendarRange', label: 'Monthly Visits', href: '/super-admin/Visit-Management/monthly-visits'},
+      { icon: 'Clock', label: 'Pending Follow-ups', href: '/super-admin/Visit-Management/pending-follow-ups'},
+      { icon: 'CheckCircle', label: 'Expense Approvals', href: '/super-admin/Visit-Management/expense-approvals' }
     ]
   },
+
+  // ========== FUNNEL MANAGEMENT ==========
   {
     icon: 'BarChart4',
     label: 'Funnel Management',
-    href: '/super-admin/funnel'
+    href: '/super-admin/funnel-management',
+    children: [
+     { icon: 'Activity', label: 'Stage Wise Funnel', href: '/super-admin/funnel-management/stage-wise'},
+     { icon: 'Users', label: 'Employee-wise Funnel', href: '/super-admin/funnel-management/employee-wise'},
+     { icon: 'Building2', label: 'Client-wise Funnel', href: '/super-admin/funnel-management/client-wise'},
+     { icon: 'Layers', label: 'Department-wise Funnel', href: '/super-admin/funnel-management/dept-wise'},
+     { icon: 'TrendingUp', label: 'Conversion Tracking', href: '/super-admin/funnel-management/conversion'},
+     { icon: 'AlertCircle', label: 'Stalled Opportunities', href: '/super-admin/funnel-management/stalled'}
+    ]
+   },
+
+  // ========== BUSINESS OUTCOME TRACKING ==========
+  {
+    icon: 'TrendingUp',
+    label: 'Business Outcomes',
+    href: '/super-admin/outcomes',
+    children: [
+      { icon: 'Zap', label: 'Leads Generated', href: '/super-admin/business-outcomes/lead'},
+      { icon: 'FileText', label: 'Proposals Created', href: '/super-admin/business-outcomes/proposals' },
+      { icon: 'PieChart', label: 'Pipeline Value', href: '/super-admin/business-outcomes/pipeline' },
+      { icon: 'Target', label: 'Confirmed Business', href: '/super-admin/business-outcomes/confirmed' },
+      { icon: 'Calculator', label: 'Cost per Lead', href: '/super-admin/business-outcomes/cost-per-lead' },
+      { icon: 'Award', label: 'Productivity Score', href: '/super-admin/business-outcomes/productivity' }
+    ]
+  },
+
+  // ========== REPORTS (All 13 Reports from SRS) ==========
+  {
+    icon: 'BarChart3',
+    label: 'Reports',
+    href: '/super-admin/reports',
+    children: [
+      { icon: 'Calendar', label: 'Daily Visit Report', href: '/super-admin/reports/daily-visit' },
+      { icon: 'CalendarRange', label: 'Date Range Visit', href: '/super-admin/reports/date-range' },
+      { icon: 'Users', label: 'Employee Visit Summary', href: '/super-admin/reports/employee-summary' },
+      { icon: 'Building2', label: 'Organisation Visit', href: '/super-admin/reports/organisation' },
+      { icon: 'Layers', label: 'Department Visit', href: '/super-admin/reports/department' },
+      { icon: 'DollarSign', label: 'Expense Report', href: '/super-admin/reports/expense' },
+      { icon: 'Car', label: 'Vehicle-wise Expense', href: '/super-admin/reports/vehicle-expense' },
+      { icon: 'GitMerge', label: 'Funnel Stage Report', href: '/super-admin/reports/funnel-stage' },
+      { icon: 'Clock', label: 'Follow-up Pending', href: '/super-admin/reports/followup-pending' },
+      { icon: 'Target', label: 'Business Outcome', href: '/super-admin/reports/business-outcome' },
+      { icon: 'TrendingUp', label: 'Conversion Analysis', href: '/super-admin/reports/conversion' },
+      { icon: 'Award', label: 'Monthly Productivity', href: '/super-admin/reports/productivity' },
+      { icon: 'PieChart', label: 'Cost vs Revenue', href: '/super-admin/reports/cost-revenue' }
+    ]
   },
   {
     icon: 'Users',

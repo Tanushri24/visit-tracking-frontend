@@ -12,7 +12,8 @@ import {
   Car,
   Bike,
   Truck,
-  Gauge
+  Gauge,
+  Trash2
 } from 'lucide-react';
 
 interface VehicleType {
@@ -38,16 +39,10 @@ const VehicleTypeMaster = () => {
   const [selectedVehicle, setSelectedVehicle] = useState<VehicleType | null>(null);
   const [showViewModal, setShowViewModal] = useState(false);
   const [showInsertModal, setShowInsertModal] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [editingVehicle, setEditingVehicle] = useState<VehicleType | null>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [vehicleToDelete, setVehicleToDelete] = useState<VehicleType | null>(null);
   
   const [newVehicle, setNewVehicle] = useState({
-    vehicleName: '',
-    defaultRate: 0,
-    status: 'active' as 'active' | 'inactive'
-  });
-
-  const [editVehicle, setEditVehicle] = useState({
     vehicleName: '',
     defaultRate: 0,
     status: 'active' as 'active' | 'inactive'
@@ -75,16 +70,25 @@ const VehicleTypeMaster = () => {
   };
 
   const viewVehicleDetails = (vehicle: VehicleType) => { setSelectedVehicle(vehicle); setShowViewModal(true); };
-  const editVehicleDetails = (vehicle: VehicleType) => { setEditingVehicle(vehicle); setEditVehicle({ vehicleName: vehicle.vehicleName, defaultRate: vehicle.defaultRate, status: vehicle.status }); setShowEditModal(true); };
+  
+  // Delete vehicle
+  const handleDeleteVehicle = () => {
+    if (vehicleToDelete) {
+      setVehicles(vehicles.filter(v => v.id !== vehicleToDelete.id));
+      setShowDeleteModal(false);
+      setVehicleToDelete(null);
+    }
+  };
+
+  // Open delete confirmation modal
+  const openDeleteModal = (vehicle: VehicleType) => {
+    setVehicleToDelete(vehicle);
+    setShowDeleteModal(true);
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setNewVehicle(prev => ({ ...prev, [name]: name === 'defaultRate' ? parseFloat(value) || 0 : value }));
-  };
-
-  const handleEditInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setEditVehicle(prev => ({ ...prev, [name]: name === 'defaultRate' ? parseFloat(value) || 0 : value }));
   };
 
   const handleInsertVehicle = () => {
@@ -92,14 +96,6 @@ const VehicleTypeMaster = () => {
     setVehicles([...vehicles, { id: Math.max(...vehicles.map(v => v.id), 0) + 1, ...newVehicle, createdAt: currentDate, updatedAt: currentDate }]);
     setShowInsertModal(false);
     setNewVehicle({ vehicleName: '', defaultRate: 0, status: 'active' });
-  };
-
-  const handleUpdateVehicle = () => {
-    if (!editingVehicle) return;
-    const currentDate = new Date().toISOString().split('T')[0];
-    setVehicles(vehicles.map(vehicle => vehicle.id === editingVehicle.id ? { ...vehicle, defaultRate: editVehicle.defaultRate, status: editVehicle.status, updatedAt: currentDate } : vehicle));
-    setShowEditModal(false);
-    setEditingVehicle(null);
   };
 
   return (
@@ -210,9 +206,15 @@ const VehicleTypeMaster = () => {
         {/* Table */}
         <div className="bg-white rounded-lg sm:rounded-xl shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[600px]">
+            <table className="w-full min-w-[650px]">
               <thead className="bg-gray-50 border-b border-gray-100">
-                <tr>{['S.No', 'Vehicle Name', 'Rate Per KM (₹)', 'Status', 'Actions'].map(h => <th key={h} className="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{h}</th>)}</tr>
+                <tr>
+                  <th className="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">S.No</th>
+                  <th className="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vehicle Name</th>
+                  <th className="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rate Per KM (₹)</th>
+                  <th className="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                  <th className="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                  </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {currentItems.map((vehicle, index) => (
@@ -230,7 +232,7 @@ const VehicleTypeMaster = () => {
                     <td className="px-3 sm:px-4 py-2 sm:py-3">
                       <div className="flex gap-1.5">
                         <button onClick={() => viewVehicleDetails(vehicle)} className="p-1 text-purple-600 hover:bg-purple-50 rounded" title="View Details"><Eye size={14} /></button>
-                        <button onClick={() => editVehicleDetails(vehicle)} className="p-1 text-green-600 hover:bg-green-50 rounded" title="Edit Rate"><svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg></button>
+                        <button onClick={() => openDeleteModal(vehicle)} className="p-1 text-red-600 hover:bg-red-50 rounded" title="Delete Vehicle"><Trash2 size={14} /></button>
                       </div>
                     </td>
                   </tr>
@@ -296,22 +298,40 @@ const VehicleTypeMaster = () => {
           </div>
         )}
 
-        {/* Edit Modal */}
-        {showEditModal && editingVehicle && (
+        {/* Delete Confirmation Modal */}
+        {showDeleteModal && vehicleToDelete && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-3">
-            <div className="bg-white rounded-lg shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
-              <div className="sticky top-0 bg-white border-b px-4 sm:px-5 py-3 flex justify-between items-center">
-                <h2 className="text-base sm:text-lg font-bold">Edit Vehicle Rate</h2>
-                <button onClick={() => { setShowEditModal(false); setEditingVehicle(null); }} className="p-1 hover:bg-gray-100 rounded"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg></button>
-              </div>
-              <form onSubmit={(e) => { e.preventDefault(); handleUpdateVehicle(); }}>
-                <div className="p-4 sm:p-5 space-y-3">
-                  <div><label className="block text-xs font-medium text-gray-700 mb-1">Vehicle Name</label><input type="text" value={editVehicle.vehicleName} disabled className="w-full px-3 py-1.5 text-sm border rounded-lg bg-gray-50" /><p className="text-xs text-gray-400 mt-1">Vehicle name cannot be changed</p></div>
-                  <div><label className="block text-xs font-medium text-gray-700 mb-1">Rate Per KM (₹) *</label><input type="number" name="defaultRate" value={editVehicle.defaultRate} onChange={handleEditInputChange} required min="0" step="0.5" className="w-full px-3 py-1.5 text-sm border rounded-lg" /></div>
-                  <div><label className="block text-xs font-medium text-gray-700 mb-1">Status</label><select name="status" value={editVehicle.status} onChange={handleEditInputChange} className="w-full px-3 py-1.5 text-sm border rounded-lg"><option value="active">Active</option><option value="inactive">Inactive</option></select></div>
+            <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
+              <div className="p-5 sm:p-6">
+                <div className="flex items-center justify-center mb-4">
+                  <div className="p-3 bg-red-100 rounded-full">
+                    <Trash2 className="w-6 h-6 sm:w-8 sm:h-8 text-red-600" />
+                  </div>
                 </div>
-                <div className="sticky bottom-0 bg-white border-t px-4 sm:px-5 py-3 flex justify-end gap-2"><button type="button" onClick={() => { setShowEditModal(false); setEditingVehicle(null); }} className="px-3 py-1.5 text-sm border rounded-lg hover:bg-gray-50">Cancel</button><button type="submit" className="px-3 py-1.5 text-sm bg-purple-600 text-white rounded-lg hover:bg-purple-700">Update Rate</button></div>
-              </form>
+                <h3 className="text-base sm:text-lg font-bold text-center text-gray-800 mb-2">Confirm Delete</h3>
+                <p className="text-xs sm:text-sm text-gray-600 text-center mb-4">
+                  Are you sure you want to delete the vehicle type <strong className="text-gray-800">{vehicleToDelete.vehicleName}</strong>?
+                  <br />
+                  This action cannot be undone.
+                </p>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => {
+                      setShowDeleteModal(false);
+                      setVehicleToDelete(null);
+                    }}
+                    className="flex-1 px-3 py-1.5 sm:px-4 sm:py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition duration-200 text-sm"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleDeleteVehicle}
+                    className="flex-1 px-3 py-1.5 sm:px-4 sm:py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition duration-200 text-sm"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         )}
