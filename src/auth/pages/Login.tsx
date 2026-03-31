@@ -80,83 +80,154 @@ const Login: React.FC = () => {
     setErrorMessage('');
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage('');
+    setIsLoading(true);
 
-    if (!formData.roleId || isNaN(Number(formData.roleId))) {
-      setErrorMessage('Please select a valid role');
+    // Basic validation
+    if (!formData.email || !formData.password) {
+      setErrorMessage('Please enter both email and password');
+      setIsLoading(false);
       return;
     }
 
-    setIsLoading(true);
+    if (!formData.roleId || isNaN(Number(formData.roleId))) {
+      setErrorMessage('Please select a valid role');
+      setIsLoading(false);
+      return;
+    }
 
-    authService
-      .login({ email: formData.email, password: formData.password })
-      .then((response) => {
-        const token = response?.data?.token;
+    try {
+      console.log('Attempting login with:', { email: formData.email });
+      
+      // Call login API
+      const response = await authService.login({
+        email: formData.email,
+        password: formData.password,
+      });
 
-        if (!token) {
-          setErrorMessage('No token received');
-          setIsLoading(false);
-          return;
-        }
+      console.log('Login response:', response);
+      
+      const token = response.token;
 
+      if (!token) {
+        setErrorMessage('No token received from server');
+        setIsLoading(false);
+        return;
+      }
+
+      // Store token
+      localStorage.setItem('auth', token);
+      
+      // Extract role from JWT token
+      let userRole = '';
+      try {
         const base64Payload = token.split('.')[1];
-        let decodedPayload: any = {};
-
-        try {
-          decodedPayload = JSON.parse(atob(base64Payload));
-        } catch (decodeError) {
-          console.error('JWT decode failed:', decodeError);
-        }
-
-        const roleFromToken =
+        const decodedPayload = JSON.parse(atob(base64Payload));
+        console.log('Decoded JWT payload:', decodedPayload);
+        
+        // Try different possible role field names
+        userRole = 
           decodedPayload['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] ||
           decodedPayload.role ||
+          decodedPayload.Role ||
+          decodedPayload.userRole ||
+          decodedPayload.UserRole ||
           '';
-
-        const formattedRole = roleFromToken.toLowerCase().replace(/\s+/g, '-');
-
-        localStorage.setItem('auth', token);
-        localStorage.setItem('role', formattedRole);
-
-        const roleRoutes: Record<string, string> = {
-          'super-admin': '/super-admin/dashboard',
-          admin: '/admin/dashboard',
-          manager: '/manager/dashboard',
-          employee: '/employee/dashboard',
-          management: '/management/dashboard',
-        };
-
-        navigate(roleRoutes[formattedRole] || '/super-admin/dashboard');
-        setIsLoading(false);
-      })
-      .catch((error) => {
-        const apiMessage = error.response?.data?.message || error.response?.data?.error;
-        const status = error.response?.status;
-
-        let nextErrorMessage = 'Login failed. ';
-
-        if (error.message === 'Network Error' || error.code === 'ECONNABORTED') {
-          nextErrorMessage +=
-            'Cannot connect to server. Please check if the backend server is running on http://localhost: or the configured VITE_API_URL.';
-        } else if (
-          error.code === 'CERT_HAS_EXPIRED' ||
-          error.code === 'UNABLE_TO_VERIFY_LEAF_SIGNATURE'
-        ) {
-          nextErrorMessage += 'SSL certificate error. This is a development environment issue.';
-        } else if (apiMessage) {
-          nextErrorMessage = `Login failed (${status}): ${apiMessage}`;
-        } else if (error.response?.status === 0) {
-          nextErrorMessage += 'Network error - please check backend server connection.';
-        } else {
-          nextErrorMessage += error.message || 'Please check your credentials and try again.';
+        
+        // If role not found in token, use selected role
+        if (!userRole) {
+          console.warn('Role not found in token, using selected role:', selectedRole);
+          userRole = selectedRole;
         }
+        
+        userRole = userRole.toLowerCase().replace(/\s+/g, '-');
+        console.log('Final user role:', userRole);
+        
+      } catch (decodeError) {
+        console.error('Failed to decode JWT token:', decodeError);
+        // Fallback to selected role
+        userRole = selectedRole;
+      }
 
-        setErrorMessage(nextErrorMessage);
-        setIsLoading(false);
-      });
+      // Store role in localStorage
+      localStorage.setItem('role', userRole);
+      
+      // Store user email if remember me is checked
+      if (formData.rememberMe) {
+        localStorage.setItem('userEmail', formData.email);
+      }
+
+      // Role-based navigation mapping
+      const roleRoutes: Record<string, string> = {
+        'super-admin': '/super-admin/dashboard',
+        'superadmin': '/super-admin/dashboard',
+        'admin': '/admin/dashboard',
+        'manager': '/manager/dashboard',
+        'employee': '/employee/dashboard',
+        'management': '/management/dashboard',
+      };
+
+      // Get redirect path based on role
+      let redirectPath = roleRoutes[userRole];
+      
+      // If role not found in mapping, try to find a matching route
+      if (!redirectPath) {
+        console.warn('No route found for role:', userRole);
+        // Default to super-admin dashboard
+        redirectPath = '/super-admin/dashboard';
+      }
+      
+      console.log('Redirecting to:', redirectPath);
+      
+      // Navigate to dashboard
+      navigate(redirectPath, { replace: true });
+      
+    } catch (error: any) {
+      console.error('Login error details:', error);
+      
+      // Enhanced error handling
+      if (error.code === 'ERR_NETWORK' || error.message === 'Network Error') {
+        setErrorMessage(
+          'Cannot connect to server. Please check:\n' +
+          '1. Backend server is running on http://192.168.29.8:8080\n' +
+          '2. Network connection is working\n' +
+          '3. CORS is configured correctly'
+        );
+      } else if (error.response) {
+        const status = error.response.status;
+        const apiMessage = error.response.data?.message || error.response.data?.error;
+        
+        switch (status) {
+          case 401:
+            setErrorMessage('Invalid email or password. Please try again.');
+            break;
+          case 400:
+            setErrorMessage(apiMessage || 'Invalid request. Please check your input.');
+            break;
+          case 404:
+            setErrorMessage('Login endpoint not found. Please check API URL.');
+            break;
+          case 500:
+            setErrorMessage('Server error. Please try again later.');
+            break;
+          default:
+            setErrorMessage(apiMessage || `Login failed with status ${status}`);
+        }
+      } else if (error.request) {
+        setErrorMessage(
+          'No response from server. Please check:\n' +
+          '• Backend server is running\n' +
+          '• API URL is correct: http://192.168.29.8:8080\n' +
+          '• No firewall blocking the connection'
+        );
+      } else {
+        setErrorMessage(error.message || 'An unexpected error occurred. Please try again.');
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -223,7 +294,7 @@ const Login: React.FC = () => {
                 </div>
 
                 {errorMessage && (
-                  <div className="mb-5 flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                  <div className="mb-5 flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 whitespace-pre-line">
                     <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
                     <span>{errorMessage}</span>
                   </div>
