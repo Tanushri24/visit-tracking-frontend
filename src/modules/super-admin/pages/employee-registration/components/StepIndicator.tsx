@@ -2,7 +2,7 @@
 
 import React from 'react';
 import type { StepIndicatorProps } from './types';
-import { CheckCircle, User, FileText } from 'lucide-react';
+import { CheckCircle } from 'lucide-react';
 
 const StepIndicator: React.FC<StepIndicatorProps> = ({ currentStep, steps }) => {
     return (

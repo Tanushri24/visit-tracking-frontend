@@ -1,15 +1,11 @@
-// src/components/registration/EmployeeRegistration.tsx
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { 
-    ArrowLeft, Save, CheckCircle, AlertCircle 
+import {
+    ArrowLeft, Save, CheckCircle, AlertCircle
 } from 'lucide-react';
 
-// Import components
 import EmployeeDetailsTab from './components/EmployeeDetailsTab';
 
-// Import types and validation
 import type {
     EmployeeRegistrationData,
     Designation,
@@ -21,21 +17,16 @@ import type {
 } from './components/types';
 import { validateRegistrationForm } from './components/validation';
 
-// Import API service
 import { registrationApi, type CreateEmployeeRequest } from '../../services/registrationApi';
 
 const EmployeeRegistration: React.FC = () => {
     const navigate = useNavigate();
 
-    // Form Data State
     const [formData, setFormData] = useState<EmployeeRegistrationData>({
-        // Employee Information
         employeeCode: '',
         fullName: '',
         email: '',
         mobile: '',
-        password: '',
-        confirmPassword: '',
         designation: '',
         department: '',
         reportingManager: '',
@@ -44,57 +35,57 @@ const EmployeeRegistration: React.FC = () => {
     });
 
     const [departments] = useState<Department[]>([
-        { id: 1, name: 'Engineering' },
-        { id: 2, name: 'Sales' },
-        { id: 3, name: 'Marketing' },
-        { id: 4, name: 'Human Resources' },
-        { id: 5, name: 'Finance' },
-        { id: 6, name: 'Operations' },
-        { id: 7, name: 'Business Development' },
-        { id: 8, name: 'Project Management' }
+        { id: 123, name: 'HR' },
+        { id: 124, name: 'Finance' },
+        { id: 125, name: 'IT' },
+        { id: 126, name: 'Sales' },
+        { id: 127, name: 'Marketing' },
+        { id: 128, name: 'Operations' },
+        { id: 130, name: 'TECHNICAL' },
+        { id: 133, name: 'mangement' },
+        { id: 141, name: 'hr' },
+        { id: 143, name: 'IIT departmenet' },
+        { id: 146, name: 'Agnigate' },
+        { id: 147, name: 'Examination Department' },
+        { id: 148, name: 'Examination Department 2' },
+        { id: 153, name: 'Board Examination' },
+        { id: 154, name: 'IIT' },
+        { id: 135, name: 'test department name' }
     ]);
-    
+
     const [designations] = useState<Designation[]>([
-        { id: 1, name: 'Software Engineer' },
-        { id: 2, name: 'Senior Developer' },
-        { id: 3, name: 'Team Lead' },
-        { id: 4, name: 'Manager' }
+        { id: 1, name: 'Designation 1' },
+        { id: 123, name: 'Designation 123' }
     ]);
 
     const [managers] = useState<Manager[]>([
-        { id: 1, name: 'Rahul Sharma', email: 'rahul.sharma@company.com' },
-        { id: 2, name: 'Priya Patel', email: 'priya.patel@company.com' },
-        { id: 3, name: 'Amit Kumar', email: 'amit.kumar@company.com' },
-        { id: 4, name: 'Neha Singh', email: 'neha.singh@company.com' },
-        { id: 5, name: 'Vikram Mehta', email: 'vikram.mehta@company.com' }
+        { id: 12, name: 'Reporting Manager 12', email: 'manager12@agnigate.com' }
     ]);
 
     const [locations] = useState<Location[]>([
-        { id: 1, name: 'Mumbai HQ', city: 'Mumbai' },
-        { id: 2, name: 'Delhi Office', city: 'Delhi' },
-        { id: 3, name: 'Bangalore Branch', city: 'Bangalore' },
-        { id: 4, name: 'Pune Office', city: 'Pune' },
-        { id: 5, name: 'Chennai Branch', city: 'Chennai' },
-        { id: 6, name: 'Kolkata Office', city: 'Kolkata' }
+        { id: 2, name: 'Location 2', city: '' },
+        { id: 3, name: 'Location 3', city: '' },
+        { id: 4, name: 'Location 4', city: '' },
+        { id: 5, name: 'Location 5', city: '' },
+        { id: 7, name: 'Location 7', city: '' }
     ]);
 
     const [userRoles] = useState<UserRole[]>([
-        { id: 1, name: 'Admin' },
-        { id: 2, name: 'Manager' },
-        { id: 3, name: 'Employee' },
-        { id: 4, name: 'Management' }
+        { id: 1, name: 'Super Admin' },
+        { id: 2, name: 'Admin' },
+        { id: 3, name: 'Master Management' },
+        { id: 4, name: 'Manager' },
+        { id: 5, name: 'Team Lead' },
+        { id: 6, name: 'Employee' },
+        { id: 7, name: 'HR' }
     ]);
 
-    // UI States
     const [errors, setErrors] = useState<RegistrationErrors>({});
-    const [showPassword, setShowPassword] = useState(false);
-    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [touched, setTouched] = useState<Set<string>>(new Set());
     const [registrationSuccess, setRegistrationSuccess] = useState(false);
     const [apiError, setApiError] = useState<string | null>(null);
 
-    // Validate on form data change
     useEffect(() => {
         if (touched.size > 0) {
             const validationErrors = validateRegistrationForm(formData);
@@ -102,7 +93,6 @@ const EmployeeRegistration: React.FC = () => {
         }
     }, [formData, touched]);
 
-    // Handle Input Change
     const handleInputChange = (
         e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
     ) => {
@@ -113,11 +103,9 @@ const EmployeeRegistration: React.FC = () => {
         }));
 
         setTouched(prev => new Set(prev).add(name));
-        // Clear API error when user starts typing again
         setApiError(null);
     };
 
-    // Handle Blur Event
     const handleBlur = (
         e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>
     ) => {
@@ -125,29 +113,24 @@ const EmployeeRegistration: React.FC = () => {
         setTouched(prev => new Set(prev).add(name));
     };
 
-    // Handle Form Submit
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        // Mark all fields as touched
         const allFields = [
-            'employeeCode', 'fullName', 'email', 'mobile', 
-            'password', 'confirmPassword', 'designation', 'department', 
-            'reportingManager', 'location', 'role'
+            'employeeCode', 'fullName', 'email', 'mobile',
+            'designation', 'department', 'reportingManager', 'location', 'role'
         ];
-        
+
         setTouched(prev => {
             const newSet = new Set(prev);
             allFields.forEach(field => newSet.add(field));
             return newSet;
         });
 
-        // Validate form
         const validationErrors = validateRegistrationForm(formData);
         setErrors(validationErrors);
 
         if (Object.keys(validationErrors).length > 0) {
-            alert('Please fix the errors before submitting');
             return;
         }
 
@@ -155,35 +138,29 @@ const EmployeeRegistration: React.FC = () => {
         setApiError(null);
 
         try {
-            // Prepare data for API with exact required keys
             const payload: CreateEmployeeRequest = {
                 fullName: formData.fullName.trim(),
                 email: formData.email.trim(),
                 mobile: formData.mobile.trim(),
-                roleId: formData.role ? Number(formData.role) : 0,
-                departmentId: formData.department ? Number(formData.department) : 0,
+                roleId: Number(formData.role),
+                departmentId: Number(formData.department),
                 employeeCode: formData.employeeCode.trim(),
-                designationId: formData.designation ? Number(formData.designation) : 0,
-                reportingManagerId: formData.reportingManager ? Number(formData.reportingManager) : 0,
-                locationId: formData.location ? Number(formData.location) : 0
+                designationId: Number(formData.designation),
+                reportingManagerId: Number(formData.reportingManager),
+                locationId: Number(formData.location)
             };
 
-            // Log the data being sent (for debugging)
             console.log('Sending data to API:', payload);
 
-            // Call API
             const response = await registrationApi.createEmployee(payload);
 
             if (response.success) {
                 setRegistrationSuccess(true);
-                // Redirect after 3 seconds
                 setTimeout(() => {
                     navigate('/super-admin/employees');
                 }, 3000);
             } else {
-                // Show specific error message from API
                 setApiError(response.message || 'Registration failed. Please try again.');
-                // Scroll to top to show error
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             }
         } catch (error) {
@@ -198,10 +175,6 @@ const EmployeeRegistration: React.FC = () => {
         return touched.has(fieldName) ? errors[fieldName] : undefined;
     }, [touched, errors]);
 
-    const togglePassword = () => setShowPassword(!showPassword);
-    const toggleConfirmPassword = () => setShowConfirmPassword(!showConfirmPassword);
-
-    // Success message
     if (registrationSuccess) {
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center p-2">
@@ -231,8 +204,6 @@ const EmployeeRegistration: React.FC = () => {
     return (
         <div className="min-h-screen bg-gray-50 py-6 px-4">
             <div className="max-w-4xl mx-auto">
-                
-                {/* Header */}
                 <div className="mb-4">
                     <button
                         onClick={() => navigate('/super-admin/employees')}
@@ -243,16 +214,12 @@ const EmployeeRegistration: React.FC = () => {
                     </button>
                 </div>
 
-                {/* Main Card */}
                 <div className="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden">
-                    
-                    {/* Title */}
                     <div className="px-6 py-4 border-b border-gray-200">
                         <h1 className="text-lg font-semibold text-gray-800">Create New Employee</h1>
                         <p className="text-xs text-gray-500 mt-0.5">Add a new employee to the system</p>
                     </div>
 
-                    {/* API Error Message */}
                     {apiError && (
                         <div className="mx-6 mt-4 p-3 bg-red-50 border border-red-200 rounded-md">
                             <div className="flex items-start gap-2">
@@ -265,7 +232,6 @@ const EmployeeRegistration: React.FC = () => {
                         </div>
                     )}
 
-                    {/* Form Content */}
                     <div className="p-6">
                         <form onSubmit={handleSubmit}>
                             <EmployeeDetailsTab
@@ -277,16 +243,11 @@ const EmployeeRegistration: React.FC = () => {
                                 managers={managers}
                                 locations={locations}
                                 userRoles={userRoles}
-                                showPassword={showPassword}
-                                showConfirmPassword={showConfirmPassword}
                                 onInputChange={handleInputChange}
                                 onBlur={handleBlur}
-                                onTogglePassword={togglePassword}
-                                onToggleConfirmPassword={toggleConfirmPassword}
                                 getFieldError={getFieldError}
                             />
 
-                            {/* Submit Button */}
                             <div className="flex justify-end mt-6 pt-4 border-t border-gray-200">
                                 <button
                                     type="submit"
