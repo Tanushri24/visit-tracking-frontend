@@ -59,11 +59,23 @@ import ConfirmedBusiness from '../pages/Outcomes/Components/ConfirmedBusiness';
 import CostperLead from '../pages/Outcomes/Components/CostperLead';
 import ProductivityScore from '../pages/Outcomes/Components/ProductivityScore';
 
+import ExpenseConfig from '../pages/expense-configrution/ExpenseConfig';
+import RateManagement from '../pages/expense-configrution/RateManagement';
+import RateChangeHistory from '../pages/expense-configrution/RateChangeHistory';
+import VehicleTypes from '../pages/expense-configrution/VehicleTypes';
+import EffectiveDates from '../pages/expense-configrution/EffectiveDates';
 
 
 
 
-// import Reports from '../pages/Reports/Reports';
+
+import Report from '../pages/Report/Report';
+import EmployeeVisitReport from '../pages/Report/Components/EmployeeVisitReport';
+import ExpenseReport from '../pages/Report/Components/ExpenseReport';
+import FunnelStageReport from '../pages/Report/Components/FunnelStageReport';
+
+
+
 // import AuditLogs from '../pages/Audit/AuditLogs';
 
 const SuperAdminRoutes = () => {
@@ -176,9 +188,9 @@ const SuperAdminRoutes = () => {
         }
       />
 
-      {/* ========== EXPENSE CONFIGURATION (WITH DROPDOWN) ========== */}
+      /* ========== EXPENSE CONFIGURATION (WITH DROPDOWN) ========== */
       
-      {/* <Route
+       <Route
         path="expense-config"
         element={
           <Layout role="super_admin">
@@ -218,7 +230,7 @@ const SuperAdminRoutes = () => {
           </Layout>
         }
       />
-       */}
+       
       {/* ========== FUNNEL MANAGEMENT ========== */}
      
        <Route
@@ -428,21 +440,39 @@ const SuperAdminRoutes = () => {
 
       {/* ========== REPORTS ========== */}
       <Route
-        path="visit-management/todays-visits"
+        path="Reports"
         element={
           <Layout role="super_admin">
-            <TodaysVisits />
+            <Report />
           </Layout>
         }
       />
       <Route
-        path="visit-management/monthly-visits"
+        path="Report/employee-reports"
         element={
           <Layout role="super_admin">
-            <MonthlyVisits />
+            <EmployeeVisitReport />
           </Layout>
         }
       />
+      <Route
+        path="Reports/expense"
+        element={
+          <Layout role="super_admin">
+            <ExpenseReport />
+          </Layout>
+        }
+      />
+
+      <Route
+        path="Reports/funnel-stage"
+        element={
+          <Layout role="super_admin">
+            <FunnelStageReport />
+          </Layout>
+        }
+      />
+
 
       {/* Default Route */}
       <Route path="*" element={<Navigate to="/super-admin/dashboard" replace />} />

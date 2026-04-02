@@ -22,146 +22,11 @@ interface Company {
   city: string;
   state: string;
   pincode: string;
-  contactPerson: string;
-  contactEmail: string;
-  contactPhone: string;
-  website: string;
-  gstNo: string;
-  status: 'active' | 'inactive';
-  isActive?: boolean;
-  createdAt: string;
-  updatedAt: string;
+  isActive: boolean;
 }
 
 const CompanyMaster = () => {
-  const [companies, setCompanies] = useState<Company[]>([
-    {
-      id: 1,
-      companyName: 'Agnigate Technologies Pvt. Ltd.',
-      companyType: 'Private Limited',
-      industryType: 'IT Services',
-      address: 'Plot No. 123, Scheme No. 74',
-      city: 'Indore',
-      state: 'Madhya Pradesh',
-      pincode: '452010',
-      contactPerson: 'Rajesh Sharma',
-      contactEmail: 'rajesh@agnigate.com',
-      contactPhone: '+91 9876543210',
-      website: 'www.agnigate.com',
-      gstNo: '23AAAAA0000A1Z5',
-      status: 'active',
-      createdAt: '2024-01-15',
-      updatedAt: '2024-02-20'
-    },
-    {
-      id: 2,
-      companyName: 'MP Board of Secondary Education',
-      companyType: 'Government',
-      industryType: 'Education',
-      address: 'Shiva Ji Nagar',
-      city: 'Bhopal',
-      state: 'Madhya Pradesh',
-      pincode: '462011',
-      contactPerson: 'Dr. S.K. Rao',
-      contactEmail: 'secretary@mpbse.com',
-      contactPhone: '+91 755 2551234',
-      website: 'www.mpbse.nic.in',
-      gstNo: '23BBBBB0000B2Z6',
-      status: 'active',
-      createdAt: '2024-01-20',
-      updatedAt: '2024-02-18'
-    },
-    {
-      id: 3,
-      companyName: 'ITI Limited',
-      companyType: 'Public',
-      industryType: 'Manufacturing',
-      address: 'ITI Industrial Area',
-      city: 'Rae Bareli',
-      state: 'Uttar Pradesh',
-      pincode: '229010',
-      contactPerson: 'A.K. Singh',
-      contactEmail: 'aksingh@iti.co.in',
-      contactPhone: '+91 535 2701234',
-      website: 'www.itiltd.in',
-      gstNo: '09CCCCC0000C3Z7',
-      status: 'inactive',
-      createdAt: '2024-01-25',
-      updatedAt: '2024-02-15'
-    },
-    {
-      id: 4,
-      companyName: 'Bhoj University',
-      companyType: 'University',
-      industryType: 'Education',
-      address: 'University Campus, Kolar Road',
-      city: 'Bhopal',
-      state: 'Madhya Pradesh',
-      pincode: '462022',
-      contactPerson: 'Prof. V.K. Shrivastava',
-      contactEmail: 'registrar@bhojuni.ac.in',
-      contactPhone: '+91 755 2731234',
-      website: 'www.bhojuni.ac.in',
-      gstNo: '23DDDDD0000D4Z8',
-      status: 'active',
-      createdAt: '2024-02-01',
-      updatedAt: '2024-02-10'
-    },
-    {
-      id: 5,
-      companyName: 'Infosys Limited',
-      companyType: 'Public',
-      industryType: 'IT Services',
-      address: 'Electronic City',
-      city: 'Bangalore',
-      state: 'Karnataka',
-      pincode: '560100',
-      contactPerson: 'Sundar Rajan',
-      contactEmail: 'sundar@infosys.com',
-      contactPhone: '+91 80 4112 3456',
-      website: 'www.infosys.com',
-      gstNo: '29EEEEE0000E5Z9',
-      status: 'active',
-      createdAt: '2024-02-05',
-      updatedAt: '2024-02-12'
-    },
-    {
-      id: 6,
-      companyName: 'Tata Motors',
-      companyType: 'Public',
-      industryType: 'Automobile',
-      address: 'Pimpri Chinchwad',
-      city: 'Pune',
-      state: 'Maharashtra',
-      pincode: '411018',
-      contactPerson: 'Vikram Singh',
-      contactEmail: 'vikram.singh@tatamotors.com',
-      contactPhone: '+91 20 6732 1234',
-      website: 'www.tatamotors.com',
-      gstNo: '27FFFFF0000F6Z0',
-      status: 'active',
-      createdAt: '2024-02-08',
-      updatedAt: '2024-02-14'
-    },
-    {
-      id: 7,
-      companyName: 'ICICI Bank',
-      companyType: 'Banking',
-      industryType: 'Banking',
-      address: 'Bandra Kurla Complex',
-      city: 'Mumbai',
-      state: 'Maharashtra',
-      pincode: '400051',
-      contactPerson: 'Priya Mehta',
-      contactEmail: 'priya.mehta@icicibank.com',
-      contactPhone: '+91 22 2653 1234',
-      website: 'www.icicibank.com',
-      gstNo: '27GGGGG0000G7Z1',
-      status: 'inactive',
-      createdAt: '2024-02-10',
-      updatedAt: '2024-02-16'
-    }
-  ]);
+  const [companies, setCompanies] = useState<Company[]>([]);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
@@ -174,8 +39,31 @@ const CompanyMaster = () => {
   const [showInsertModal, setShowInsertModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [companyToDelete, setCompanyToDelete] = useState<Company | null>(null);
-  
-  // Form state for new company
+
+  useEffect(() => {
+    const fetchCompanies = async () => {
+      try {
+        const data = await companyApi.getCompanies();
+        setCompanies(data.map(c => ({
+          id: c.id,
+          companyName: c.companyName,
+          companyType: c.companyType,
+          industryType: c.industryType,
+          address: c.address,
+          city: c.city,
+          state: c.state,
+          pincode: c.pincode,
+          isActive: c.isActive
+        })));
+      } catch (error) {
+        console.error('Failed to load companies from API', error);
+      }
+    };
+
+    fetchCompanies();
+  }, []);
+
+  // Form state for new company (API-only fields)
   const [newCompany, setNewCompany] = useState({
     companyName: '',
     companyType: '',
@@ -184,11 +72,6 @@ const CompanyMaster = () => {
     city: '',
     state: '',
     pincode: '',
-    contactPerson: '',
-    contactEmail: '',
-    contactPhone: '',
-    website: '',
-    gstNo: '',
     status: 'active' as 'active' | 'inactive'
   });
 
@@ -196,16 +79,14 @@ const CompanyMaster = () => {
   const industryTypes = ['all', ...new Set(companies.map(c => c.industryType))];
 
   // Filter companies based on search and filters
-  const filteredCompanies = companies.filter(company => {
-    const matchesSearch = 
-      company.companyName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      company.companyType.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      company.city.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      company.industryType.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      company.contactPerson.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      company.contactEmail.toLowerCase().includes(searchTerm.toLowerCase());
+ const filteredCompanies = companies.filter(company => {
+  const matchesSearch =
+    (company.companyName || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (company.companyType || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (company.city || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (company.industryType || "").toLowerCase().includes(searchTerm.toLowerCase());
     
-    const matchesStatus = filterStatus === 'all' || company.status === filterStatus;
+    const matchesStatus = filterStatus === 'all' || (company.isActive ? 'active' : 'inactive') === filterStatus;
     const matchesIndustry = filterIndustry === 'all' || company.industryType === filterIndustry;
     
     return matchesSearch && matchesStatus && matchesIndustry;
@@ -219,16 +100,14 @@ const CompanyMaster = () => {
 
   // Export to CSV
   const exportToCSV = () => {
-    const headers = ['Company Name', 'Industry', 'City', 'State', 'Contact Person', 'Email', 'Phone', 'Status'];
+    const headers = ['Company Name', 'Industry', 'City', 'State', 'Pincode', 'Status'];
     const csvData = filteredCompanies.map(c => [
       c.companyName,
       c.industryType,
       c.city,
       c.state,
-      c.contactPerson,
-      c.contactEmail,
-      c.contactPhone,
-      c.status
+      c.pincode,
+      c.isActive ? 'active' : 'inactive'
     ]);
     
     const csvContent = [headers, ...csvData]
@@ -272,12 +151,8 @@ const CompanyMaster = () => {
   };
 
   // Handle form submission
-  const handleInsertCompany = () => {
-    const newId = Math.max(...companies.map(c => c.id), 0) + 1;
-    const currentDate = new Date().toISOString().split('T')[0];
-    
-    const companyToAdd: Company = {
-      id: newId,
+  const handleInsertCompany = async () => {
+    const createPayload = {
       companyName: newCompany.companyName,
       companyType: newCompany.companyType,
       industryType: newCompany.industryType,
@@ -285,33 +160,39 @@ const CompanyMaster = () => {
       city: newCompany.city,
       state: newCompany.state,
       pincode: newCompany.pincode,
-      contactPerson: newCompany.contactPerson,
-      contactEmail: newCompany.contactEmail,
-      contactPhone: newCompany.contactPhone,
-      website: newCompany.website,
-      gstNo: newCompany.gstNo,
-      status: newCompany.status,
-      createdAt: currentDate,
-      updatedAt: currentDate
+      isActive: newCompany.status === 'active'
     };
-    
-    setCompanies([...companies, companyToAdd]);
-    setShowInsertModal(false);
-    setNewCompany({
-      companyName: '',
-      companyType: '',
-      industryType: '',
-      address: '',
-      city: '',
-      state: '',
-      pincode: '',
-      contactPerson: '',
-      contactEmail: '',
-      contactPhone: '',
-      website: '',
-      gstNo: '',
-      status: 'active'
-    });
+
+    try {
+      const created = await companyApi.createCompany(createPayload);
+      const companyToAdd: Company = {
+        id: created.id,
+        companyName: created.companyName,
+        companyType: created.companyType,
+        industryType: created.industryType,
+        address: created.address,
+        city: created.city,
+        state: created.state,
+        pincode: created.pincode,
+        isActive: created.isActive
+      };
+
+      setCompanies(prev => [...prev, companyToAdd]);
+      setShowInsertModal(false);
+      setNewCompany({
+        companyName: '',
+        companyType: '',
+        industryType: '',
+        address: '',
+        city: '',
+        state: '',
+        pincode: '',
+        status: 'active'
+      });
+    } catch (error) {
+      console.error('Company creation failed', error);
+      alert('Failed to create company. Please check server and try again.');
+    }
   };
 
   return (
@@ -341,11 +222,11 @@ const CompanyMaster = () => {
         </div>
         <div className="bg-white rounded-lg shadow p-4 border-l-4 border-green-500">
           <p className="text-sm text-gray-600">Active Companies</p>
-          <p className="text-2xl font-bold text-green-600">{companies.filter(c => c.status === 'active').length}</p>
+          <p className="text-2xl font-bold text-green-600">{companies.filter(c => c.isActive).length}</p>
         </div>
         <div className="bg-white rounded-lg shadow p-4 border-l-4 border-red-500">
           <p className="text-sm text-gray-600">Inactive Companies</p>
-          <p className="text-2xl font-bold text-red-600">{companies.filter(c => c.status === 'inactive').length}</p>
+          <p className="text-2xl font-bold text-red-600">{companies.filter(c => !c.isActive).length}</p>
         </div>
         <div className="bg-white rounded-lg shadow p-4 border-l-4 border-blue-500">
           <p className="text-sm text-gray-600">Industries</p>
@@ -444,10 +325,7 @@ const CompanyMaster = () => {
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Industry</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">City</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">State</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact Person</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phone</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">GST No</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pincode</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
               </tr>
@@ -461,27 +339,19 @@ const CompanyMaster = () => {
                   <td className="px-4 py-3">
                     <div>
                       <p className="font-medium text-gray-900">{company.companyName}</p>
-                      <p className="text-xs text-gray-500">{company.website}</p>
                     </div>
                   </td>
                   <td className="px-4 py-3 text-sm text-gray-600">{company.industryType}</td>
                   <td className="px-4 py-3 text-sm text-gray-600">{company.city}</td>
                   <td className="px-4 py-3 text-sm text-gray-600">{company.state}</td>
-                  <td className="px-4 py-3 text-sm text-gray-600">{company.contactPerson}</td>
-                  <td className="px-4 py-3 text-sm text-gray-600">
-                    <a href={`mailto:${company.contactEmail}`} className="text-blue-600 hover:underline">
-                      {company.contactEmail}
-                    </a>
-                  </td>
-                  <td className="px-4 py-3 text-sm text-gray-600">{company.contactPhone}</td>
-                  <td className="px-4 py-3 text-sm text-gray-600">{company.gstNo}</td>
+                  <td className="px-4 py-3 text-sm text-gray-600">{company.pincode}</td>
                   <td className="px-4 py-3">
                     <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold ${
-                      company.status === 'active' 
-                        ? 'bg-green-100 text-green-800' 
+                      company.isActive
+                        ? 'bg-green-100 text-green-800'
                         : 'bg-red-100 text-red-800'
                     }`}>
-                      {company.status}
+                      {company.isActive ? 'active' : 'inactive'}
                     </span>
                   </td>
                   <td className="px-4 py-3">
@@ -574,19 +444,11 @@ const CompanyMaster = () => {
                       <p className="font-medium">{selectedCompany.industryType}</p>
                     </div>
                     <div>
-                      <p className="text-sm text-gray-500">GST Number</p>
-                      <p className="font-medium">{selectedCompany.gstNo}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Website</p>
-                      <p className="font-medium text-blue-600">{selectedCompany.website}</p>
-                    </div>
-                    <div>
                       <p className="text-sm text-gray-500">Status</p>
                       <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold ${
-                        selectedCompany.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                        selectedCompany.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                       }`}>
-                        {selectedCompany.status}
+                        {selectedCompany.isActive ? 'active' : 'inactive'}
                       </span>
                     </div>
                   </div>
@@ -597,38 +459,6 @@ const CompanyMaster = () => {
                   <div className="grid grid-cols-1 gap-2">
                     <p className="font-medium">{selectedCompany.address}</p>
                     <p>{selectedCompany.city}, {selectedCompany.state} - {selectedCompany.pincode}</p>
-                  </div>
-                </div>
-
-                <div className="border-b pb-4">
-                  <h3 className="text-lg font-semibold text-purple-600 mb-3">Contact Information</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-sm text-gray-500">Contact Person</p>
-                      <p className="font-medium">{selectedCompany.contactPerson}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Email</p>
-                      <p className="font-medium text-blue-600">{selectedCompany.contactEmail}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Phone</p>
-                      <p className="font-medium">{selectedCompany.contactPhone}</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <h3 className="text-lg font-semibold text-purple-600 mb-3">System Information</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-sm text-gray-500">Created At</p>
-                      <p className="text-sm">{new Date(selectedCompany.createdAt).toLocaleDateString()}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Last Updated</p>
-                      <p className="text-sm">{new Date(selectedCompany.updatedAt).toLocaleDateString()}</p>
-                    </div>
                   </div>
                 </div>
               </div>
@@ -667,11 +497,6 @@ const CompanyMaster = () => {
                       city: '',
                       state: '',
                       pincode: '',
-                      contactPerson: '',
-                      contactEmail: '',
-                      contactPhone: '',
-                      website: '',
-                      gstNo: '',
                       status: 'active'
                     });
                   }}
@@ -719,27 +544,6 @@ const CompanyMaster = () => {
                           value={newCompany.industryType}
                           onChange={handleInputChange}
                           required
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">GST Number</label>
-                        <input
-                          type="text"
-                          name="gstNo"
-                          value={newCompany.gstNo}
-                          onChange={handleInputChange}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Website</label>
-                        <input
-                          type="text"
-                          name="website"
-                          value={newCompany.website}
-                          onChange={handleInputChange}
-                          placeholder="www.example.com"
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                         />
                       </div>
@@ -811,45 +615,6 @@ const CompanyMaster = () => {
                     </div>
                   </div>
 
-                  {/* Contact Information */}
-                  <div>
-                    <h3 className="text-lg font-semibold text-purple-600 mb-3">Contact Information</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Contact Person *</label>
-                        <input
-                          type="text"
-                          name="contactPerson"
-                          value={newCompany.contactPerson}
-                          onChange={handleInputChange}
-                          required
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Email *</label>
-                        <input
-                          type="email"
-                          name="contactEmail"
-                          value={newCompany.contactEmail}
-                          onChange={handleInputChange}
-                          required
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Phone *</label>
-                        <input
-                          type="tel"
-                          name="contactPhone"
-                          value={newCompany.contactPhone}
-                          onChange={handleInputChange}
-                          required
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-                        />
-                      </div>
-                    </div>
-                  </div>
                 </div>
 
                 <div className="flex justify-end gap-3 mt-6">
@@ -865,11 +630,6 @@ const CompanyMaster = () => {
                         city: '',
                         state: '',
                         pincode: '',
-                        contactPerson: '',
-                        contactEmail: '',
-                        contactPhone: '',
-                        website: '',
-                        gstNo: '',
                         status: 'active'
                       });
                     }}
