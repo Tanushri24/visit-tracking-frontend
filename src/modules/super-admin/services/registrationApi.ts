@@ -2,8 +2,11 @@
 
 import axios from "axios";
 
+const configuredApiUrl = import.meta.env.VITE_API_URL?.trim() || "";
+const apiBaseUrl = configuredApiUrl.replace(/\/Auth\/?$/, "");
+
 const API = axios.create({
-  baseURL: "https://localhost:7146/api",
+  baseURL: apiBaseUrl || "/api",
   headers: {
     "Content-Type": "application/json",
   },
@@ -34,10 +37,10 @@ export const createEmployee = async (
     employeeData: CreateEmployeeRequest
 ): Promise<ApiResponse> => {
     try {
-        console.log("Sending request to:", "/Admin/create-employee");
+        console.log("Sending request to:", `${apiBaseUrl || "/api"}/Admin/create-employee`);
         console.log("Request payload:", JSON.stringify(employeeData, null, 2));
 
-        const token = localStorage.getItem("authToken");
+        const token = localStorage.getItem("authToken") || localStorage.getItem("auth");
         const response = await API.post("/Admin/create-employee", employeeData, {
             headers: {
                 "Content-Type": "application/json",
@@ -59,6 +62,8 @@ export const createEmployee = async (
         const axiosError = error as any;
         const statusCode = axiosError?.response?.status ?? 0;
         const responseData = axiosError?.response?.data;
+        console.error("Create employee response status:", statusCode);
+        console.error("Create employee response data:", responseData);
         const validationErrors = responseData?.errors;
         const validationMessage =
             validationErrors && typeof validationErrors === "object"

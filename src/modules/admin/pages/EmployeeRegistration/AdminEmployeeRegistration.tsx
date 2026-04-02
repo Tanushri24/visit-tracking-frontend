@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   AlertCircle,
@@ -99,27 +99,6 @@ const AdminEmployeeRegistration: React.FC = () => {
   const [apiMessage, setApiMessage] = useState<string>('');
   const [apiError, setApiError] = useState<string>('');
   const [isSuccess, setIsSuccess] = useState(false);
-
-  const formSections = useMemo(
-    () => [
-      {
-        title: 'Basic Details',
-        icon: <User className="h-4 w-4 text-purple-600" />,
-        fields: ['fullName', 'email', 'mobile', 'employeeCode'] as Array<keyof EmployeeCreateFormData>,
-      },
-      {
-        title: 'Organization Mapping',
-        icon: <Building2 className="h-4 w-4 text-purple-600" />,
-        fields: ['departmentId', 'designationId', 'locationId'] as Array<keyof EmployeeCreateFormData>,
-      },
-      {
-        title: 'Access & Reporting',
-        icon: <Shield className="h-4 w-4 text-purple-600" />,
-        fields: ['roleId', 'reportingManagerId'] as Array<keyof EmployeeCreateFormData>,
-      },
-    ],
-    []
-  );
 
   const validateForm = (): EmployeeCreateErrors => {
     const nextErrors: EmployeeCreateErrors = {};
@@ -237,61 +216,20 @@ const AdminEmployeeRegistration: React.FC = () => {
               <div>
                 <h1 className="text-2xl font-semibold">Create Employee</h1>
                 <p className="mt-1 text-sm text-purple-100">
-                  Frontend integrated with <span className="font-semibold">POST /api/Admin/create-employee</span>
+                  Employee registration aligned to <span className="font-semibold">POST /api/Admin/create-employee</span>
                 </p>
               </div>
               <div className="rounded-xl bg-white/10 px-4 py-3 text-sm backdrop-blur-sm">
-                <p className="font-medium">Required API fields</p>
+                <p className="font-medium">API Payload</p>
                 <p className="mt-1 text-purple-100">
-                  fullName, email, mobile, roleId, departmentId, employeeCode, designationId,
-                  reportingManagerId, locationId
+                  fullName, email, mobile, roleId, departmentId, employeeCode, designationId, reportingManagerId, locationId
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="grid gap-6 px-6 py-6 lg:grid-cols-[280px_1fr]">
-            <aside className="space-y-4">
-              <div className="rounded-xl border border-purple-100 bg-purple-50 p-4">
-                <h2 className="text-sm font-semibold text-purple-800">Integration Summary</h2>
-                <ul className="mt-3 space-y-2 text-sm text-purple-700">
-                  <li className="flex items-start gap-2">
-                    <CheckCircle className="mt-0.5 h-4 w-4" />
-                    Uses existing axios service in `registrationApi.ts`
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <CheckCircle className="mt-0.5 h-4 w-4" />
-                    Sends only API-supported parameters
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <CheckCircle className="mt-0.5 h-4 w-4" />
-                    Includes client-side validation and API error handling
-                  </li>
-                </ul>
-              </div>
-
-              <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
-                <h2 className="text-sm font-semibold text-gray-800">Form Sections</h2>
-                <div className="mt-3 space-y-3">
-                  {formSections.map((section, index) => (
-                    <div key={section.title} className="flex items-start gap-3 rounded-lg bg-white p-3 shadow-sm">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-purple-100 text-xs font-semibold text-purple-700">
-                        {index + 1}
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          {section.icon}
-                          <p className="text-sm font-medium text-gray-800">{section.title}</p>
-                        </div>
-                        <p className="mt-1 text-xs text-gray-500">{section.fields.join(', ')}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </aside>
-
-            <section>
+          <div className="px-6 py-6">
+            <section className="mx-auto max-w-4xl">
               {(apiError || apiMessage) && (
                 <div
                   className={`mb-5 flex items-start gap-3 rounded-xl border px-4 py-3 text-sm ${
@@ -495,27 +433,6 @@ const AdminEmployeeRegistration: React.FC = () => {
                     </div>
                     {renderError('locationId')}
                   </div>
-                </div>
-
-                <div className="rounded-xl border border-gray-200 bg-gray-50 px-4 py-4">
-                  <h3 className="text-sm font-semibold text-gray-800">API Payload Preview</h3>
-                  <pre className="mt-3 overflow-x-auto rounded-lg bg-slate-900 p-4 text-xs text-slate-100">
-{JSON.stringify(
-  {
-    fullName: formData.fullName || 'string',
-    email: formData.email || 'string',
-    mobile: formData.mobile || 'string',
-    roleId: Number(formData.roleId) || 0,
-    departmentId: Number(formData.departmentId) || 0,
-    employeeCode: formData.employeeCode || 'string',
-    designationId: Number(formData.designationId) || 0,
-    reportingManagerId: Number(formData.reportingManagerId) || 0,
-    locationId: Number(formData.locationId) || 0,
-  },
-  null,
-  2
-)}
-                  </pre>
                 </div>
 
                 <div className="flex flex-col gap-3 border-t border-gray-200 pt-5 sm:flex-row sm:items-center sm:justify-end">
