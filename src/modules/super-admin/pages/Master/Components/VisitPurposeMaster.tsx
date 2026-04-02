@@ -15,6 +15,7 @@ import {
   Trash2,
   Edit
 } from 'lucide-react';
+import { createVisitPurpose } from "../../../services/visitPurpose.service";
 
 interface VisitPurpose {
   id: number;
@@ -61,11 +62,11 @@ const VisitPurposeMaster = () => {
     updatedAt: ''
   });
 
-  const filteredPurposes = purposes.filter(purpose => {
-    const matchesSearch = purpose.purposeName.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = filterStatus === 'all' || purpose.status === filterStatus;
-    return matchesSearch && matchesStatus;
-  });
+  const filteredPurposes = purposes.filter((purpose) => {
+  return purpose?.purposeName
+    ?.toLowerCase()
+    ?.includes(searchTerm.toLowerCase());
+});
 
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
@@ -121,18 +122,30 @@ const VisitPurposeMaster = () => {
     setEditPurpose(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleInsertPurpose = () => {
-    const newId = Math.max(...purposes.map(p => p.id), 0) + 1;
-    const currentDate = new Date().toISOString().split('T')[0];
-    const purposeToAdd: VisitPurpose = {
-      id: newId,
-      ...newPurpose,
-      createdAt: currentDate,
-      updatedAt: currentDate
+  const handleInsertPurpose = async () => {
+    const payload = {
+      id: 0,
+      purposeName: newPurpose.purposeName,
+      status: newPurpose.status === "active" ? 1 : 0,
+      updatedBy: "admin",
+      updatedDate: new Date().toISOString(),
     };
-    setPurposes([...purposes, purposeToAdd]);
-    setShowInsertModal(false);
-    setNewPurpose({ purposeName: '', status: 'active' });
+    
+    try {
+      const data = await createVisitPurpose(payload); // Fixed: was "payloa" instead of "payload"
+
+      setPurposes((prev) => [...prev, data]);
+
+      setShowInsertModal(false);
+
+      setNewPurpose({
+        purposeName: "",
+        status: "active",
+      });
+
+    } catch (error) {
+      console.error("Failed to add purpose:", error);
+    }
   };
 
   const handleUpdatePurpose = () => {
