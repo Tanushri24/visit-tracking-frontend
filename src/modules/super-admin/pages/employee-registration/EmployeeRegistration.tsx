@@ -3,13 +3,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { 
-    ArrowLeft, ArrowRight, CheckCircle, Save,
-    User, FileText, AlertCircle 
+    ArrowLeft, Save, CheckCircle, AlertCircle 
 } from 'lucide-react';
 
 // Import components
 import EmployeeDetailsTab from './components/EmployeeDetailsTab';
-import ReviewTab from './components/ReviewTab';
 
 // Import types and validation
 import type {
@@ -31,36 +29,37 @@ const EmployeeRegistration: React.FC = () => {
 
     // Form Data State
     const [formData, setFormData] = useState<EmployeeRegistrationData>({
-    // Employee Information
-    employeeCode: '',
-    fullName: '',
-    email: '',
-    mobile: '',
-    password: '',
-    confirmPassword: '',
-    designation: '',
-    department: '',
-    reportingManager: '',
-    location: '',
-    role: ''
-}); // ✅ THIS WAS MISSING
+        // Employee Information
+        employeeCode: '',
+        fullName: '',
+        email: '',
+        mobile: '',
+        password: '',
+        confirmPassword: '',
+        designation: '',
+        department: '',
+        reportingManager: '',
+        location: '',
+        role: ''
+    });
 
-const [departments] = useState<Department[]>([
-    { id: 1, name: 'Engineering' },
-    { id: 2, name: 'Sales' },
-    { id: 3, name: 'Marketing' },
-    { id: 4, name: 'Human Resources' },
-    { id: 5, name: 'Finance' },
-    { id: 6, name: 'Operations' },
-    { id: 7, name: 'Business Development' },
-    { id: 8, name: 'Project Management' }
-]);
-const [designations] = useState<Designation[]>([
-    { id: 1, name: 'Software Engineer' },
-    { id: 2, name: 'Senior Developer' },
-    { id: 3, name: 'Team Lead' },
-    { id: 4, name: 'Manager' }
-]);
+    const [departments] = useState<Department[]>([
+        { id: 1, name: 'Engineering' },
+        { id: 2, name: 'Sales' },
+        { id: 3, name: 'Marketing' },
+        { id: 4, name: 'Human Resources' },
+        { id: 5, name: 'Finance' },
+        { id: 6, name: 'Operations' },
+        { id: 7, name: 'Business Development' },
+        { id: 8, name: 'Project Management' }
+    ]);
+    
+    const [designations] = useState<Designation[]>([
+        { id: 1, name: 'Software Engineer' },
+        { id: 2, name: 'Senior Developer' },
+        { id: 3, name: 'Team Lead' },
+        { id: 4, name: 'Manager' }
+    ]);
 
     const [managers] = useState<Manager[]>([
         { id: 1, name: 'Rahul Sharma', email: 'rahul.sharma@company.com' },
@@ -87,12 +86,10 @@ const [designations] = useState<Designation[]>([
     ]);
 
     // UI States
-    const [activeTab, setActiveTab] = useState(0);
     const [errors, setErrors] = useState<RegistrationErrors>({});
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
-    const [agreeToTerms, setAgreeToTerms] = useState(false);
     const [touched, setTouched] = useState<Set<string>>(new Set());
     const [registrationSuccess, setRegistrationSuccess] = useState(false);
     const [apiError, setApiError] = useState<string | null>(null);
@@ -128,37 +125,22 @@ const [designations] = useState<Designation[]>([
         setTouched(prev => new Set(prev).add(name));
     };
 
-    // Handle Tab Change
-    const handleTabChange = (tabIndex: number) => {
-        if (tabIndex === 1) {
-            const validationErrors = validateRegistrationForm(formData);
-            setErrors(validationErrors);
-            
-            const allFields = [
-                'employeeCode', 'fullName', 'email', 'mobile', 
-                'password', 'confirmPassword', 'designation', 'department', 
-                'reportingManager', 'location', 'role'
-            ];
-            
-            setTouched(prev => {
-                const newSet = new Set(prev);
-                allFields.forEach(field => newSet.add(field));
-                return newSet;
-            });
-
-            if (Object.keys(validationErrors).length === 0) {
-                setActiveTab(tabIndex);
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            }
-        } else {
-            setActiveTab(tabIndex);
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-    };
-
     // Handle Form Submit
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        // Mark all fields as touched
+        const allFields = [
+            'employeeCode', 'fullName', 'email', 'mobile', 
+            'password', 'confirmPassword', 'designation', 'department', 
+            'reportingManager', 'location', 'role'
+        ];
+        
+        setTouched(prev => {
+            const newSet = new Set(prev);
+            allFields.forEach(field => newSet.add(field));
+            return newSet;
+        });
 
         // Validate form
         const validationErrors = validateRegistrationForm(formData);
@@ -166,12 +148,6 @@ const [designations] = useState<Designation[]>([
 
         if (Object.keys(validationErrors).length > 0) {
             alert('Please fix the errors before submitting');
-            setActiveTab(0);
-            return;
-        }
-
-        if (!agreeToTerms) {
-            alert('Please agree to terms and conditions');
             return;
         }
 
@@ -254,7 +230,7 @@ const [designations] = useState<Designation[]>([
 
     return (
         <div className="min-h-screen bg-gray-50 py-6 px-4">
-            <div className="max-w-6xl mx-auto">
+            <div className="max-w-4xl mx-auto">
                 
                 {/* Header */}
                 <div className="mb-4">
@@ -289,125 +265,50 @@ const [designations] = useState<Designation[]>([
                         </div>
                     )}
 
-                    {/* Tab Navigation */}
-                    <div className="border-b border-gray-200 px-6">
-                        <div className="flex space-x-6">
-                            <button
-                                onClick={() => handleTabChange(0)}
-                                className={`
-                                    py-3 px-1 border-b-2 font-medium text-xs flex items-center gap-1.5
-                                    transition-colors duration-200
-                                    ${activeTab === 0
-                                        ? 'border-purple-600 text-purple-600'
-                                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                                    }
-                                `}
-                            >
-                                <User className="w-3.5 h-3.5" />
-                                Employee Details
-                                {Object.keys(errors).length > 0 && activeTab === 0 && (
-                                    <span className="ml-1 w-1.5 h-1.5 bg-red-500 rounded-full"></span>
-                                )}
-                            </button>
-                            <button
-                                onClick={() => handleTabChange(1)}
-                                className={`
-                                    py-3 px-1 border-b-2 font-medium text-xs flex items-center gap-1.5
-                                    transition-colors duration-200
-                                    ${activeTab === 1
-                                        ? 'border-purple-600 text-purple-600'
-                                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                                    }
-                                `}
-                            >
-                                <FileText className="w-3.5 h-3.5" />
-                                Review & Submit
-                            </button>
-                        </div>
-                    </div>
-
-                    {/* Tab Content */}
+                    {/* Form Content */}
                     <div className="p-6">
                         <form onSubmit={handleSubmit}>
-                            
-                            {activeTab === 0 && (
-                                <EmployeeDetailsTab
-                                    formData={formData}
-                                    errors={errors}
-                                    touched={touched}
-                                    designations={designations}
-                                    departments={departments}
-                                    managers={managers}
-                                    locations={locations}
-                                    userRoles={userRoles}
-                                    showPassword={showPassword}
-                                    showConfirmPassword={showConfirmPassword}
-                                    onInputChange={handleInputChange}
-                                    onBlur={handleBlur}
-                                    onTogglePassword={togglePassword}
-                                    onToggleConfirmPassword={toggleConfirmPassword}
-                                    getFieldError={getFieldError}
-                                />
-                            )}
-                            
-                            {activeTab === 1 && (
-                                <ReviewTab
-                                    formData={formData}
-                                    agreeToTerms={agreeToTerms}
-                                    onTermsChange={setAgreeToTerms}
-                                />
-                            )}
+                            <EmployeeDetailsTab
+                                formData={formData}
+                                errors={errors}
+                                touched={touched}
+                                designations={designations}
+                                departments={departments}
+                                managers={managers}
+                                locations={locations}
+                                userRoles={userRoles}
+                                showPassword={showPassword}
+                                showConfirmPassword={showConfirmPassword}
+                                onInputChange={handleInputChange}
+                                onBlur={handleBlur}
+                                onTogglePassword={togglePassword}
+                                onToggleConfirmPassword={toggleConfirmPassword}
+                                getFieldError={getFieldError}
+                            />
 
-                            {/* Navigation Buttons */}
-                            <div className="flex justify-between mt-6 pt-4 border-t border-gray-200">
-                                {activeTab === 1 ? (
-                                    <button
-                                        type="button"
-                                        onClick={() => setActiveTab(0)}
-                                        className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors text-xs font-medium inline-flex items-center gap-1.5"
-                                    >
-                                        <ArrowLeft className="w-3.5 h-3.5" />
-                                        Edit Details
-                                    </button>
-                                ) : (
-                                    <div></div>
-                                )}
-
-                                {activeTab === 0 ? (
-                                    <button
-                                        type="button"
-                                        onClick={() => handleTabChange(1)}
-                                        className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors text-xs font-medium inline-flex items-center gap-1.5"
-                                    >
-                                        Review & Continue
-                                        <ArrowRight className="w-3.5 h-3.5" />
-                                    </button>
-                                ) : (
-                                    <button
-                                        type="submit"
-                                        disabled={isLoading || !agreeToTerms}
-                                        className={`
-                                            px-5 py-2 bg-purple-600 text-white rounded-md text-xs font-medium
-                                            transition-all duration-200 inline-flex items-center gap-1.5
-                                            ${isLoading || !agreeToTerms
-                                                ? 'opacity-50 cursor-not-allowed'
-                                                : 'hover:bg-purple-700 hover:shadow-sm'
-                                            }
-                                        `}
-                                    >
-                                        {isLoading ? (
-                                            <>
-                                                <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                                                Creating...
-                                            </>
-                                        ) : (
-                                            <>
-                                                <Save className="w-3.5 h-3.5" />
-                                                Create Employee
-                                            </>
-                                        )}
-                                    </button>
-                                )}
+                            {/* Submit Button */}
+                            <div className="flex justify-end mt-6 pt-4 border-t border-gray-200">
+                                <button
+                                    type="submit"
+                                    disabled={isLoading}
+                                    className={`
+                                        px-5 py-2 bg-purple-600 text-white rounded-md text-xs font-medium
+                                        transition-all duration-200 inline-flex items-center gap-1.5
+                                        ${isLoading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-purple-700 hover:shadow-sm'}
+                                    `}
+                                >
+                                    {isLoading ? (
+                                        <>
+                                            <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                            Creating...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Save className="w-3.5 h-3.5" />
+                                            Create Employee
+                                        </>
+                                    )}
+                                </button>
                             </div>
                         </form>
                     </div>
