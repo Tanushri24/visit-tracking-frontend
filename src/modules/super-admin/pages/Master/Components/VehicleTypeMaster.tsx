@@ -15,6 +15,7 @@ import {
   Gauge,
   Trash2
 } from 'lucide-react';
+import { createVehicleType } from '../../../services/VehicleType.service';
 
 interface VehicleType {
   id: number;
@@ -91,11 +92,42 @@ const VehicleTypeMaster = () => {
     setNewVehicle(prev => ({ ...prev, [name]: name === 'defaultRate' ? parseFloat(value) || 0 : value }));
   };
 
-  const handleInsertVehicle = () => {
-    const currentDate = new Date().toISOString().split('T')[0];
-    setVehicles([...vehicles, { id: Math.max(...vehicles.map(v => v.id), 0) + 1, ...newVehicle, createdAt: currentDate, updatedAt: currentDate }]);
-    setShowInsertModal(false);
-    setNewVehicle({ vehicleName: '', defaultRate: 0, status: 'active' });
+  const handleInsertVehicle = async () => {
+    try {
+      const payload = {
+        vehicleName: newVehicle.vehicleName,
+        defaultRate: newVehicle.defaultRate,
+        status: newVehicle.status === "active" // Fixed: Convert "active" to true, "inactive" to false
+      };
+
+      const response = await createVehicleType(payload);
+
+      const currentDate = new Date().toISOString().split("T")[0];
+
+      setVehicles([
+        ...vehicles,
+        {
+          id: response.id || vehicles.length + 1,
+          vehicleName: newVehicle.vehicleName,
+          defaultRate: newVehicle.defaultRate,
+          status: newVehicle.status, // Fixed: Use the status string directly
+          createdAt: currentDate,
+          updatedAt: currentDate
+        }
+      ]);
+
+      setShowInsertModal(false);
+
+      // Reset form
+      setNewVehicle({
+        vehicleName: "",
+        defaultRate: 0,
+        status: "active", // Fixed: Reset to "active" string, not "true"
+      });
+
+    } catch (error) {
+      console.error("Error creating vehicle type:", error);
+    }
   };
 
   return (
@@ -214,7 +246,7 @@ const VehicleTypeMaster = () => {
                   <th className="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rate Per KM (₹)</th>
                   <th className="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                   <th className="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                  </tr>
+                </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {currentItems.map((vehicle, index) => (
