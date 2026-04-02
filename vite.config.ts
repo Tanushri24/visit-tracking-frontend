@@ -13,7 +13,7 @@ export default defineConfig({
     https: {}, // ✅ IMPORTANT
     proxy: {
       '/api': {
-        target: 'https://localhost:7146',
+        target: 'http://192.168.29.8:8080',
         changeOrigin: true,
         secure: false,
       }
