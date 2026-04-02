@@ -97,22 +97,22 @@ const superAdminMenu: NavItem[] = [
   // ========== REPORTS (All 13 Reports from SRS) ==========
   {
     icon: 'BarChart3',
-    label: 'Reports',
-    href: '/super-admin/reports',
+    label: 'Report',
+    href: '/super-admin/Report',
     children: [
-      { icon: 'Calendar', label: 'Daily Visit Report', href: '/super-admin/reports/daily-visit' },
-      { icon: 'CalendarRange', label: 'Date Range Visit', href: '/super-admin/reports/date-range' },
-      { icon: 'Users', label: 'Employee Visit Summary', href: '/super-admin/reports/employee-summary' },
-      { icon: 'Building2', label: 'Organisation Visit', href: '/super-admin/reports/organisation' },
-      { icon: 'Layers', label: 'Department Visit', href: '/super-admin/reports/department' },
-      { icon: 'DollarSign', label: 'Expense Report', href: '/super-admin/reports/expense' },
-      { icon: 'Car', label: 'Vehicle-wise Expense', href: '/super-admin/reports/vehicle-expense' },
-      { icon: 'GitMerge', label: 'Funnel Stage Report', href: '/super-admin/reports/funnel-stage' },
-      { icon: 'Clock', label: 'Follow-up Pending', href: '/super-admin/reports/followup-pending' },
-      { icon: 'Target', label: 'Business Outcome', href: '/super-admin/reports/business-outcome' },
-      { icon: 'TrendingUp', label: 'Conversion Analysis', href: '/super-admin/reports/conversion' },
-      { icon: 'Award', label: 'Monthly Productivity', href: '/super-admin/reports/productivity' },
-      { icon: 'PieChart', label: 'Cost vs Revenue', href: '/super-admin/reports/cost-revenue' }
+      // { icon: 'Calendar', label: 'Daily Visit Report', href: '/super-admin/reports/daily-visit' },
+      // { icon: 'CalendarRange', label: 'Date Range Visit', href: '/super-admin/reports/date-range' },
+      { icon: 'Users', label: 'Employee Visit Summary', href: '/super-admin/Report/employee-reports' },
+      // { icon: 'Building2', label: 'Organisation Visit', href: '/super-admin/reports/organisation' },
+      // { icon: 'Layers', label: 'Department Visit', href: '/super-admin/reports/department' },
+      { icon: 'DollarSign', label: 'Expense Report', href: '/super-admin/Reports/expense' },
+      // { icon: 'Car', label: 'Vehicle-wise Expense', href: '/super-admin/reports/vehicle-expense' },
+      { icon: 'GitMerge', label: 'Funnel Stage Report', href: '/super-admin/Reports/funnel-stage' },
+      // { icon: 'Clock', label: 'Follow-up Pending', href: '/super-admin/reports/followup-pending' },
+    //   { icon: 'Target', label: 'Business Outcome', href: '/super-admin/reports/business-outcome' },
+    //   { icon: 'TrendingUp', label: 'Conversion Analysis', href: '/super-admin/reports/conversion' },
+    //   { icon: 'Award', label: 'Monthly Productivity', href: '/super-admin/reports/productivity' },
+    //   { icon: 'PieChart', label: 'Cost vs Revenue', href: '/super-admin/reports/cost-revenue' }
     ]
   },
   {

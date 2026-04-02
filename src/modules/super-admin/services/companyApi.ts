@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'https://localhost:7146/api/Company';
+const API_URL = 'http://192.168.29.8:8080/api/Company';
 
 export interface CompanyCreateRequest {
   companyName: string;

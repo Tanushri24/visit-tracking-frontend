@@ -16,14 +16,17 @@ import {
   Trash2
 } from 'lucide-react';
 import axios from 'axios';
+import { contactService } from '../../../services/contactPerson.service';
+import type { CompanyOption as CompanyApiOption, OrganisationOption as OrganisationApiOption, DepartmentOption as DepartmentApiOption } from '../../../services/contactPerson.service';
 
 interface ContactPerson {
   id: number;
   name: string;
   designation: string;
-  department: string;
   organizationId: number;
   organizationName: string;
+  departmentId: number;
+  department: string;
   companyId: number;
   companyName: string;
   email: string;
@@ -48,26 +51,6 @@ interface ContactPerson {
   updatedAt: string;
 }
 
-interface CompanyOption {
-  id: number;
-  name: string;
-  isActive: boolean;
-}
-
-interface OrganisationOption {
-  id: number;
-  name: string;
-  companyId: number;
-  isActive: boolean;
-}
-
-interface DepartmentOption {
-  id: number;
-  name: string;
-  organisationId: number;
-  isActive: boolean;
-}
-
 interface ContactPersonPayload {
   companyId: number;
   organisationId: number;
@@ -80,247 +63,9 @@ interface ContactPersonPayload {
   isActive: boolean;
 }
 
-// Mock service - replace with actual API calls
-const contactService = {
-  getAll: async () => {
-    // Replace with actual API call
-    return { data: [] };
-  },
-  getCompanies: async () => {
-    // Replace with actual API call
-    return [];
-  },
-  getOrganisations: async () => {
-    // Replace with actual API call
-    return [];
-  },
-  getDepartments: async () => {
-    // Replace with actual API call
-    return [];
-  },
-  create: async (payload: ContactPersonPayload) => {
-    // Replace with actual API call
-    return { data: payload };
-  },
-  update: async (id: number, payload: ContactPersonPayload & { id: number }) => {
-    // Replace with actual API call
-    return { data: payload };
-  }
-};
 
 const ContactPersonMaster = () => {
-  const [contacts, setContacts] = useState<ContactPerson[]>([
-    {
-      id: 1,
-      name: 'Dr. S.K. Rao',
-      designation: 'Controller of Examinations',
-      department: 'Examination Department',
-      organizationId: 1,
-      organizationName: 'Examination Wing - MP Board',
-      companyId: 2,
-      companyName: 'MP Board of Secondary Education',
-      email: 'controller@mpbse.com',
-      mobile: '+91 755 2551234',
-      alternatePhone: '+91 9425001234',
-      whatsappNumber: '+91 9425001234',
-      address: 'Board Headquarters, Shiva Ji Nagar',
-      city: 'Bhopal',
-      state: 'Madhya Pradesh',
-      pincode: '462011',
-      country: 'India',
-      dateOfBirth: '1965-05-15',
-      anniversaryDate: '1990-12-10',
-      gender: 'Male',
-      isPrimary: true,
-      isDecisionMaker: true,
-      reportingTo: 'Education Secretary',
-      remarks: 'Key decision maker for examination related purchases',
-      preferredContactMode: 'Email',
-      status: 'active',
-      createdAt: '2024-01-20',
-      updatedAt: '2024-02-18'
-    },
-    {
-      id: 2,
-      name: 'Prof. V.K. Shrivastava',
-      designation: 'Director - IT',
-      department: 'IT Department',
-      organizationId: 2,
-      organizationName: 'University Campus Office',
-      companyId: 4,
-      companyName: 'Bhoj University',
-      email: 'itdirector@bhojuni.ac.in',
-      mobile: '+91 755 2731234',
-      alternatePhone: '+91 9826005678',
-      whatsappNumber: '+91 9826005678',
-      address: 'University Campus, Kolar Road',
-      city: 'Bhopal',
-      state: 'Madhya Pradesh',
-      pincode: '462022',
-      country: 'India',
-      dateOfBirth: '1970-08-22',
-      anniversaryDate: '1995-02-14',
-      gender: 'Male',
-      isPrimary: true,
-      isDecisionMaker: true,
-      reportingTo: 'Vice Chancellor',
-      remarks: 'Handles all IT infrastructure decisions',
-      preferredContactMode: 'Phone',
-      status: 'active',
-      createdAt: '2024-02-01',
-      updatedAt: '2024-02-10'
-    },
-    {
-      id: 3,
-      name: 'A.K. Singh',
-      designation: 'Plant Manager',
-      department: 'Production Department',
-      organizationId: 3,
-      organizationName: 'ITI Limited - Rae Bareli Plant',
-      companyId: 3,
-      companyName: 'ITI Limited',
-      email: 'aksingh@iti.co.in',
-      mobile: '+91 535 2701234',
-      alternatePhone: '+91 9839001122',
-      whatsappNumber: '+91 9839001122',
-      address: 'ITI Industrial Area',
-      city: 'Rae Bareli',
-      state: 'Uttar Pradesh',
-      pincode: '229010',
-      country: 'India',
-      dateOfBirth: '1968-11-30',
-      anniversaryDate: '1992-04-25',
-      gender: 'Male',
-      isPrimary: true,
-      isDecisionMaker: true,
-      reportingTo: 'Regional Director',
-      remarks: 'Retiring next year, establish relationship with successor',
-      preferredContactMode: 'Any',
-      status: 'inactive',
-      createdAt: '2024-01-25',
-      updatedAt: '2024-02-15'
-    },
-    {
-      id: 4,
-      name: 'Sundar Rajan',
-      designation: 'Delivery Manager',
-      department: 'Software Development',
-      organizationId: 4,
-      organizationName: 'Infosys - Electronic City Campus',
-      companyId: 5,
-      companyName: 'Infosys Limited',
-      email: 'sundar.rajan@infosys.com',
-      mobile: '+91 80 4112 3456',
-      alternatePhone: '+91 9845012345',
-      whatsappNumber: '+91 9845012345',
-      address: 'Building 12, Electronic City',
-      city: 'Bangalore',
-      state: 'Karnataka',
-      pincode: '560100',
-      country: 'India',
-      dateOfBirth: '1975-03-18',
-      anniversaryDate: '2000-06-20',
-      gender: 'Male',
-      isPrimary: true,
-      isDecisionMaker: false,
-      reportingTo: 'VP Engineering',
-      remarks: 'Technical evaluator for vendor proposals',
-      preferredContactMode: 'Email',
-      status: 'active',
-      createdAt: '2024-02-05',
-      updatedAt: '2024-02-12'
-    },
-    {
-      id: 5,
-      name: 'Priya Mehta',
-      designation: 'Branch Manager',
-      department: 'Retail Banking',
-      organizationId: 6,
-      organizationName: 'ICICI Bank - BKC Branch',
-      companyId: 7,
-      companyName: 'ICICI Bank',
-      email: 'priya.mehta@icicibank.com',
-      mobile: '+91 22 2653 1234',
-      alternatePhone: '+91 9987012345',
-      whatsappNumber: '+91 9987012345',
-      address: 'BKC Complex, Bandra East',
-      city: 'Mumbai',
-      state: 'Maharashtra',
-      pincode: '400051',
-      country: 'India',
-      dateOfBirth: '1980-07-12',
-      anniversaryDate: '2005-11-08',
-      gender: 'Female',
-      isPrimary: true,
-      isDecisionMaker: true,
-      reportingTo: 'Regional Manager',
-      remarks: 'Approves all vendor empanelment',
-      preferredContactMode: 'WhatsApp',
-      status: 'inactive',
-      createdAt: '2024-02-10',
-      updatedAt: '2024-02-16'
-    },
-    {
-      id: 6,
-      name: 'Rajesh Sharma',
-      designation: 'CTO',
-      department: 'Research & Development',
-      organizationId: 7,
-      organizationName: 'Agnigate - Corporate Office',
-      companyId: 1,
-      companyName: 'Agnigate Technologies Pvt. Ltd.',
-      email: 'rajesh@agnigate.com',
-      mobile: '+91 9876543210',
-      alternatePhone: '+91 9876501234',
-      whatsappNumber: '+91 9876543210',
-      address: 'Plot No. 123, Scheme No. 74',
-      city: 'Indore',
-      state: 'Madhya Pradesh',
-      pincode: '452010',
-      country: 'India',
-      dateOfBirth: '1985-09-25',
-      anniversaryDate: '2010-01-15',
-      gender: 'Male',
-      isPrimary: true,
-      isDecisionMaker: true,
-      reportingTo: 'CEO',
-      remarks: 'Founder and technical head',
-      preferredContactMode: 'Phone',
-      status: 'active',
-      createdAt: '2024-01-15',
-      updatedAt: '2024-02-20'
-    },
-    {
-      id: 7,
-      name: 'Neha Gupta',
-      designation: 'HR Manager',
-      department: 'Human Resources',
-      organizationId: 7,
-      organizationName: 'Agnigate - Corporate Office',
-      companyId: 1,
-      companyName: 'Agnigate Technologies Pvt. Ltd.',
-      email: 'neha.gupta@agnigate.com',
-      mobile: '+91 9876543222',
-      alternatePhone: '+91 9876512345',
-      whatsappNumber: '+91 9876543222',
-      address: 'Plot No. 123, Scheme No. 74',
-      city: 'Indore',
-      state: 'Madhya Pradesh',
-      pincode: '452010',
-      country: 'India',
-      dateOfBirth: '1988-12-05',
-      anniversaryDate: '2015-03-20',
-      gender: 'Female',
-      isPrimary: false,
-      isDecisionMaker: false,
-      reportingTo: 'CTO',
-      remarks: 'Handles recruitment and employee relations',
-      preferredContactMode: 'Email',
-      status: 'active',
-      createdAt: '2024-01-16',
-      updatedAt: '2024-02-19'
-    }
-  ]);
+  const [contacts, setContacts] = useState<ContactPerson[]>([]);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
@@ -341,9 +86,9 @@ const ContactPersonMaster = () => {
   const [editMode, setEditMode] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
   const [errorMessage, setErrorMessage] = useState("");
-  const [companies, setCompanies] = useState<CompanyOption[]>([]);
-  const [organizations, setOrganizations] = useState<OrganisationOption[]>([]);
-  const [departments, setDepartments] = useState<DepartmentOption[]>([]);
+  const [companies, setCompanies] = useState<CompanyApiOption[]>([]);
+  const [organizations, setOrganizations] = useState<OrganisationApiOption[]>([]);
+  const [departments, setDepartments] = useState<DepartmentApiOption[]>([]);
   
   // Form state for new/edit contact
   const [form, setForm] = useState({
@@ -413,9 +158,9 @@ const ContactPersonMaster = () => {
         contactService.getDepartments(),
       ]);
 
-      setCompanies((companyData ?? []).filter((company: CompanyOption) => company.isActive !== false));
-      setOrganizations((organisationData ?? []).filter((organisation: OrganisationOption) => organisation.isActive !== false));
-      setDepartments((departmentData ?? []).filter((department: DepartmentOption) => department.isActive !== false));
+      setCompanies((companyData ?? []).filter((company: CompanyApiOption) => company.isActive !== false));
+      setOrganizations((organisationData ?? []).filter((organisation: OrganisationApiOption) => organisation.isActive !== false));
+      setDepartments((departmentData ?? []).filter((department: DepartmentApiOption) => department.isActive !== false));
     } catch (err) {
       console.error("Error fetching contact master dependencies", err);
       setErrorMessage("Unable to load company, organisation, or department master data.");
@@ -515,7 +260,7 @@ const ContactPersonMaster = () => {
     setForm({
       companyId: data.companyId,
       organisationId: data.organizationId,
-      departmentId: 0, // You'll need to map this from your data
+      departmentId: data.departmentId,
       name: data.name,
       designation: data.designation,
       mobile: data.mobile,
@@ -591,21 +336,6 @@ const ContactPersonMaster = () => {
     URL.revokeObjectURL(url);
   };
 
-  // Handle insert form input changes for the simple modal
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    const { name, value, type } = e.target;
-    if (type === 'checkbox') {
-      const checked = (e.target as HTMLInputElement).checked;
-      // This would need to be implemented for the simple modal
-    }
-  };
-
-  // Handle simple form submission
-  const handleInsertContact = () => {
-    // This is a simplified version - you would implement full form handling here
-    setShowInsertModal(false);
-  };
-
   return (
     <div className="p-4 md:p-6 bg-gray-50 min-h-screen">
       {/* Header */}
@@ -613,6 +343,12 @@ const ContactPersonMaster = () => {
         <h1 className="text-2xl md:text-3xl font-bold text-gray-800">Contact Person Master</h1>
         <p className="text-sm text-gray-600 mt-1">Manage contact person details</p>
       </div>
+
+      {(loading || lookupLoading) && (
+        <div className="mb-4 p-4 bg-yellow-100 text-yellow-800 rounded-lg border border-yellow-300">
+          Loading data, please wait...
+        </div>
+      )}
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
@@ -1051,7 +787,7 @@ const ContactPersonMaster = () => {
                       >
                         <option value={0}>Select Company</option>
                         {companies.map(company => (
-                          <option key={company.id} value={company.id}>{company.name}</option>
+                          <option key={company.id} value={company.id}>{company.companyName}</option>
                         ))}
                       </select>
                     </div>
@@ -1066,7 +802,7 @@ const ContactPersonMaster = () => {
                       >
                         <option value={0}>Select Organization</option>
                         {organizations.map(org => (
-                          <option key={org.id} value={org.id}>{org.name}</option>
+                          <option key={org.id} value={org.id}>{org.organisationName}</option>
                         ))}
                       </select>
                     </div>
@@ -1081,7 +817,7 @@ const ContactPersonMaster = () => {
                       >
                         <option value={0}>Select Department</option>
                         {departments.map(dept => (
-                          <option key={dept.id} value={dept.id}>{dept.name}</option>
+                          <option key={dept.id} value={dept.id}>{dept.departmentName}</option>
                         ))}
                       </select>
                     </div>

@@ -1,272 +1,231 @@
 // src/modules/super-admin/pages/Master/OrganizationMaster.tsx
-import React, { useState } from 'react';
-import { 
-  Search, 
+
+import React, { useState } from "react";
+import {
+  Search,
   ChevronLeft,
   ChevronRight,
-  Filter,
   Download,
-  RefreshCw,
-  Eye,
   Building2,
   Plus,
-  Trash2
-} from 'lucide-react';
+  Trash2,
+  X,
+  CheckCircle,
+  AlertCircle,
+  Edit,
+  TrendingUp,
+  Users,
+  Calendar,
+  Briefcase,
+} from "lucide-react";
+
+import {createOrganization } from '../../../services/organization.service';
 
 interface Organization {
   id: number;
-  organizationName: string;
+  organisationName: string;
   companyId: number;
-  companyName: string;
   address: string;
   city: string;
   state: string;
-  pincode: string;
-  contactPerson: string;
-  contactEmail: string;
-  contactPhone: string;
-  website: string;
-  gstNo: string;
-  registrationNo: string;
-  establishedYear: string;
-  employeeCount: string;
-  status: 'active' | 'inactive';
-  createdAt: string;
-  updatedAt: string;
+  updatedBy: string;
+  updatedDate: string;
 }
 
-// Sample company data for dropdown
 const sampleCompanies = [
-  { id: 1, name: 'Agnigate Technologies Pvt. Ltd.' },
-  { id: 2, name: 'MP Board of Secondary Education' },
-  { id: 3, name: 'ITI Limited' },
-  { id: 4, name: 'Bhoj University' },
-  { id: 5, name: 'Infosys Limited' },
-  { id: 6, name: 'Tata Motors' },
-  { id: 7, name: 'ICICI Bank' },
+  { id: 1, name: "Agnigate Technologies Pvt. Ltd." },
+  { id: 2, name: "MP Board of Secondary Education" },
+  { id: 3, name: "ITI Limited" },
 ];
 
 const OrganizationMaster = () => {
+
   const [organizations, setOrganizations] = useState<Organization[]>([
     {
       id: 1,
-      organizationName: 'Examination Wing - MP Board',
+      organisationName: "Exam Wing MP Board",
       companyId: 2,
-      companyName: 'MP Board of Secondary Education',
-      address: 'Board Headquarters, Shiva Ji Nagar',
-      city: 'Bhopal',
-      state: 'Madhya Pradesh',
-      pincode: '462011',
-      contactPerson: 'Dr. S.K. Rao',
-      contactEmail: 'examwing@mpbse.com',
-      contactPhone: '+91 755 2551234',
-      website: 'www.mpbse.nic.in/exam',
-      gstNo: '23BBBBB0000B2Z6',
-      registrationNo: 'EDU/MP/2024/001',
-      establishedYear: '1965',
-      employeeCount: '150+',
-      status: 'active',
-      createdAt: '2024-01-20',
-      updatedAt: '2024-02-18'
+      address: "Shivaji Nagar",
+      city: "Bhopal",
+      state: "MP",
+      updatedBy: "Admin",
+      updatedDate: "2026-04-01"
     },
     {
       id: 2,
-      organizationName: 'University Campus Office',
-      companyId: 4,
-      companyName: 'Bhoj University',
-      address: 'University Campus, Kolar Road',
-      city: 'Bhopal',
-      state: 'Madhya Pradesh',
-      pincode: '462022',
-      contactPerson: 'Prof. V.K. Shrivastava',
-      contactEmail: 'campus@bhojuni.ac.in',
-      contactPhone: '+91 755 2731234',
-      website: 'www.bhojuni.ac.in/campus',
-      gstNo: '23DDDDD0000D4Z8',
-      registrationNo: 'UNI/MP/1992/045',
-      establishedYear: '1992',
-      employeeCount: '200+',
-      status: 'active',
-      createdAt: '2024-02-01',
-      updatedAt: '2024-02-10'
+      organisationName: "Agnigate Corporate Office",
+      companyId: 1,
+      address: "Vijay Nagar",
+      city: "Indore",
+      state: "MP",
+      updatedBy: "Super Admin",
+      updatedDate: "2026-03-28"
     },
     {
       id: 3,
-      organizationName: 'ITI Limited - Rae Bareli Plant',
+      organisationName: "ITI Training Center",
       companyId: 3,
-      companyName: 'ITI Limited',
-      address: 'ITI Industrial Area',
-      city: 'Rae Bareli',
-      state: 'Uttar Pradesh',
-      pincode: '229010',
-      contactPerson: 'A.K. Singh',
-      contactEmail: 'plant@iti.co.in',
-      contactPhone: '+91 535 2701234',
-      website: 'www.itiltd.in/raebareli',
-      gstNo: '09CCCCC0000C3Z7',
-      registrationNo: 'IND/UP/1950/789',
-      establishedYear: '1950',
-      employeeCount: '500+',
-      status: 'inactive',
-      createdAt: '2024-01-25',
-      updatedAt: '2024-02-15'
-    },
-    {
-      id: 4,
-      organizationName: 'Infosys - Electronic City Campus',
-      companyId: 5,
-      companyName: 'Infosys Limited',
-      address: 'Building 12, Electronic City',
-      city: 'Bangalore',
-      state: 'Karnataka',
-      pincode: '560100',
-      contactPerson: 'Sundar Rajan',
-      contactEmail: 'campus@infosys.com',
-      contactPhone: '+91 80 4112 3456',
-      website: 'www.infosys.com/campus',
-      gstNo: '29EEEEE0000E5Z9',
-      registrationNo: 'IT/KA/1999/123',
-      establishedYear: '1999',
-      employeeCount: '1000+',
-      status: 'active',
-      createdAt: '2024-02-05',
-      updatedAt: '2024-02-12'
-    },
-    {
-      id: 5,
-      organizationName: 'Tata Motors - Pimpri Plant',
-      companyId: 6,
-      companyName: 'Tata Motors',
-      address: 'Pimpri Industrial Area',
-      city: 'Pune',
-      state: 'Maharashtra',
-      pincode: '411018',
-      contactPerson: 'Vikram Singh',
-      contactEmail: 'pimpri@tatamotors.com',
-      contactPhone: '+91 20 6732 1234',
-      website: 'www.tatamotors.com/pimpri',
-      gstNo: '27FFFFF0000F6Z0',
-      registrationNo: 'AUTO/MH/1945/456',
-      establishedYear: '1945',
-      employeeCount: '2000+',
-      status: 'active',
-      createdAt: '2024-02-08',
-      updatedAt: '2024-02-14'
-    },
-    {
-      id: 6,
-      organizationName: 'ICICI Bank - BKC Branch',
-      companyId: 7,
-      companyName: 'ICICI Bank',
-      address: 'BKC Complex, Bandra East',
-      city: 'Mumbai',
-      state: 'Maharashtra',
-      pincode: '400051',
-      contactPerson: 'Priya Mehta',
-      contactEmail: 'bkc@icicibank.com',
-      contactPhone: '+91 22 2653 1234',
-      website: 'www.icicibank.com/bkc',
-      gstNo: '27GGGGG0000G7Z1',
-      registrationNo: 'BANK/MH/1994/789',
-      establishedYear: '1994',
-      employeeCount: '300+',
-      status: 'inactive',
-      createdAt: '2024-02-10',
-      updatedAt: '2024-02-16'
-    },
-    {
-      id: 7,
-      organizationName: 'Agnigate - Corporate Office',
-      companyId: 1,
-      companyName: 'Agnigate Technologies Pvt. Ltd.',
-      address: 'Plot No. 123, Scheme No. 74',
-      city: 'Indore',
-      state: 'Madhya Pradesh',
-      pincode: '452010',
-      contactPerson: 'Rajesh Sharma',
-      contactEmail: 'corporate@agnigate.com',
-      contactPhone: '+91 9876543210',
-      website: 'www.agnigate.com/corporate',
-      gstNo: '23AAAAA0000A1Z5',
-      registrationNo: 'IT/MP/2010/321',
-      establishedYear: '2010',
-      employeeCount: '50+',
-      status: 'active',
-      createdAt: '2024-01-15',
-      updatedAt: '2024-02-20'
+      address: "Govindpura",
+      city: "Bhopal",
+      state: "MP",
+      updatedBy: "Admin",
+      updatedDate: "2026-03-25"
     }
   ]);
 
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterStatus, setFilterStatus] = useState<string>('all');
-  const [filterCompany, setFilterCompany] = useState<string>('all');
+  const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(10);
-  const [showFilters, setShowFilters] = useState(false);
-  const [selectedOrganization, setSelectedOrganization] = useState<Organization | null>(null);
-  const [showViewModal, setShowViewModal] = useState(false);
   const [showInsertModal, setShowInsertModal] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [organizationToDelete, setOrganizationToDelete] = useState<Organization | null>(null);
-  const [loading, setLoading] = useState(false);
-  
-  // Form state for new organization
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<number | null>(null);
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
+
   const [newOrganization, setNewOrganization] = useState({
-    organizationName: '',
+    organisationName: "",
     companyId: 0,
-    companyName: '',
-    address: '',
-    city: '',
-    state: '',
-    pincode: '',
-    contactPerson: '',
-    contactEmail: '',
-    contactPhone: '',
-    website: '',
-    gstNo: '',
-    registrationNo: '',
-    establishedYear: '',
-    employeeCount: '',
-    status: 'active' as 'active' | 'inactive'
+    address: "",
+    city: "",
+    state: "",
+    updatedBy: "Super Admin"
   });
 
-  // Get unique companies for filter
-  const companies = ['all', ...new Set(organizations.map(o => o.companyName))];
-
-  // Filter organizations based on search and filters
-  const filteredOrganizations = organizations.filter(org => {
-    const matchesSearch = 
-      org.organizationName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      org.companyName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      org.city.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      org.contactPerson.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      org.contactEmail.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesStatus = filterStatus === 'all' || org.status === filterStatus;
-    const matchesCompany = filterCompany === 'all' || org.companyName === filterCompany;
-    
-    return matchesSearch && matchesStatus && matchesCompany;
+  const [editOrganization, setEditOrganization] = useState({
+    id: 0,
+    organisationName: "",
+    companyId: 0,
+    address: "",
+    city: "",
+    state: "",
+    updatedBy: ""
   });
 
-  // Pagination
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = filteredOrganizations.slice(indexOfFirstItem, indexOfLastItem);
-  const totalPages = Math.max(1, Math.ceil(filteredOrganizations.length / itemsPerPage));
+  const itemsPerPage = 10;
 
-  // Export to CSV
+  const getCompanyName = (companyId: number) => {
+    const company = sampleCompanies.find(c => c.id === companyId);
+    return company ? company.name : "N/A";
+  };
+
+  const filteredOrganizations = organizations.filter((org) =>
+    org.organisationName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    org.city.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    getCompanyName(org.companyId).toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const indexOfLast = currentPage * itemsPerPage;
+  const indexOfFirst = indexOfLast - itemsPerPage;
+
+  const currentItems = filteredOrganizations.slice(indexOfFirst, indexOfLast);
+
+  const totalPages = Math.ceil(filteredOrganizations.length / itemsPerPage);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setNewOrganization({ ...newOrganization, [name]: value });
+  };
+
+  const handleEditInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setEditOrganization({ ...editOrganization, [name]: value });
+  };
+
+  const handleInsertOrganization = async () => {
+    const payload = {
+      id: 0,
+      organisationName: newOrganization.organisationName,
+      companyId: Number(newOrganization.companyId),
+      address: newOrganization.address,
+      city: newOrganization.city,
+      state: newOrganization.state,
+      updatedBy: newOrganization.updatedBy,
+      updatedDate: new Date().toISOString()
+    };
+
+    try {
+      const response = await createOrganization(payload);
+
+      const newOrg: Organization = {
+        ...payload,
+        id: response?.id || Date.now(),
+        updatedDate: new Date().toISOString().split('T')[0]
+      };
+
+      setOrganizations([...organizations, newOrg]);
+      setShowInsertModal(false);
+      setSuccessMessage("Organization added successfully!");
+      setShowSuccessMessage(true);
+
+      setTimeout(() => setShowSuccessMessage(false), 3000);
+
+      setNewOrganization({
+        organisationName: "",
+        companyId: 0,
+        address: "",
+        city: "",
+        state: "",
+        updatedBy: "Super Admin"
+      });
+
+    } catch (error) {
+      console.error(error);
+      alert("Failed to create organization");
+    }
+  };
+
+  const handleUpdateOrganization = () => {
+    setOrganizations(organizations.map(org => 
+      org.id === editOrganization.id 
+        ? {
+            ...org,
+            organisationName: editOrganization.organisationName,
+            companyId: editOrganization.companyId,
+            address: editOrganization.address,
+            city: editOrganization.city,
+            state: editOrganization.state,
+            updatedBy: editOrganization.updatedBy,
+            updatedDate: new Date().toISOString().split('T')[0]
+          }
+        : org
+    ));
+    setShowEditModal(false);
+    setSuccessMessage("Organization updated successfully!");
+    setShowSuccessMessage(true);
+    setTimeout(() => setShowSuccessMessage(false), 3000);
+  };
+
+  const handleDeleteOrganization = (id: number) => {
+    setOrganizations(organizations.filter(o => o.id !== id));
+    setShowDeleteConfirm(null);
+    setSuccessMessage("Organization deleted successfully!");
+    setShowSuccessMessage(true);
+    setTimeout(() => setShowSuccessMessage(false), 3000);
+  };
+
+  const openEditModal = (org: Organization) => {
+    setEditOrganization({
+      id: org.id,
+      organisationName: org.organisationName,
+      companyId: org.companyId,
+      address: org.address,
+      city: org.city,
+      state: org.state,
+      updatedBy: org.updatedBy
+    });
+    setShowEditModal(true);
+  };
+
   const exportToCSV = () => {
-    const headers = ['Organization Name', 'Company', 'City', 'State', 'Contact Person', 'Email', 'Phone', 'Registration No', 'Status'];
-    const csvData = filteredOrganizations.map(org => [
-      org.organizationName,
-      org.companyName,
+    const headers = ['ID', 'Organization Name', 'Company ID', 'Address', 'City', 'State', 'Updated By', 'Updated Date'];
+    const csvData = filteredOrganizations.map((org) => [
+      org.id,
+      org.organisationName,
+      org.companyId,
+      org.address,
       org.city,
       org.state,
-      org.contactPerson,
-      org.contactEmail,
-      org.contactPhone,
-      org.registrationNo,
-      org.status
+      org.updatedBy,
+      org.updatedDate
     ]);
     
     const csvContent = [headers, ...csvData].map(row => row.join(',')).join('\n');
@@ -277,518 +236,560 @@ const OrganizationMaster = () => {
     a.download = `organizations_${new Date().toISOString().split('T')[0]}.csv`;
     a.click();
     window.URL.revokeObjectURL(url);
-  };
-
-  const viewOrganizationDetails = (organization: Organization) => {
-    setSelectedOrganization(organization);
-    setShowViewModal(true);
-  };
-
-  // Delete organization
-  const handleDeleteOrganization = () => {
-    if (organizationToDelete) {
-      setOrganizations(organizations.filter(o => o.id !== organizationToDelete.id));
-      setShowDeleteModal(false);
-      setOrganizationToDelete(null);
-    }
-  };
-
-  // Open delete confirmation modal
-  const openDeleteModal = (organization: Organization) => {
-    setOrganizationToDelete(organization);
-    setShowDeleteModal(true);
-  };
-
-  // Handle insert form input changes
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
     
-    if (name === 'companyId') {
-      const selectedCompany = sampleCompanies.find(c => c.id === parseInt(value));
-      setNewOrganization(prev => ({ 
-        ...prev, 
-        companyId: parseInt(value),
-        companyName: selectedCompany ? selectedCompany.name : ''
-      }));
-    } else {
-      setNewOrganization(prev => ({ ...prev, [name]: value }));
-    }
+    setSuccessMessage("Export completed successfully!");
+    setShowSuccessMessage(true);
+    setTimeout(() => setShowSuccessMessage(false), 3000);
   };
 
-  // Handle form submission
-  const handleInsertOrganization = () => {
-    const newId = Math.max(...organizations.map(o => o.id), 0) + 1;
-    const currentDate = new Date().toISOString().split('T')[0];
-    
-    const organizationToAdd: Organization = {
-      id: newId,
-      organizationName: newOrganization.organizationName,
-      companyId: newOrganization.companyId,
-      companyName: newOrganization.companyName,
-      address: newOrganization.address,
-      city: newOrganization.city,
-      state: newOrganization.state,
-      pincode: newOrganization.pincode,
-      contactPerson: newOrganization.contactPerson,
-      contactEmail: newOrganization.contactEmail,
-      contactPhone: newOrganization.contactPhone,
-      website: newOrganization.website,
-      gstNo: newOrganization.gstNo,
-      registrationNo: newOrganization.registrationNo,
-      establishedYear: newOrganization.establishedYear,
-      employeeCount: newOrganization.employeeCount,
-      status: newOrganization.status,
-      createdAt: currentDate,
-      updatedAt: currentDate
-    };
-    
-    setOrganizations([...organizations, organizationToAdd]);
-    setShowInsertModal(false);
-    setNewOrganization({
-      organizationName: '',
-      companyId: 0,
-      companyName: '',
-      address: '',
-      city: '',
-      state: '',
-      pincode: '',
-      contactPerson: '',
-      contactEmail: '',
-      contactPhone: '',
-      website: '',
-      gstNo: '',
-      registrationNo: '',
-      establishedYear: '',
-      employeeCount: '',
-      status: 'active'
-    });
-  };
+  // Calculate statistics
+  const totalOrganizations = organizations.length;
+  const totalCompanies = sampleCompanies.length;
+  const lastUpdated = organizations.reduce((latest, org) => {
+    return org.updatedDate > latest ? org.updatedDate : latest;
+  }, organizations[0]?.updatedDate || "");
 
   return (
-    <div className="p-4 md:p-6 bg-gray-50 min-h-screen">
-      {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl md:text-3xl font-bold text-gray-800">Organization Master</h1>
-        <p className="text-sm text-gray-600 mt-1">Manage organization details</p>
-      </div>
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <div className="bg-white rounded-lg shadow p-4 border-l-4 border-purple-500">
-          <p className="text-sm text-gray-600">Total Organizations</p>
-          <p className="text-2xl font-bold text-gray-800">{organizations.length}</p>
-        </div>
-        <div className="bg-white rounded-lg shadow p-4 border-l-4 border-green-500">
-          <p className="text-sm text-gray-600">Active Organizations</p>
-          <p className="text-2xl font-bold text-green-600">{organizations.filter(o => o.status === 'active').length}</p>
-        </div>
-        <div className="bg-white rounded-lg shadow p-4 border-l-4 border-red-500">
-          <p className="text-sm text-gray-600">Inactive Organizations</p>
-          <p className="text-2xl font-bold text-red-600">{organizations.filter(o => o.status === 'inactive').length}</p>
-        </div>
-        <div className="bg-white rounded-lg shadow p-4 border-l-4 border-blue-500">
-          <p className="text-sm text-gray-600">Filtered Results</p>
-          <p className="text-2xl font-bold text-blue-600">{filteredOrganizations.length}</p>
-        </div>
-      </div>
-
-      {/* Action Bar */}
-      <div className="bg-white rounded-lg shadow mb-6">
-        <div className="p-4 flex flex-col md:flex-row gap-4 items-center justify-between">
-          {/* Search */}
-          <div className="w-full md:w-96 relative">
-            <Search className="absolute left-3 top-2.5 text-gray-400" size={20} />
-            <input
-              type="text"
-              placeholder="Search organizations..."
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+      <div className="p-6 max-w-7xl mx-auto">
+        
+        {/* Header Section */}
+        <div className="mb-8">
+          <div className="flex items-center gap-3 mb-2">
+            <Building2 className="text-purple-600" size={28} />
+            <h1 className="text-3xl font-bold text-gray-900">Organization Master</h1>
           </div>
-
-          {/* Action Buttons */}
-          <div className="flex gap-2 w-full md:w-auto">
-            <button
-              onClick={() => setShowInsertModal(true)}
-              className="flex-1 md:flex-none px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 flex items-center justify-center gap-2"
-            >
-              <Plus size={18} />
-              <span>Add Organization</span>
-            </button>
-            <button
-              onClick={() => setShowFilters(!showFilters)}
-              className="flex-1 md:flex-none px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center justify-center gap-2"
-            >
-              <Filter size={18} />
-              <span>Filters</span>
-            </button>
-            <button
-              onClick={exportToCSV}
-              className="flex-1 md:flex-none px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center justify-center gap-2"
-            >
-              <Download size={18} />
-              <span>Export</span>
-            </button>
-          </div>
+          <p className="text-gray-600">Manage and organize all organizational entities in the system</p>
         </div>
 
-        {/* Filters Panel */}
-        {showFilters && (
-          <div className="p-4 border-t border-gray-200 bg-gray-50">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                <select
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-                  value={filterStatus}
-                  onChange={(e) => setFilterStatus(e.target.value)}
-                >
-                  <option value="all">All Status</option>
-                  <option value="active">Active</option>
-                  <option value="inactive">Inactive</option>
-                </select>
+        {/* Success Message */}
+        {showSuccessMessage && (
+          <div className="fixed top-4 right-4 z-50 animate-slide-in">
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-center gap-3 shadow-lg">
+              <CheckCircle className="text-green-600" size={20} />
+              <p className="text-green-800">{successMessage}</p>
+            </div>
+          </div>
+        )}
+
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+          <div className="group bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden border border-gray-100 hover:border-purple-200">
+            <div className="p-3">
+              <div className="flex items-center justify-between mb-2">
+                <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-md p-1.5 shadow-lg group-hover:scale-110 transition-transform">
+                  <Building2 size={16} className="text-white" />
+                </div>
+                <TrendingUp className="text-green-500 opacity-0 group-hover:opacity-100 transition-opacity" size={12} />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Company</label>
-                <select
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-                  value={filterCompany}
-                  onChange={(e) => setFilterCompany(e.target.value)}
-                >
-                  {companies.map(company => (
-                    <option key={company} value={company}>{company === 'all' ? 'All Companies' : company}</option>
-                  ))}
-                </select>
+                <p className="text-[10px] font-medium text-gray-500 uppercase tracking-wider mb-0.5">Total Organizations</p>
+                <p className="text-xl font-bold text-gray-900">{totalOrganizations}</p>
+                <p className="text-[10px] text-gray-400 mt-0.5">+{totalOrganizations} total entries</p>
               </div>
-              <div className="flex items-end">
+            </div>
+            <div className="h-0.5 bg-gradient-to-r from-purple-500 to-purple-600 transform scale-x-0 group-hover:scale-x-100 transition-transform"></div>
+          </div>
+          
+          <div className="group bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden border border-gray-100 hover:border-green-200">
+            <div className="p-3">
+              <div className="flex items-center justify-between mb-2">
+                <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-md p-1.5 shadow-lg group-hover:scale-110 transition-transform">
+                  <Users size={16} className="text-white" />
+                </div>
+                <TrendingUp className="text-green-500 opacity-0 group-hover:opacity-100 transition-opacity" size={12} />
+              </div>
+              <div>
+                <p className="text-[10px] font-medium text-gray-500 uppercase tracking-wider mb-0.5">Active Organizations</p>
+                <p className="text-xl font-bold text-gray-900">{organizations.length}</p>
+                <p className="text-[10px] text-green-600 mt-0.5">All active</p>
+              </div>
+            </div>
+            <div className="h-0.5 bg-gradient-to-r from-green-500 to-green-600 transform scale-x-0 group-hover:scale-x-100 transition-transform"></div>
+          </div>
+          
+          <div className="group bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden border border-gray-100 hover:border-blue-200">
+            <div className="p-3">
+              <div className="flex items-center justify-between mb-2">
+                <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-md p-1.5 shadow-lg group-hover:scale-110 transition-transform">
+                  <Briefcase size={16} className="text-white" />
+                </div>
+              </div>
+              <div>
+                <p className="text-[10px] font-medium text-gray-500 uppercase tracking-wider mb-0.5">Associated Companies</p>
+                <p className="text-xl font-bold text-gray-900">{totalCompanies}</p>
+                <p className="text-[10px] text-gray-400 mt-0.5">Across all industries</p>
+              </div>
+            </div>
+            <div className="h-0.5 bg-gradient-to-r from-blue-500 to-blue-600 transform scale-x-0 group-hover:scale-x-100 transition-transform"></div>
+          </div>
+          
+          <div className="group bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden border border-gray-100 hover:border-orange-200">
+            <div className="p-3">
+              <div className="flex items-center justify-between mb-2">
+                <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-md p-1.5 shadow-lg group-hover:scale-110 transition-transform">
+                  <Calendar size={16} className="text-white" />
+                </div>
+              </div>
+              <div>
+                <p className="text-[10px] font-medium text-gray-500 uppercase tracking-wider mb-0.5">Last Updated</p>
+                <p className="text-base font-bold text-gray-900">{lastUpdated || "N/A"}</p>
+                <p className="text-[10px] text-gray-400 mt-0.5">Most recent update</p>
+              </div>
+            </div>
+            <div className="h-0.5 bg-gradient-to-r from-orange-500 to-orange-600 transform scale-x-0 group-hover:scale-x-100 transition-transform"></div>
+          </div>
+        </div>
+        
+        {/* Action Bar */}
+        <div className="bg-white rounded-xl shadow-sm p-4 mb-6 border border-gray-100">
+          <div className="flex flex-wrap gap-4 justify-between items-center">
+            <div className="relative flex-1 min-w-[300px]">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+              <input
+                type="text"
+                placeholder="Search by organization name, company ID, or city..."
+                className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            
+            <div className="flex gap-2">
+              <button
+                onClick={exportToCSV}
+                className="px-4 py-2 bg-green-600 text-white rounded-lg flex items-center gap-2 hover:bg-green-700 transition-all hover:shadow-md"
+              >
+                <Download size={18} /> Export
+              </button>
+              <button
+                onClick={() => setShowInsertModal(true)}
+                className="px-4 py-2 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-lg flex items-center gap-2 hover:shadow-lg transition-all hover:scale-105"
+              >
+                <Plus size={18} /> Add Organization
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Table */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200">
+                <tr>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">ID</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Organization Name</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Company ID</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Address</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">City</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">State</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Updated By</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Updated Date</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {currentItems.length > 0 ? (
+                  currentItems.map((org) => (
+                    <tr key={org.id} className="hover:bg-gray-50 transition-colors group">
+                      <td className="px-4 py-3 text-sm text-gray-600">{org.id}</td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          <Building2 size={16} className="text-purple-500" />
+                          <span className="font-medium text-gray-900">{org.organisationName}</span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className="text-sm text-gray-700">{org.companyId}</span>
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-700">{org.address || 'N/A'}</td>
+                      <td className="px-4 py-3 text-sm text-gray-700">{org.city}</td>
+                      <td className="px-4 py-3">
+                        <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
+                          {org.state}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-700">{org.updatedBy}</td>
+                      <td className="px-4 py-3">
+                        <div className="flex flex-col">
+                          <span className="text-sm text-gray-700">{new Date(org.updatedDate).toLocaleDateString()}</span>
+                          <span className="text-xs text-gray-400">{new Date(org.updatedDate).toLocaleTimeString()}</span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => openEditModal(org)}
+                            className="p-1.5 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                            title="Edit Organization"
+                          >
+                            <Edit size={18} />
+                          </button>
+                          <button
+                            onClick={() => setShowDeleteConfirm(org.id)}
+                            className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                            title="Delete Organization"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={9} className="px-4 py-12 text-center">
+                      <div className="flex flex-col items-center gap-2">
+                        <Building2 size={48} className="text-gray-300" />
+                        <p className="text-gray-500">No organizations found</p>
+                        <button
+                          onClick={() => setShowInsertModal(true)}
+                          className="mt-2 text-purple-600 hover:text-purple-700 font-medium"
+                        >
+                          Add your first organization
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        
+        {/* Pagination */}
+        {filteredOrganizations.length > 0 && (
+          <div className="flex justify-between items-center mt-6">
+            <div className="text-sm text-gray-600">
+              Showing {indexOfFirst + 1} to {Math.min(indexOfLast, filteredOrganizations.length)} of {filteredOrganizations.length} entries
+            </div>
+            <div className="flex gap-2 items-center">
+              <button
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage(currentPage - 1)}
+                className="flex items-center gap-1 px-3 py-1.5 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                <ChevronLeft size={16} /> Previous
+              </button>
+              <div className="flex gap-1">
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  let pageNum;
+                  if (totalPages <= 5) {
+                    pageNum = i + 1;
+                  } else if (currentPage <= 3) {
+                    pageNum = i + 1;
+                  } else if (currentPage >= totalPages - 2) {
+                    pageNum = totalPages - 4 + i;
+                  } else {
+                    pageNum = currentPage - 2 + i;
+                  }
+                  
+                  return (
+                    <button
+                      key={pageNum}
+                      onClick={() => setCurrentPage(pageNum)}
+                      className={`px-3 py-1.5 rounded-lg transition-colors ${
+                        currentPage === pageNum
+                          ? 'bg-purple-600 text-white'
+                          : 'border border-gray-300 text-gray-700 hover:bg-gray-50'
+                      }`}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                })}
+              </div>
+              <button
+                disabled={currentPage === totalPages}
+                onClick={() => setCurrentPage(currentPage + 1)}
+                className="flex items-center gap-1 px-3 py-1.5 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                Next <ChevronRight size={16} />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Insert Modal */}
+        {showInsertModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-xl w-[550px] max-h-[90vh] overflow-y-auto shadow-2xl animate-fade-in">
+              <div className="sticky top-0 bg-white border-b border-gray-200 p-6 flex justify-between items-center">
+                <div className="flex items-center gap-2">
+                  <Plus size={24} className="text-purple-600" />
+                  <h2 className="text-xl font-bold text-gray-900">Add New Organization</h2>
+                </div>
                 <button
-                  onClick={() => {
-                    setFilterStatus('all');
-                    setFilterCompany('all');
-                    setSearchTerm('');
-                  }}
-                  className="px-4 py-2 text-gray-600 hover:text-gray-800 flex items-center gap-2"
+                  onClick={() => setShowInsertModal(false)}
+                  className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
                 >
-                  <RefreshCw size={16} />
-                  Clear Filters
+                  <X size={20} />
+                </button>
+              </div>
+              
+              <div className="p-6">
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Organization Name *</label>
+                    <input
+                      name="organisationName"
+                      placeholder="Enter organization name"
+                      value={newOrganization.organisationName}
+                      onChange={handleInputChange}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Company *</label>
+                    <select
+                      name="companyId"
+                      value={newOrganization.companyId}
+                      onChange={handleInputChange}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    >
+                      <option value={0}>Select Company</option>
+                      {sampleCompanies.map(c => (
+                        <option key={c.id} value={c.id}>{c.name}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
+                    <textarea
+                      name="address"
+                      placeholder="Enter full address"
+                      value={newOrganization.address}
+                      onChange={handleInputChange}
+                      rows={3}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">City</label>
+                      <input
+                        name="city"
+                        placeholder="Enter city"
+                        value={newOrganization.city}
+                        onChange={handleInputChange}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">State</label>
+                      <input
+                        name="state"
+                        placeholder="Enter state"
+                        value={newOrganization.state}
+                        onChange={handleInputChange}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="sticky bottom-0 bg-white border-t border-gray-200 p-6 flex justify-end gap-3">
+                <button
+                  onClick={() => setShowInsertModal(false)}
+                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleInsertOrganization}
+                  className="px-4 py-2 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-lg hover:shadow-lg transition-all"
+                >
+                  Save Organization
                 </button>
               </div>
             </div>
           </div>
         )}
-      </div>
 
-      {/* Table */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[1400px] lg:min-w-full">
-            <thead className="bg-gray-50 border-b border-gray-200">
-              <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">S.No</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Organization Name</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Company</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">City</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">State</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact Person</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phone</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Registration No</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {currentItems.map((org, index) => (
-                <tr key={org.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3 text-sm text-gray-600">{indexOfFirstItem + index + 1}</td>
-                  <td className="px-4 py-3">
-                    <div>
-                      <p className="font-medium text-gray-900">{org.organizationName}</p>
-                      <p className="text-xs text-gray-500">{org.website}</p>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 text-sm text-gray-600">{org.companyName}</td>
-                  <td className="px-4 py-3 text-sm text-gray-600">{org.city}</td>
-                  <td className="px-4 py-3 text-sm text-gray-600">{org.state}</td>
-                  <td className="px-4 py-3 text-sm text-gray-600">{org.contactPerson}</td>
-                  <td className="px-4 py-3 text-sm text-gray-600">
-                    <a href={`mailto:${org.contactEmail}`} className="text-blue-600 hover:underline">
-                      {org.contactEmail}
-                    </a>
-                  </td>
-                  <td className="px-4 py-3 text-sm text-gray-600">{org.contactPhone}</td>
-                  <td className="px-4 py-3 text-sm text-gray-600">{org.registrationNo}</td>
-                  <td className="px-4 py-3">
-                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold ${
-                      org.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                    }`}>
-                      {org.status}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => viewOrganizationDetails(org)}
-                        className="p-1 text-blue-600 hover:bg-blue-50 rounded"
-                        title="View Details"
-                      >
-                        <Eye size={18} />
-                      </button>
-                      <button
-                        onClick={() => openDeleteModal(org)}
-                        className="p-1 text-red-600 hover:bg-red-50 rounded"
-                        title="Delete Organization"
-                      >
-                        <Trash2 size={18} />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* Pagination */}
-      {filteredOrganizations.length > 0 && (
-        <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="text-sm text-gray-600">
-            Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, filteredOrganizations.length)} of {filteredOrganizations.length} entries
-          </div>
-          <div className="flex gap-2">
-            <button
-              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-              disabled={currentPage === 1}
-              className="px-3 py-1 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 flex items-center gap-1"
-            >
-              <ChevronLeft size={16} /> Previous
-            </button>
-            <span className="px-4 py-1 bg-purple-600 text-white rounded-lg">
-              Page {currentPage} of {totalPages}
-            </span>
-            <button
-              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-              disabled={currentPage === totalPages}
-              className="px-3 py-1 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 flex items-center gap-1"
-            >
-              Next <ChevronRight size={16} />
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* View Details Modal */}
-      {showViewModal && selectedOrganization && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-bold text-gray-800">Organization Details</h2>
+        {/* Edit Modal */}
+        {showEditModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-xl w-[550px] max-h-[90vh] overflow-y-auto shadow-2xl animate-fade-in">
+              <div className="sticky top-0 bg-white border-b border-gray-200 p-6 flex justify-between items-center">
+                <div className="flex items-center gap-2">
+                  <Edit size={24} className="text-green-600" />
+                  <h2 className="text-xl font-bold text-gray-900">Edit Organization</h2>
+                </div>
                 <button
-                  onClick={() => {
-                    setShowViewModal(false);
-                    setSelectedOrganization(null);
-                  }}
-                  className="p-1 hover:bg-gray-100 rounded"
+                  onClick={() => setShowEditModal(false)}
+                  className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
                 >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
+                  <X size={20} />
                 </button>
               </div>
-
-              <div className="space-y-4">
-                <div className="border-b pb-4">
-                  <h3 className="text-lg font-semibold text-purple-600 mb-3">Organization Information</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div><p className="text-sm text-gray-500">Organization Name</p><p className="font-medium">{selectedOrganization.organizationName}</p></div>
-                    <div><p className="text-sm text-gray-500">Company</p><p className="font-medium">{selectedOrganization.companyName}</p></div>
-                    <div><p className="text-sm text-gray-500">Registration No</p><p className="font-medium">{selectedOrganization.registrationNo}</p></div>
-                    <div><p className="text-sm text-gray-500">GST No</p><p className="font-medium">{selectedOrganization.gstNo}</p></div>
-                    <div><p className="text-sm text-gray-500">Website</p><p className="font-medium text-blue-600">{selectedOrganization.website}</p></div>
-                    <div><p className="text-sm text-gray-500">Status</p><span className={`inline-flex px-2 py-1 rounded-full text-xs font-semibold ${selectedOrganization.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>{selectedOrganization.status}</span></div>
-                    <div><p className="text-sm text-gray-500">Established Year</p><p className="font-medium">{selectedOrganization.establishedYear}</p></div>
-                    <div><p className="text-sm text-gray-500">Employee Count</p><p className="font-medium">{selectedOrganization.employeeCount}</p></div>
+              
+              <div className="p-6">
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Organization Name *</label>
+                    <input
+                      name="organisationName"
+                      placeholder="Enter organization name"
+                      value={editOrganization.organisationName}
+                      onChange={handleEditInputChange}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    />
                   </div>
-                </div>
 
-                <div className="border-b pb-4">
-                  <h3 className="text-lg font-semibold text-purple-600 mb-3">Address</h3>
-                  <p className="font-medium">{selectedOrganization.address}</p>
-                  <p>{selectedOrganization.city}, {selectedOrganization.state} - {selectedOrganization.pincode}</p>
-                </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Company *</label>
+                    <select
+                      name="companyId"
+                      value={editOrganization.companyId}
+                      onChange={handleEditInputChange}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    >
+                      <option value={0}>Select Company</option>
+                      {sampleCompanies.map(c => (
+                        <option key={c.id} value={c.id}>{c.name}</option>
+                      ))}
+                    </select>
+                  </div>
 
-                <div>
-                  <h3 className="text-lg font-semibold text-purple-600 mb-3">Contact Information</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div><p className="text-sm text-gray-500">Contact Person</p><p className="font-medium">{selectedOrganization.contactPerson}</p></div>
-                    <div><p className="text-sm text-gray-500">Email</p><p className="font-medium text-blue-600">{selectedOrganization.contactEmail}</p></div>
-                    <div><p className="text-sm text-gray-500">Phone</p><p className="font-medium">{selectedOrganization.contactPhone}</p></div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
+                    <textarea
+                      name="address"
+                      placeholder="Enter full address"
+                      value={editOrganization.address}
+                      onChange={handleEditInputChange}
+                      rows={3}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">City</label>
+                      <input
+                        name="city"
+                        placeholder="Enter city"
+                        value={editOrganization.city}
+                        onChange={handleEditInputChange}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">State</label>
+                      <input
+                        name="state"
+                        placeholder="Enter state"
+                        value={editOrganization.state}
+                        onChange={handleEditInputChange}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Updated By</label>
+                    <input
+                      name="updatedBy"
+                      placeholder="Enter updater name"
+                      value={editOrganization.updatedBy}
+                      onChange={handleEditInputChange}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    />
                   </div>
                 </div>
               </div>
 
-              <div className="flex justify-end mt-6">
-                <button onClick={() => setShowViewModal(false)} className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">Close</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Insert Organization Modal */}
-      {showInsertModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-bold text-gray-800">Add New Organization</h2>
+              <div className="sticky bottom-0 bg-white border-t border-gray-200 p-6 flex justify-end gap-3">
                 <button
-                  onClick={() => {
-                    setShowInsertModal(false);
-                    setNewOrganization({
-                      organizationName: '', companyId: 0, companyName: '', address: '', city: '', state: '', pincode: '',
-                      contactPerson: '', contactEmail: '', contactPhone: '', website: '', gstNo: '', registrationNo: '',
-                      establishedYear: '', employeeCount: '', status: 'active'
-                    });
-                  }}
-                  className="p-1 hover:bg-gray-100 rounded"
-                >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-
-              <form onSubmit={(e) => { e.preventDefault(); handleInsertOrganization(); }}>
-                {/* Basic Information */}
-                <div className="border-b pb-4 mb-4">
-                  <h3 className="text-lg font-semibold text-purple-600 mb-3">Basic Information</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Organization Name *</label>
-                      <input type="text" name="organizationName" value={newOrganization.organizationName} onChange={handleInputChange} required className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500" />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Parent Company *</label>
-                      <select name="companyId" value={newOrganization.companyId} onChange={handleInputChange} required className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500">
-                        <option value={0}>Select Company</option>
-                        {sampleCompanies.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Registration Number</label>
-                      <input type="text" name="registrationNo" value={newOrganization.registrationNo} onChange={handleInputChange} className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500" />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">GST Number</label>
-                      <input type="text" name="gstNo" value={newOrganization.gstNo} onChange={handleInputChange} className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500" />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Website</label>
-                      <input type="text" name="website" value={newOrganization.website} onChange={handleInputChange} className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500" />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Established Year</label>
-                      <input type="text" name="establishedYear" value={newOrganization.establishedYear} onChange={handleInputChange} className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500" />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Employee Count</label>
-                      <input type="text" name="employeeCount" value={newOrganization.employeeCount} onChange={handleInputChange} className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500" />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                      <select name="status" value={newOrganization.status} onChange={handleInputChange} className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500">
-                        <option value="active">Active</option>
-                        <option value="inactive">Inactive</option>
-                      </select>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Address Information */}
-                <div className="border-b pb-4 mb-4">
-                  <h3 className="text-lg font-semibold text-purple-600 mb-3">Address Information</h3>
-                  <div className="grid grid-cols-1 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Full Address *</label>
-                      <textarea name="address" value={newOrganization.address} onChange={handleInputChange} required rows={2} className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500" />
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div><label className="block text-sm font-medium text-gray-700 mb-1">City *</label><input type="text" name="city" value={newOrganization.city} onChange={handleInputChange} required className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500" /></div>
-                      <div><label className="block text-sm font-medium text-gray-700 mb-1">State *</label><input type="text" name="state" value={newOrganization.state} onChange={handleInputChange} required className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500" /></div>
-                      <div><label className="block text-sm font-medium text-gray-700 mb-1">Pincode *</label><input type="text" name="pincode" value={newOrganization.pincode} onChange={handleInputChange} required className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500" /></div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Contact Information */}
-                <div>
-                  <h3 className="text-lg font-semibold text-purple-600 mb-3">Contact Information</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div><label className="block text-sm font-medium text-gray-700 mb-1">Contact Person *</label><input type="text" name="contactPerson" value={newOrganization.contactPerson} onChange={handleInputChange} required className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500" /></div>
-                    <div><label className="block text-sm font-medium text-gray-700 mb-1">Email *</label><input type="email" name="contactEmail" value={newOrganization.contactEmail} onChange={handleInputChange} required className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500" /></div>
-                    <div><label className="block text-sm font-medium text-gray-700 mb-1">Phone *</label><input type="tel" name="contactPhone" value={newOrganization.contactPhone} onChange={handleInputChange} required className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500" /></div>
-                  </div>
-                </div>
-
-                <div className="flex justify-end gap-3 mt-6">
-                  <button type="button" onClick={() => setShowInsertModal(false)} className="px-4 py-2 border rounded-lg hover:bg-gray-50">Cancel</button>
-                  <button type="submit" className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">Add Organization</button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Delete Confirmation Modal */}
-      {showDeleteModal && organizationToDelete && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
-            <div className="p-6">
-              <div className="flex items-center justify-center mb-4">
-                <div className="p-3 bg-red-100 rounded-full">
-                  <Trash2 className="w-8 h-8 text-red-600" />
-                </div>
-              </div>
-              <h3 className="text-lg font-bold text-center text-gray-800 mb-2">Confirm Delete</h3>
-              <p className="text-sm text-gray-600 text-center mb-4">
-                Are you sure you want to delete the organization <strong className="text-gray-800">{organizationToDelete.organizationName}</strong>?
-                <br />
-                This action cannot be undone.
-              </p>
-              <div className="flex gap-3">
-                <button
-                  onClick={() => {
-                    setShowDeleteModal(false);
-                    setOrganizationToDelete(null);
-                  }}
-                  className="flex-1 px-5 py-2.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition duration-200"
+                  onClick={() => setShowEditModal(false)}
+                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
                 >
                   Cancel
                 </button>
                 <button
-                  onClick={handleDeleteOrganization}
-                  className="flex-1 px-5 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition duration-200"
+                  onClick={handleUpdateOrganization}
+                  className="px-4 py-2 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg hover:shadow-lg transition-all"
                 >
-                  Delete
+                  Update Organization
                 </button>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
+        
+        {/* Delete Confirmation Modal */}
+        {showDeleteConfirm && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-xl w-[400px] shadow-2xl animate-fade-in">
+              <div className="p-6">
+                <div className="flex items-center justify-center mb-4">
+                  <div className="bg-red-100 rounded-full p-3">
+                    <AlertCircle size={32} className="text-red-600" />
+                  </div>
+                </div>
+                <h3 className="text-lg font-bold text-gray-900 text-center mb-2">Confirm Delete</h3>
+                <p className="text-gray-600 text-center mb-6">
+                  Are you sure you want to delete this organization? This action cannot be undone.
+                </p>
+                <div className="flex gap-3 justify-center">
+                  <button
+                    onClick={() => setShowDeleteConfirm(null)}
+                    className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => handleDeleteOrganization(showDeleteConfirm)}
+                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
-      {/* No Results Message */}
-      {filteredOrganizations.length === 0 && (
-        <div className="text-center py-12 bg-white rounded-lg shadow mt-6">
-          <Building2 className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-          <p className="text-gray-500">No organizations found matching your criteria.</p>
-        </div>
-      )}
+      </div>
+
+      <style>{`
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: scale(0.95);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
+        
+        @keyframes slideIn {
+          from {
+            transform: translateX(100%);
+            opacity: 0;
+          }
+          to {
+            transform: translateX(0);
+            opacity: 1;
+          }
+        }
+        
+        .animate-fade-in {
+          animation: fadeIn 0.2s ease-out;
+        }
+        
+        .animate-slide-in {
+          animation: slideIn 0.3s ease-out;
+        }
+      `}</style>
     </div>
   );
 };

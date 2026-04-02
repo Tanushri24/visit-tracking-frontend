@@ -7,13 +7,13 @@ import {
   Filter,
   Download,
   RefreshCw,
-  Eye,
   Plus,
   Target,
   CheckCircle,
   XCircle,
   Layers,
-  Trash2
+  Trash2,
+  Edit
 } from 'lucide-react';
 
 interface VisitPurpose {
@@ -43,15 +43,22 @@ const VisitPurposeMaster = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
   const [showFilters, setShowFilters] = useState(false);
-  const [selectedPurpose, setSelectedPurpose] = useState<VisitPurpose | null>(null);
-  const [showViewModal, setShowViewModal] = useState(false);
   const [showInsertModal, setShowInsertModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [purposeToDelete, setPurposeToDelete] = useState<VisitPurpose | null>(null);
   
   const [newPurpose, setNewPurpose] = useState({
     purposeName: '',
     status: 'active' as 'active' | 'inactive'
+  });
+
+  const [editPurpose, setEditPurpose] = useState({
+    id: 0,
+    purposeName: '',
+    status: 'active' as 'active' | 'inactive',
+    createdAt: '',
+    updatedAt: ''
   });
 
   const filteredPurposes = purposes.filter(purpose => {
@@ -77,9 +84,16 @@ const VisitPurposeMaster = () => {
     a.click();
   };
 
-  const viewPurposeDetails = (purpose: VisitPurpose) => {
-    setSelectedPurpose(purpose);
-    setShowViewModal(true);
+  // Open edit modal
+  const openEditModal = (purpose: VisitPurpose) => {
+    setEditPurpose({
+      id: purpose.id,
+      purposeName: purpose.purposeName,
+      status: purpose.status,
+      createdAt: purpose.createdAt,
+      updatedAt: purpose.updatedAt
+    });
+    setShowEditModal(true);
   };
 
   // Delete purpose
@@ -102,6 +116,11 @@ const VisitPurposeMaster = () => {
     setNewPurpose(prev => ({ ...prev, [name]: value }));
   };
 
+  const handleEditInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setEditPurpose(prev => ({ ...prev, [name]: value }));
+  };
+
   const handleInsertPurpose = () => {
     const newId = Math.max(...purposes.map(p => p.id), 0) + 1;
     const currentDate = new Date().toISOString().split('T')[0];
@@ -114,6 +133,27 @@ const VisitPurposeMaster = () => {
     setPurposes([...purposes, purposeToAdd]);
     setShowInsertModal(false);
     setNewPurpose({ purposeName: '', status: 'active' });
+  };
+
+  const handleUpdatePurpose = () => {
+    setPurposes(purposes.map(purpose => 
+      purpose.id === editPurpose.id 
+        ? {
+            ...purpose,
+            purposeName: editPurpose.purposeName,
+            status: editPurpose.status,
+            updatedAt: new Date().toISOString().split('T')[0]
+          }
+        : purpose
+    ));
+    setShowEditModal(false);
+    setEditPurpose({
+      id: 0,
+      purposeName: '',
+      status: 'active',
+      createdAt: '',
+      updatedAt: ''
+    });
   };
 
   return (
@@ -276,11 +316,11 @@ const VisitPurposeMaster = () => {
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
                         <button
-                          onClick={() => viewPurposeDetails(purpose)}
-                          className="p-1.5 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
-                          title="View Details"
+                          onClick={() => openEditModal(purpose)}
+                          className="p-1.5 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                          title="Edit Purpose"
                         >
-                          <Eye size={16} />
+                          <Edit size={16} />
                         </button>
                         <button
                           onClick={() => openDeleteModal(purpose)}
@@ -328,41 +368,6 @@ const VisitPurposeMaster = () => {
           </div>
         )}
 
-        {/* View Modal */}
-        {showViewModal && selectedPurpose && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-              <div className="sticky top-0 bg-white border-b border-gray-100 px-6 py-4 flex justify-between items-center">
-                <h2 className="text-xl font-bold text-gray-900">Purpose Details</h2>
-                <button onClick={() => setShowViewModal(false)} className="p-1 hover:bg-gray-100 rounded-lg transition-colors">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-              <div className="p-6 space-y-6">
-                <div>
-                  <h3 className="text-lg font-semibold text-purple-600 mb-3">Purpose Information</h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div><p className="text-sm text-gray-500">Purpose Name</p><p className="font-medium text-gray-900">{selectedPurpose.purposeName}</p></div>
-                    <div><p className="text-sm text-gray-500">Status</p><span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium ${selectedPurpose.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>{selectedPurpose.status}</span></div>
-                  </div>
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-purple-600 mb-3">System Information</h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-                    <div><p className="text-gray-500">Created At</p><p className="font-medium text-gray-900">{new Date(selectedPurpose.createdAt).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' })}</p></div>
-                    <div><p className="text-gray-500">Last Updated</p><p className="font-medium text-gray-900">{new Date(selectedPurpose.updatedAt).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' })}</p></div>
-                  </div>
-                </div>
-              </div>
-              <div className="sticky bottom-0 bg-white border-t border-gray-100 px-6 py-4 flex justify-end">
-                <button onClick={() => setShowViewModal(false)} className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors">Close</button>
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* Insert Modal */}
         {showInsertModal && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -405,6 +410,54 @@ const VisitPurposeMaster = () => {
                 <div className="sticky bottom-0 bg-white border-t border-gray-100 px-6 py-4 flex justify-end gap-3">
                   <button type="button" onClick={() => setShowInsertModal(false)} className="px-4 py-2 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">Cancel</button>
                   <button type="submit" className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors">Add Purpose</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* Edit Modal */}
+        {showEditModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+              <div className="sticky top-0 bg-white border-b border-gray-100 px-6 py-4 flex justify-between items-center">
+                <h2 className="text-xl font-bold text-gray-900">Edit Purpose</h2>
+                <button onClick={() => setShowEditModal(false)} className="p-1 hover:bg-gray-100 rounded-lg transition-colors">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <form onSubmit={(e) => { e.preventDefault(); handleUpdatePurpose(); }}>
+                <div className="p-6 space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Purpose Name *</label>
+                    <input
+                      type="text"
+                      name="purposeName"
+                      value={editPurpose.purposeName}
+                      onChange={handleEditInputChange}
+                      required
+                      placeholder="e.g., Product Demo, Proposal Discussion"
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                    <select
+                      name="status"
+                      value={editPurpose.status}
+                      onChange={handleEditInputChange}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    >
+                      <option value="active">Active</option>
+                      <option value="inactive">Inactive</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="sticky bottom-0 bg-white border-t border-gray-100 px-6 py-4 flex justify-end gap-3">
+                  <button type="button" onClick={() => setShowEditModal(false)} className="px-4 py-2 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">Cancel</button>
+                  <button type="submit" className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors">Update Purpose</button>
                 </div>
               </form>
             </div>
