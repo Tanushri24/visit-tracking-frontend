@@ -16,7 +16,6 @@ export interface CreateUserByAdminDto {
   joiningDate?: string;
   isActive: boolean;
 }
-
 export const createUserByAdmin = (data: CreateUserByAdminDto) => {
   // Uses the API endpoint requested by the user
   return api.post("/controller/create-user-by-admin", data);

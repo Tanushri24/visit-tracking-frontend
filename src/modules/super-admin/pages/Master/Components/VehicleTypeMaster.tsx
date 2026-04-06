@@ -1,5 +1,5 @@
 // src/modules/super-admin/pages/Master/VehicleTypeMaster.tsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Search, 
   ChevronLeft,
@@ -13,9 +13,16 @@ import {
   Bike,
   Truck,
   Gauge,
-  Trash2
+  Trash2,
+  AlertCircle,
+  CheckCircle
 } from 'lucide-react';
-import { createVehicleType } from '../../../services/VehicleType.service';
+import { 
+  getVehicleTypes, 
+  createVehicleType, 
+  deleteVehicleType,
+  type VehicleTypeResponse 
+} from '../../../services/VehicleType.service';
 
 interface VehicleType {
   id: number;
@@ -27,10 +34,10 @@ interface VehicleType {
 }
 
 const VehicleTypeMaster = () => {
-  const [vehicles, setVehicles] = useState<VehicleType[]>([
-    { id: 1, vehicleName: 'Two Wheeler', defaultRate: 4, status: 'active', createdAt: '2024-01-15', updatedAt: '2024-02-20' },
-    { id: 2, vehicleName: 'Four Wheeler', defaultRate: 10, status: 'active', createdAt: '2024-01-15', updatedAt: '2024-02-20' }
-  ]);
+  const [vehicles, setVehicles] = useState<VehicleType[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
@@ -42,12 +49,53 @@ const VehicleTypeMaster = () => {
   const [showInsertModal, setShowInsertModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [vehicleToDelete, setVehicleToDelete] = useState<VehicleType | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   const [newVehicle, setNewVehicle] = useState({
     vehicleName: '',
     defaultRate: 0,
     status: 'active' as 'active' | 'inactive'
   });
+
+  // Fetch vehicle types on component mount
+  useEffect(() => {
+    fetchVehicleTypes();
+  }, []);
+
+  // Auto-clear success message after 3 seconds
+  useEffect(() => {
+    if (successMessage) {
+      const timer = setTimeout(() => {
+        setSuccessMessage(null);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [successMessage]);
+
+  const fetchVehicleTypes = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await getVehicleTypes();
+      
+      // Transform API response to component format
+      const transformedVehicles: VehicleType[] = data.map((item: any) => ({
+        id: item.id,
+        vehicleName: item.vehicleName,
+        defaultRate: item.defaultRatePerKm,
+        status: item.isActive ? 'active' : 'inactive',
+        createdAt: item.created_at || item.createdAt || new Date().toISOString().split('T')[0],
+        updatedAt: item.updated_at || item.updatedAt || new Date().toISOString().split('T')[0]
+      }));
+      
+      setVehicles(transformedVehicles);
+    } catch (err) {
+      console.error('Failed to fetch vehicle types:', err);
+      setError('Failed to load vehicle types. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filteredVehicles = vehicles.filter(vehicle => {
     const matchesSearch = vehicle.vehicleName.toLowerCase().includes(searchTerm.toLowerCase());
@@ -70,14 +118,33 @@ const VehicleTypeMaster = () => {
     a.click();
   };
 
-  const viewVehicleDetails = (vehicle: VehicleType) => { setSelectedVehicle(vehicle); setShowViewModal(true); };
+  const viewVehicleDetails = (vehicle: VehicleType) => { 
+    setSelectedVehicle(vehicle); 
+    setShowViewModal(true); 
+  };
   
   // Delete vehicle
-  const handleDeleteVehicle = () => {
+  const handleDeleteVehicle = async () => {
     if (vehicleToDelete) {
-      setVehicles(vehicles.filter(v => v.id !== vehicleToDelete.id));
-      setShowDeleteModal(false);
-      setVehicleToDelete(null);
+      try {
+        setLoading(true);
+        const response = await deleteVehicleType(vehicleToDelete.id);
+        
+        if (response.success) {
+          // Remove from local state
+          setVehicles(vehicles.filter(v => v.id !== vehicleToDelete.id));
+          setShowDeleteModal(false);
+          setVehicleToDelete(null);
+          setSuccessMessage(`Vehicle type "${vehicleToDelete.vehicleName}" deleted successfully!`);
+        } else {
+          setError(response.message || 'Failed to delete vehicle type');
+        }
+      } catch (err) {
+        console.error('Delete failed:', err);
+        setError('An unexpected error occurred while deleting');
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
@@ -93,42 +160,52 @@ const VehicleTypeMaster = () => {
   };
 
   const handleInsertVehicle = async () => {
+    setIsSubmitting(true);
+    setError(null);
+    
     try {
       const payload = {
         vehicleName: newVehicle.vehicleName,
-        defaultRate: newVehicle.defaultRate,
-        status: newVehicle.status === "active" // Fixed: Convert "active" to true, "inactive" to false
+        defaultRatePerKm: newVehicle.defaultRate,
+        isActive: newVehicle.status === "active"
       };
 
       const response = await createVehicleType(payload);
 
-      const currentDate = new Date().toISOString().split("T")[0];
-
-      setVehicles([
-        ...vehicles,
-        {
-          id: response.id || vehicles.length + 1,
-          vehicleName: newVehicle.vehicleName,
-          defaultRate: newVehicle.defaultRate,
-          status: newVehicle.status, // Fixed: Use the status string directly
-          createdAt: currentDate,
-          updatedAt: currentDate
-        }
-      ]);
-
-      setShowInsertModal(false);
-
-      // Reset form
-      setNewVehicle({
-        vehicleName: "",
-        defaultRate: 0,
-        status: "active", // Fixed: Reset to "active" string, not "true"
-      });
-
+      if (response.success) {
+        // Refresh the list from API
+        await fetchVehicleTypes();
+        
+        setShowInsertModal(false);
+        setSuccessMessage(`Vehicle type "${newVehicle.vehicleName}" created successfully!`);
+        
+        // Reset form
+        setNewVehicle({
+          vehicleName: "",
+          defaultRate: 0,
+          status: "active",
+        });
+      } else {
+        setError(response.message || 'Failed to create vehicle type');
+      }
     } catch (error) {
       console.error("Error creating vehicle type:", error);
+      setError('An unexpected error occurred while creating vehicle type');
+    } finally {
+      setIsSubmitting(false);
     }
   };
+
+  if (loading && vehicles.length === 0) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-purple-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading vehicle types...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -139,7 +216,39 @@ const VehicleTypeMaster = () => {
           <p className="text-xs sm:text-sm text-gray-500 mt-1">Manage vehicle types and their expense rates</p>
         </div>
 
-        {/* Stats Cards - Smaller Grid */}
+        {/* Success Message */}
+        {successMessage && (
+          <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-md">
+            <div className="flex items-start gap-2">
+              <CheckCircle className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
+              <div className="text-xs text-green-700">
+                <span className="font-medium">Success: </span>
+                {successMessage}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Error Message */}
+        {error && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
+            <div className="flex items-start gap-2">
+              <AlertCircle className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" />
+              <div className="text-xs text-red-700">
+                <span className="font-medium">Error: </span>
+                {error}
+              </div>
+              <button 
+                onClick={() => setError(null)}
+                className="ml-auto text-red-500 hover:text-red-700"
+              >
+                ×
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Stats Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
           <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg sm:rounded-xl p-3 sm:p-4 border border-purple-200 hover:shadow-md transition-all">
             <div className="flex items-center justify-between">
@@ -181,7 +290,9 @@ const VehicleTypeMaster = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs sm:text-sm font-medium text-blue-600">Default Rate (Min)</p>
-                <p className="text-lg sm:text-xl font-bold text-blue-700">₹{Math.min(...vehicles.map(v => v.defaultRate))}/km</p>
+                <p className="text-lg sm:text-xl font-bold text-blue-700">
+                  ₹{vehicles.length > 0 ? Math.min(...vehicles.map(v => v.defaultRate)) : 0}/km
+                </p>
               </div>
               <div className="bg-blue-500 rounded-lg p-1.5 sm:p-2">
                 <Gauge size={18} className="text-white sm:w-5 sm:h-5" />
@@ -204,7 +315,10 @@ const VehicleTypeMaster = () => {
               />
             </div>
             <div className="flex gap-2">
-              <button onClick={() => setShowInsertModal(true)} className="px-3 sm:px-4 py-1.5 sm:py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-all flex items-center gap-1.5 text-sm shadow-sm">
+              <button 
+                onClick={() => setShowInsertModal(true)} 
+                className="px-3 sm:px-4 py-1.5 sm:py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-all flex items-center gap-1.5 text-sm shadow-sm"
+              >
                 <Plus size={16} /><span className="hidden sm:inline">Add New Vehicle</span><span className="sm:hidden">Add</span>
               </button>
               <button onClick={() => setShowFilters(!showFilters)} className="px-3 sm:px-4 py-1.5 sm:py-2 border border-gray-200 rounded-lg hover:bg-gray-50 transition-all flex items-center gap-1.5 text-sm">
@@ -212,6 +326,10 @@ const VehicleTypeMaster = () => {
               </button>
               <button onClick={exportToCSV} className="px-3 sm:px-4 py-1.5 sm:py-2 border border-gray-200 rounded-lg hover:bg-gray-50 transition-all flex items-center gap-1.5 text-sm">
                 <Download size={16} /><span className="hidden sm:inline">Export</span>
+              </button>
+              <button onClick={fetchVehicleTypes} className="px-3 sm:px-4 py-1.5 sm:py-2 border border-gray-200 rounded-lg hover:bg-gray-50 transition-all flex items-center gap-1.5 text-sm">
+                <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
+                <span className="hidden sm:inline">Refresh</span>
               </button>
             </div>
           </div>
@@ -221,12 +339,24 @@ const VehicleTypeMaster = () => {
               <div className="flex flex-col sm:flex-row gap-3">
                 <div className="w-full sm:w-64">
                   <label className="block text-xs font-medium text-gray-700 mb-1">Status</label>
-                  <select className="w-full px-3 py-1.5 text-sm border border-gray-200 rounded-lg" value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
-                    <option value="all">All Status</option><option value="active">Active</option><option value="inactive">Inactive</option>
+                  <select 
+                    className="w-full px-3 py-1.5 text-sm border border-gray-200 rounded-lg" 
+                    value={filterStatus} 
+                    onChange={(e) => setFilterStatus(e.target.value)}
+                  >
+                    <option value="all">All Status</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
                   </select>
                 </div>
                 <div className="flex items-end">
-                  <button onClick={() => { setFilterStatus('all'); setSearchTerm(''); }} className="px-3 py-1.5 text-gray-600 hover:text-gray-800 flex items-center gap-1 text-sm">
+                  <button 
+                    onClick={() => { 
+                      setFilterStatus('all'); 
+                      setSearchTerm(''); 
+                    }} 
+                    className="px-3 py-1.5 text-gray-600 hover:text-gray-800 flex items-center gap-1 text-sm"
+                  >
                     <RefreshCw size={14} /> Clear Filters
                   </button>
                 </div>
@@ -254,17 +384,37 @@ const VehicleTypeMaster = () => {
                     <td className="px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-500">{indexOfFirstItem + index + 1}</td>
                     <td className="px-3 sm:px-4 py-2 sm:py-3">
                       <div className="flex items-center gap-1.5 sm:gap-2">
-                        {vehicle.vehicleName === 'Two Wheeler' && <Bike size={14} className="text-gray-500 sm:w-4 sm:h-4" />}
-                        {vehicle.vehicleName === 'Four Wheeler' && <Car size={14} className="text-gray-500 sm:w-4 sm:h-4" />}
+                        {vehicle.vehicleName.toLowerCase().includes('two') && <Bike size={14} className="text-gray-500 sm:w-4 sm:h-4" />}
+                        {vehicle.vehicleName.toLowerCase().includes('four') && <Car size={14} className="text-gray-500 sm:w-4 sm:h-4" />}
                         <p className="font-medium text-gray-900 text-sm">{vehicle.vehicleName}</p>
                       </div>
                     </td>
-                    <td className="px-3 sm:px-4 py-2 sm:py-3"><p className="text-xs sm:text-sm font-semibold text-purple-600">₹{vehicle.defaultRate}/km</p></td>
-                    <td className="px-3 sm:px-4 py-2 sm:py-3"><span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${vehicle.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>{vehicle.status}</span></td>
+                    <td className="px-3 sm:px-4 py-2 sm:py-3">
+                      <p className="text-xs sm:text-sm font-semibold text-purple-600">₹{vehicle.defaultRate}/km</p>
+                    </td>
+                    <td className="px-3 sm:px-4 py-2 sm:py-3">
+                      <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${
+                        vehicle.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                      }`}>
+                        {vehicle.status}
+                      </span>
+                    </td>
                     <td className="px-3 sm:px-4 py-2 sm:py-3">
                       <div className="flex gap-1.5">
-                        <button onClick={() => viewVehicleDetails(vehicle)} className="p-1 text-purple-600 hover:bg-purple-50 rounded" title="View Details"><Eye size={14} /></button>
-                        <button onClick={() => openDeleteModal(vehicle)} className="p-1 text-red-600 hover:bg-red-50 rounded" title="Delete Vehicle"><Trash2 size={14} /></button>
+                        <button 
+                          onClick={() => viewVehicleDetails(vehicle)} 
+                          className="p-1 text-purple-600 hover:bg-purple-50 rounded" 
+                          title="View Details"
+                        >
+                          <Eye size={14} />
+                        </button>
+                        <button 
+                          onClick={() => openDeleteModal(vehicle)} 
+                          className="p-1 text-red-600 hover:bg-red-50 rounded" 
+                          title="Delete Vehicle"
+                        >
+                          <Trash2 size={14} />
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -277,11 +427,27 @@ const VehicleTypeMaster = () => {
         {/* Pagination */}
         {filteredVehicles.length > 0 && (
           <div className="mt-4 sm:mt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
-            <div className="text-xs sm:text-sm text-gray-500">Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, filteredVehicles.length)} of {filteredVehicles.length} entries</div>
+            <div className="text-xs sm:text-sm text-gray-500">
+              Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, filteredVehicles.length)} of {filteredVehicles.length} entries
+            </div>
             <div className="flex gap-1.5 sm:gap-2">
-              <button onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1} className="px-2 sm:px-3 py-1 text-xs sm:text-sm border rounded-lg disabled:opacity-50 hover:bg-gray-50 flex items-center gap-1"><ChevronLeft size={12} /> Previous</button>
-              <span className="px-2 sm:px-3 py-1 text-xs sm:text-sm bg-purple-600 text-white rounded-lg">Page {currentPage} of {totalPages}</span>
-              <button onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} disabled={currentPage === totalPages} className="px-2 sm:px-3 py-1 text-xs sm:text-sm border rounded-lg disabled:opacity-50 hover:bg-gray-50 flex items-center gap-1">Next <ChevronRight size={12} /></button>
+              <button 
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} 
+                disabled={currentPage === 1} 
+                className="px-2 sm:px-3 py-1 text-xs sm:text-sm border rounded-lg disabled:opacity-50 hover:bg-gray-50 flex items-center gap-1"
+              >
+                <ChevronLeft size={12} /> Previous
+              </button>
+              <span className="px-2 sm:px-3 py-1 text-xs sm:text-sm bg-purple-600 text-white rounded-lg">
+                Page {currentPage} of {totalPages}
+              </span>
+              <button 
+                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} 
+                disabled={currentPage === totalPages} 
+                className="px-2 sm:px-3 py-1 text-xs sm:text-sm border rounded-lg disabled:opacity-50 hover:bg-gray-50 flex items-center gap-1"
+              >
+                Next <ChevronRight size={12} />
+              </button>
             </div>
           </div>
         )}
@@ -292,20 +458,59 @@ const VehicleTypeMaster = () => {
             <div className="bg-white rounded-lg shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
               <div className="sticky top-0 bg-white border-b px-4 sm:px-5 py-3 flex justify-between items-center">
                 <h2 className="text-base sm:text-lg font-bold">Vehicle Details</h2>
-                <button onClick={() => { setShowViewModal(false); setSelectedVehicle(null); }} className="p-1 hover:bg-gray-100 rounded"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg></button>
+                <button 
+                  onClick={() => { setShowViewModal(false); setSelectedVehicle(null); }} 
+                  className="p-1 hover:bg-gray-100 rounded"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
               </div>
               <div className="p-4 sm:p-5 space-y-4">
-                <div className="border-b pb-3"><h3 className="text-sm sm:text-base font-semibold text-purple-600 mb-2">Vehicle Information</h3>
-                  <div className="space-y-2"><div><p className="text-xs text-gray-500">Vehicle Name</p><p className="text-sm font-medium">{selectedVehicle.vehicleName}</p></div>
-                  <div><p className="text-xs text-gray-500">Rate Per KM</p><p className="text-sm font-semibold text-purple-600">₹{selectedVehicle.defaultRate}/km</p></div>
-                  <div><p className="text-xs text-gray-500">Status</p><span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${selectedVehicle.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>{selectedVehicle.status}</span></div></div>
+                <div className="border-b pb-3">
+                  <h3 className="text-sm sm:text-base font-semibold text-purple-600 mb-2">Vehicle Information</h3>
+                  <div className="space-y-2">
+                    <div>
+                      <p className="text-xs text-gray-500">Vehicle Name</p>
+                      <p className="text-sm font-medium">{selectedVehicle.vehicleName}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500">Rate Per KM</p>
+                      <p className="text-sm font-semibold text-purple-600">₹{selectedVehicle.defaultRate}/km</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500">Status</p>
+                      <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${
+                        selectedVehicle.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                      }`}>
+                        {selectedVehicle.status}
+                      </span>
+                    </div>
+                  </div>
                 </div>
-                <div><h3 className="text-sm sm:text-base font-semibold text-purple-600 mb-2">System Information</h3>
-                  <div className="space-y-2"><div><p className="text-xs text-gray-500">Created At</p><p className="text-sm">{new Date(selectedVehicle.createdAt).toLocaleDateString()}</p></div>
-                  <div><p className="text-xs text-gray-500">Last Updated</p><p className="text-sm">{new Date(selectedVehicle.updatedAt).toLocaleDateString()}</p></div></div>
+                <div>
+                  <h3 className="text-sm sm:text-base font-semibold text-purple-600 mb-2">System Information</h3>
+                  <div className="space-y-2">
+                    <div>
+                      <p className="text-xs text-gray-500">Created At</p>
+                      <p className="text-sm">{new Date(selectedVehicle.createdAt).toLocaleDateString()}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500">Last Updated</p>
+                      <p className="text-sm">{new Date(selectedVehicle.updatedAt).toLocaleDateString()}</p>
+                    </div>
+                  </div>
                 </div>
               </div>
-              <div className="sticky bottom-0 bg-white border-t px-4 sm:px-5 py-3 flex justify-end"><button onClick={() => { setShowViewModal(false); setSelectedVehicle(null); }} className="px-3 sm:px-4 py-1.5 bg-purple-600 text-white rounded-lg text-sm hover:bg-purple-700">Close</button></div>
+              <div className="sticky bottom-0 bg-white border-t px-4 sm:px-5 py-3 flex justify-end">
+                <button 
+                  onClick={() => { setShowViewModal(false); setSelectedVehicle(null); }} 
+                  className="px-3 sm:px-4 py-1.5 bg-purple-600 text-white rounded-lg text-sm hover:bg-purple-700"
+                >
+                  Close
+                </button>
+              </div>
             </div>
           </div>
         )}
@@ -316,15 +521,84 @@ const VehicleTypeMaster = () => {
             <div className="bg-white rounded-lg shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
               <div className="sticky top-0 bg-white border-b px-4 sm:px-5 py-3 flex justify-between items-center">
                 <h2 className="text-base sm:text-lg font-bold">Add New Vehicle</h2>
-                <button onClick={() => { setShowInsertModal(false); setNewVehicle({ vehicleName: '', defaultRate: 0, status: 'active' }); }} className="p-1 hover:bg-gray-100 rounded"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg></button>
+                <button 
+                  onClick={() => { 
+                    setShowInsertModal(false); 
+                    setNewVehicle({ vehicleName: '', defaultRate: 0, status: 'active' });
+                    setError(null);
+                  }} 
+                  className="p-1 hover:bg-gray-100 rounded"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
               </div>
               <form onSubmit={(e) => { e.preventDefault(); handleInsertVehicle(); }}>
                 <div className="p-4 sm:p-5 space-y-3">
-                  <div><label className="block text-xs font-medium text-gray-700 mb-1">Vehicle Name *</label><input type="text" name="vehicleName" value={newVehicle.vehicleName} onChange={handleInputChange} required placeholder="e.g., Two Wheeler" className="w-full px-3 py-1.5 text-sm border rounded-lg focus:ring-2 focus:ring-purple-500" /></div>
-                  <div><label className="block text-xs font-medium text-gray-700 mb-1">Rate Per KM (₹) *</label><input type="number" name="defaultRate" value={newVehicle.defaultRate} onChange={handleInputChange} required min="0" step="0.5" placeholder="e.g., 4" className="w-full px-3 py-1.5 text-sm border rounded-lg" /><p className="text-xs text-gray-400 mt-1">Default: Two Wheeler ₹4/km, Four Wheeler ₹10/km</p></div>
-                  <div><label className="block text-xs font-medium text-gray-700 mb-1">Status</label><select name="status" value={newVehicle.status} onChange={handleInputChange} className="w-full px-3 py-1.5 text-sm border rounded-lg"><option value="active">Active</option><option value="inactive">Inactive</option></select></div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">Vehicle Name *</label>
+                    <input 
+                      type="text" 
+                      name="vehicleName" 
+                      value={newVehicle.vehicleName} 
+                      onChange={handleInputChange} 
+                      required 
+                      placeholder="e.g., Two Wheeler" 
+                      className="w-full px-3 py-1.5 text-sm border rounded-lg focus:ring-2 focus:ring-purple-500" 
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">Rate Per KM (₹) *</label>
+                    <input 
+                      type="number" 
+                      name="defaultRate" 
+                      value={newVehicle.defaultRate} 
+                      onChange={handleInputChange} 
+                      required 
+                      min="0" 
+                      step="0.5" 
+                      placeholder="e.g., 4" 
+                      className="w-full px-3 py-1.5 text-sm border rounded-lg" 
+                    />
+                    <p className="text-xs text-gray-400 mt-1">Default: Two Wheeler ₹4/km, Four Wheeler ₹10/km</p>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">Status</label>
+                    <select 
+                      name="status" 
+                      value={newVehicle.status} 
+                      onChange={handleInputChange} 
+                      className="w-full px-3 py-1.5 text-sm border rounded-lg"
+                    >
+                      <option value="active">Active</option>
+                      <option value="inactive">Inactive</option>
+                    </select>
+                  </div>
                 </div>
-                <div className="sticky bottom-0 bg-white border-t px-4 sm:px-5 py-3 flex justify-end gap-2"><button type="button" onClick={() => setShowInsertModal(false)} className="px-3 py-1.5 text-sm border rounded-lg hover:bg-gray-50">Cancel</button><button type="submit" className="px-3 py-1.5 text-sm bg-purple-600 text-white rounded-lg hover:bg-purple-700">Add Vehicle</button></div>
+                <div className="sticky bottom-0 bg-white border-t px-4 sm:px-5 py-3 flex justify-end gap-2">
+                  <button 
+                    type="button" 
+                    onClick={() => setShowInsertModal(false)} 
+                    className="px-3 py-1.5 text-sm border rounded-lg hover:bg-gray-50"
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    type="submit" 
+                    disabled={isSubmitting}
+                    className="px-3 py-1.5 text-sm bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        Creating...
+                      </>
+                    ) : (
+                      'Add Vehicle'
+                    )}
+                  </button>
+                </div>
               </form>
             </div>
           </div>
@@ -358,9 +632,17 @@ const VehicleTypeMaster = () => {
                   </button>
                   <button
                     onClick={handleDeleteVehicle}
-                    className="flex-1 px-3 py-1.5 sm:px-4 sm:py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition duration-200 text-sm"
+                    disabled={loading}
+                    className="flex-1 px-3 py-1.5 sm:px-4 sm:py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition duration-200 text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   >
-                    Delete
+                    {loading ? (
+                      <>
+                        <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        Deleting...
+                      </>
+                    ) : (
+                      'Delete'
+                    )}
                   </button>
                 </div>
               </div>
@@ -369,11 +651,21 @@ const VehicleTypeMaster = () => {
         )}
 
         {/* No Results */}
-        {filteredVehicles.length === 0 && (
+        {filteredVehicles.length === 0 && !loading && (
           <div className="text-center py-8 sm:py-10 bg-white rounded-lg shadow-sm">
-            <div className="inline-flex items-center justify-center w-12 h-12 bg-gray-100 rounded-full mb-3"><Car className="w-6 h-6 text-gray-400" /></div>
+            <div className="inline-flex items-center justify-center w-12 h-12 bg-gray-100 rounded-full mb-3">
+              <Car className="w-6 h-6 text-gray-400" />
+            </div>
             <p className="text-sm text-gray-500">No vehicle types found</p>
-            <button onClick={() => { setSearchTerm(''); setFilterStatus('all'); }} className="mt-2 text-purple-600 text-xs font-medium">Clear filters</button>
+            <button 
+              onClick={() => { 
+                setSearchTerm(''); 
+                setFilterStatus('all'); 
+              }} 
+              className="mt-2 text-purple-600 text-xs font-medium"
+            >
+              Clear filters
+            </button>
           </div>
         )}
       </div>

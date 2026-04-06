@@ -25,6 +25,26 @@ const Login: React.FC = () => {
     rememberMe: false,
   });
 
+  const normalizeUserRole = (role: string) => {
+    const normalizedRole = role.toLowerCase().replace(/[\s_]+/g, '-');
+
+    const roleAliases: Record<string, string> = {
+      'super-admin': 'super-admin',
+      superadmin: 'super-admin',
+      admin: 'admin',
+      manager: 'manager',
+      'team-lead': 'manager',
+      teamlead: 'manager',
+      employee: 'employee',
+      management: 'management',
+      'master-management': 'management',
+      mastermanagement: 'management',
+      hr: 'admin',
+    };
+
+    return roleAliases[normalizedRole] || normalizedRole;
+  };
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
     setFormData((prev) => ({
@@ -64,6 +84,7 @@ const Login: React.FC = () => {
       }
 
       localStorage.setItem('auth', token);
+      localStorage.setItem('authToken', token);
       
       let userRole = '';
       try {
@@ -86,7 +107,7 @@ const Login: React.FC = () => {
           return;
         }
         
-        userRole = userRole.toLowerCase().replace(/\s+/g, '-');
+        userRole = normalizeUserRole(userRole);
         console.log('Final user role:', userRole);
         
       } catch (decodeError) {
@@ -166,7 +187,7 @@ const Login: React.FC = () => {
         {/* Back Button */}
         <div className="mb-4">
           <button
-            onClick={() => navigate('/')}
+            onClick={() => navigate('/login')}
             className="inline-flex items-center gap-1.5 text-gray-500 hover:text-indigo-600 transition-colors text-sm"
           >
             <ArrowLeft className="w-4 h-4" />

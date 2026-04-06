@@ -44,13 +44,14 @@ class AuthService {
 
   logout(): void {
     localStorage.removeItem('auth');
+    localStorage.removeItem('authToken');
     localStorage.removeItem('role');
     localStorage.removeItem('userEmail');
     localStorage.removeItem('user');
   }
 
   getToken(): string | null {
-    return localStorage.getItem('auth');
+    return localStorage.getItem('auth') || localStorage.getItem('authToken');
   }
 
   getUserRole(): string | null {

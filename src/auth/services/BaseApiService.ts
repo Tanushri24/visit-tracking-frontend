@@ -25,7 +25,7 @@ class BaseApiService {
 
     private setupInterceptors(): void {
         this.axiosInstance.interceptors.request.use((config) => {
-            const token = localStorage.getItem('authToken');
+            const token = localStorage.getItem('authToken') || localStorage.getItem('auth');
             if (token) {
                 config.headers.Authorization = `Bearer ${token}`;
             }
@@ -38,6 +38,7 @@ class BaseApiService {
         this.axiosInstance.interceptors.response.use(
             (response) => {
                 if (response.status === 401) {
+                    localStorage.removeItem('auth');
                     localStorage.removeItem('authToken');
                     window.location.href = '/login';
                     return Promise.reject(new Error('Unauthorized'));
@@ -53,6 +54,7 @@ class BaseApiService {
                 });
 
                 if (error.response?.status === 401) {
+                    localStorage.removeItem('auth');
                     localStorage.removeItem('authToken');
                     window.location.href = '/login';
                 }

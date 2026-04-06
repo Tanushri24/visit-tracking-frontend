@@ -1,5 +1,5 @@
 // src/modules/super-admin/pages/Master/ExpenseRateMaster.tsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Search, 
   ChevronLeft,
@@ -13,12 +13,22 @@ import {
   Calendar,
   TrendingUp,
   PieChart,
-  Trash2
+  Trash2,
+  AlertCircle,
+  CheckCircle
 } from 'lucide-react';
+import { 
+  getExpenseRates, 
+  createExpenseRate, 
+  deleteExpenseRate,
+  type ExpenseRateResponse 
+} from '../../../services/ExpenseRate.service';
+import { getVehicleTypes, type VehicleTypeResponse } from '../../../services/VehicleType.service';
 
 interface ExpenseRate {
   id: number;
-  vehicleType: string;
+  vehicleTypeId: number;
+  vehicleTypeName: string;
   ratePerKm: number;
   effectiveFrom: string;
   effectiveTo: string;
@@ -27,24 +37,12 @@ interface ExpenseRate {
   updatedAt: string;
 }
 
-const sampleVehicleTypes = [
-  { id: 1, name: 'Two Wheeler', defaultRate: 4 },
-  { id: 2, name: 'Four Wheeler', defaultRate: 10 },
-  { id: 3, name: 'Three Wheeler', defaultRate: 8 },
-  { id: 4, name: 'Mini Bus', defaultRate: 15 },
-  { id: 5, name: 'Bus', defaultRate: 20 },
-];
-
 const ExpenseRateMaster = () => {
-  const [rates, setRates] = useState<ExpenseRate[]>([
-    { id: 1, vehicleType: 'Two Wheeler', ratePerKm: 4, effectiveFrom: '2024-01-01', effectiveTo: '2024-12-31', status: 'active', createdAt: '2024-01-01', updatedAt: '2024-01-01' },
-    { id: 2, vehicleType: 'Four Wheeler', ratePerKm: 10, effectiveFrom: '2024-01-01', effectiveTo: '2024-12-31', status: 'active', createdAt: '2024-01-01', updatedAt: '2024-01-01' },
-    { id: 3, vehicleType: 'Three Wheeler', ratePerKm: 8, effectiveFrom: '2024-01-01', effectiveTo: '2024-06-30', status: 'active', createdAt: '2024-01-01', updatedAt: '2024-01-01' },
-    { id: 4, vehicleType: 'Mini Bus', ratePerKm: 15, effectiveFrom: '2024-01-01', effectiveTo: '2024-12-31', status: 'inactive', createdAt: '2024-01-15', updatedAt: '2024-02-20' },
-    { id: 5, vehicleType: 'Bus', ratePerKm: 20, effectiveFrom: '2024-01-01', effectiveTo: '2024-12-31', status: 'active', createdAt: '2024-01-20', updatedAt: '2024-02-18' },
-    { id: 6, vehicleType: 'Two Wheeler', ratePerKm: 5, effectiveFrom: '2025-01-01', effectiveTo: '2025-12-31', status: 'active', createdAt: '2024-12-01', updatedAt: '2024-12-01' },
-    { id: 7, vehicleType: 'Four Wheeler', ratePerKm: 12, effectiveFrom: '2025-01-01', effectiveTo: '2025-12-31', status: 'active', createdAt: '2024-12-01', updatedAt: '2024-12-01' }
-  ]);
+  const [rates, setRates] = useState<ExpenseRate[]>([]);
+  const [vehicleTypes, setVehicleTypes] = useState<VehicleTypeResponse[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
@@ -57,21 +55,79 @@ const ExpenseRateMaster = () => {
   const [showInsertModal, setShowInsertModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [rateToDelete, setRateToDelete] = useState<ExpenseRate | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   const [newRate, setNewRate] = useState({
-    vehicleType: '',
+    vehicleTypeId: 0,
     ratePerKm: 0,
     effectiveFrom: '',
     effectiveTo: '',
     status: 'active' as 'active' | 'inactive'
   });
 
-  const vehicleTypes = ['all', ...new Set(rates.map(r => r.vehicleType))];
+  // Fetch data on component mount
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  // Auto-clear success message after 3 seconds
+  useEffect(() => {
+    if (successMessage) {
+      const timer = setTimeout(() => {
+        setSuccessMessage(null);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [successMessage]);
+
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // Fetch both expense rates and vehicle types in parallel
+      const [expenseRatesData, vehicleTypesData] = await Promise.all([
+        getExpenseRates(),
+        getVehicleTypes()
+      ]);
+      
+      setVehicleTypes(vehicleTypesData);
+      
+      // Transform expense rates to component format
+      const transformedRates: ExpenseRate[] = expenseRatesData.map((item: any) => {
+        const vehicleType = vehicleTypesData.find(vt => vt.id === item.vehicleTypeId);
+        return {
+          id: item.id,
+          vehicleTypeId: item.vehicleTypeId,
+          vehicleTypeName: vehicleType?.vehicleName || item.vehicleTypeName || `Vehicle Type ${item.vehicleTypeId}`,
+          ratePerKm: item.ratePerKm,
+          effectiveFrom: item.effectiveFrom?.split('T')[0] || item.effectiveFrom,
+          effectiveTo: item.effectiveTo?.split('T')[0] || item.effectiveTo,
+          status: item.isActive ? 'active' : 'inactive',
+          createdAt: item.created_at || item.createdAt || new Date().toISOString().split('T')[0],
+          updatedAt: item.updated_at || item.updatedAt || new Date().toISOString().split('T')[0]
+        };
+      });
+      
+      setRates(transformedRates);
+    } catch (err) {
+      console.error('Failed to fetch data:', err);
+      setError('Failed to load expense rates. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getVehicleTypeName = (vehicleTypeId: number): string => {
+    const vehicle = vehicleTypes.find(vt => vt.id === vehicleTypeId);
+    return vehicle?.vehicleName || `Vehicle Type ${vehicleTypeId}`;
+  };
 
   const filteredRates = rates.filter(rate => {
-    const matchesSearch = rate.vehicleType.toLowerCase().includes(searchTerm.toLowerCase()) || rate.ratePerKm.toString().includes(searchTerm);
+    const matchesSearch = rate.vehicleTypeName.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                         rate.ratePerKm.toString().includes(searchTerm);
     const matchesStatus = filterStatus === 'all' || rate.status === filterStatus;
-    const matchesVehicleType = filterVehicleType === 'all' || rate.vehicleType === filterVehicleType;
+    const matchesVehicleType = filterVehicleType === 'all' || rate.vehicleTypeId.toString() === filterVehicleType;
     return matchesSearch && matchesStatus && matchesVehicleType;
   });
 
@@ -82,7 +138,7 @@ const ExpenseRateMaster = () => {
 
   const exportToCSV = () => {
     const headers = ['Vehicle Type', 'Rate Per KM (₹)', 'Effective From', 'Effective To', 'Status', 'Created At', 'Updated At'];
-    const csvData = filteredRates.map(r => [r.vehicleType, r.ratePerKm.toString(), r.effectiveFrom, r.effectiveTo, r.status, r.createdAt, r.updatedAt]);
+    const csvData = filteredRates.map(r => [r.vehicleTypeName, r.ratePerKm.toString(), r.effectiveFrom, r.effectiveTo, r.status, r.createdAt, r.updatedAt]);
     const blob = new Blob([[headers, ...csvData].map(row => row.join(',')).join('\n')], { type: 'text/csv' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
@@ -90,14 +146,32 @@ const ExpenseRateMaster = () => {
     a.click();
   };
 
-  const viewRateDetails = (rate: ExpenseRate) => { setSelectedRate(rate); setShowViewModal(true); };
+  const viewRateDetails = (rate: ExpenseRate) => { 
+    setSelectedRate(rate); 
+    setShowViewModal(true); 
+  };
   
   // Delete rate
-  const handleDeleteRate = () => {
+  const handleDeleteRate = async () => {
     if (rateToDelete) {
-      setRates(rates.filter(r => r.id !== rateToDelete.id));
-      setShowDeleteModal(false);
-      setRateToDelete(null);
+      try {
+        setLoading(true);
+        const response = await deleteExpenseRate(rateToDelete.id);
+        
+        if (response.success) {
+          setRates(rates.filter(r => r.id !== rateToDelete.id));
+          setShowDeleteModal(false);
+          setRateToDelete(null);
+          setSuccessMessage(`Expense rate for "${rateToDelete.vehicleTypeName}" deleted successfully!`);
+        } else {
+          setError(response.message || 'Failed to delete expense rate');
+        }
+      } catch (err) {
+        console.error('Delete failed:', err);
+        setError('An unexpected error occurred while deleting');
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
@@ -109,16 +183,65 @@ const ExpenseRateMaster = () => {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setNewRate(prev => ({ ...prev, [name]: name === 'ratePerKm' ? parseFloat(value) || 0 : value }));
+    setNewRate(prev => ({ 
+      ...prev, 
+      [name]: name === 'ratePerKm' ? parseFloat(value) || 0 : 
+              name === 'vehicleTypeId' ? parseInt(value) || 0 : 
+              value 
+    }));
   };
 
-  const handleInsertRate = () => {
-    const newId = Math.max(...rates.map(r => r.id), 0) + 1;
-    const currentDate = new Date().toISOString().split('T')[0];
-    setRates([...rates, { id: newId, ...newRate, createdAt: currentDate, updatedAt: currentDate }]);
-    setShowInsertModal(false);
-    setNewRate({ vehicleType: '', ratePerKm: 0, effectiveFrom: '', effectiveTo: '', status: 'active' });
+  const handleInsertRate = async () => {
+    setIsSubmitting(true);
+    setError(null);
+    
+    try {
+      const payload = {
+        vehicleTypeId: newRate.vehicleTypeId,
+        ratePerKm: newRate.ratePerKm,
+        effectiveFrom: new Date(newRate.effectiveFrom).toISOString(),
+        effectiveTo: new Date(newRate.effectiveTo).toISOString(),
+        isActive: newRate.status === "active"
+      };
+
+      const response = await createExpenseRate(payload);
+
+      if (response.success) {
+        // Refresh the list from API
+        await fetchData();
+        
+        setShowInsertModal(false);
+        setSuccessMessage(`Expense rate created successfully!`);
+        
+        // Reset form
+        setNewRate({
+          vehicleTypeId: 0,
+          ratePerKm: 0,
+          effectiveFrom: '',
+          effectiveTo: '',
+          status: 'active'
+        });
+      } else {
+        setError(response.message || 'Failed to create expense rate');
+      }
+    } catch (error) {
+      console.error("Error creating expense rate:", error);
+      setError('An unexpected error occurred while creating expense rate');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
+
+  if (loading && rates.length === 0) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-purple-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading expense rates...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -131,6 +254,38 @@ const ExpenseRateMaster = () => {
           <p className="text-xs sm:text-sm text-gray-500 mt-1">Manage expense rates per kilometer for vehicle types</p>
           <div className="h-0.5 w-16 bg-purple-500 rounded-full mt-2"></div>
         </div>
+
+        {/* Success Message */}
+        {successMessage && (
+          <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-md">
+            <div className="flex items-start gap-2">
+              <CheckCircle className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
+              <div className="text-xs text-green-700">
+                <span className="font-medium">Success: </span>
+                {successMessage}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Error Message */}
+        {error && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
+            <div className="flex items-start gap-2">
+              <AlertCircle className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" />
+              <div className="text-xs text-red-700">
+                <span className="font-medium">Error: </span>
+                {error}
+              </div>
+              <button 
+                onClick={() => setError(null)}
+                className="ml-auto text-red-500 hover:text-red-700"
+              >
+                ×
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* KPI Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3 md:gap-4 mb-5 sm:mb-6 md:mb-8">
@@ -189,7 +344,7 @@ const ExpenseRateMaster = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-[11px] sm:text-xs font-medium text-gray-500">Vehicle Types</p>
-                <p className="text-lg sm:text-xl md:text-2xl font-bold text-blue-600">{vehicleTypes.length - 1}</p>
+                <p className="text-lg sm:text-xl md:text-2xl font-bold text-blue-600">{vehicleTypes.length}</p>
               </div>
               <div className="bg-blue-50 rounded-lg p-1.5 sm:p-2">
                 <PieChart size={14} className="text-blue-600 sm:w-4 sm:h-4" />
@@ -226,6 +381,10 @@ const ExpenseRateMaster = () => {
               <button onClick={exportToCSV} className="px-3 sm:px-4 py-2 border border-gray-200 rounded-lg hover:bg-gray-50 transition-all flex items-center gap-1.5 text-sm">
                 <Download size={15} /><span className="hidden sm:inline">Export</span>
               </button>
+              <button onClick={fetchData} className="px-3 sm:px-4 py-2 border border-gray-200 rounded-lg hover:bg-gray-50 transition-all flex items-center gap-1.5 text-sm">
+                <RefreshCw size={15} className={loading ? "animate-spin" : ""} />
+                <span className="hidden sm:inline">Refresh</span>
+              </button>
             </div>
           </div>
 
@@ -235,13 +394,18 @@ const ExpenseRateMaster = () => {
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">Status</label>
                   <select className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg bg-white" value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
-                    <option value="all">All Status</option><option value="active">Active</option><option value="inactive">Inactive</option>
+                    <option value="all">All Status</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
                   </select>
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">Vehicle Type</label>
                   <select className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg bg-white" value={filterVehicleType} onChange={(e) => setFilterVehicleType(e.target.value)}>
-                    {vehicleTypes.map(vt => <option key={vt} value={vt}>{vt === 'all' ? 'All Types' : vt}</option>)}
+                    <option value="all">All Types</option>
+                    {vehicleTypes.map(vt => (
+                      <option key={vt.id} value={vt.id}>{vt.vehicleName}</option>
+                    ))}
                   </select>
                 </div>
                 <div className="flex items-end">
@@ -270,7 +434,7 @@ const ExpenseRateMaster = () => {
                   <tr key={rate.id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-3 sm:px-4 py-2.5 sm:py-3 text-sm text-gray-500">{indexOfFirstItem + index + 1}</td>
                     <td className="px-3 sm:px-4 py-2.5 sm:py-3 text-sm font-mono text-purple-600 font-semibold">R-{rate.id.toString().padStart(4, '0')}</td>
-                    <td className="px-3 sm:px-4 py-2.5 sm:py-3 text-sm text-gray-700">{rate.vehicleType}</td>
+                    <td className="px-3 sm:px-4 py-2.5 sm:py-3 text-sm text-gray-700">{rate.vehicleTypeName}</td>
                     <td className="px-3 sm:px-4 py-2.5 sm:py-3 text-sm font-bold text-purple-600">₹{rate.ratePerKm}/km</td>
                     <td className="px-3 sm:px-4 py-2.5 sm:py-3 text-sm text-gray-600">{new Date(rate.effectiveFrom).toLocaleDateString('en-IN')}</td>
                     <td className="px-3 sm:px-4 py-2.5 sm:py-3 text-sm text-gray-600">{new Date(rate.effectiveTo).toLocaleDateString('en-IN')}</td>
@@ -333,7 +497,7 @@ const ExpenseRateMaster = () => {
                   <h3 className="text-sm font-semibold text-purple-600 mb-2">Rate Information</h3>
                   <div className="space-y-2">
                     <div className="flex justify-between"><span className="text-xs text-gray-500">Rate ID</span><span className="text-sm font-mono">R-{selectedRate.id.toString().padStart(4, '0')}</span></div>
-                    <div className="flex justify-between"><span className="text-xs text-gray-500">Vehicle Type</span><span className="text-sm">{selectedRate.vehicleType}</span></div>
+                    <div className="flex justify-between"><span className="text-xs text-gray-500">Vehicle Type</span><span className="text-sm">{selectedRate.vehicleTypeName}</span></div>
                     <div className="flex justify-between"><span className="text-xs text-gray-500">Rate Per KM</span><span className="text-sm font-bold text-purple-600">₹{selectedRate.ratePerKm}/km</span></div>
                     <div className="flex justify-between"><span className="text-xs text-gray-500">Effective From</span><span className="text-sm">{new Date(selectedRate.effectiveFrom).toLocaleDateString()}</span></div>
                     <div className="flex justify-between"><span className="text-xs text-gray-500">Effective To</span><span className="text-sm">{new Date(selectedRate.effectiveTo).toLocaleDateString()}</span></div>
@@ -361,20 +525,100 @@ const ExpenseRateMaster = () => {
             <div className="bg-white rounded-lg shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
               <div className="sticky top-0 bg-white border-b px-4 py-3 flex justify-between items-center">
                 <h2 className="text-base sm:text-lg font-bold text-gray-800">Add New Expense Rate</h2>
-                <button onClick={() => { setShowInsertModal(false); setNewRate({ vehicleType: '', ratePerKm: 0, effectiveFrom: '', effectiveTo: '', status: 'active' }); }} className="p-1 hover:bg-gray-100 rounded">
+                <button onClick={() => { setShowInsertModal(false); setNewRate({ vehicleTypeId: 0, ratePerKm: 0, effectiveFrom: '', effectiveTo: '', status: 'active' }); setError(null); }} className="p-1 hover:bg-gray-100 rounded">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                 </button>
               </div>
               <form onSubmit={(e) => { e.preventDefault(); handleInsertRate(); }}>
                 <div className="p-4 space-y-3">
-                  <div><label className="block text-xs font-medium text-gray-700 mb-1">Vehicle Type *</label><select name="vehicleType" value={newRate.vehicleType} onChange={handleInputChange} required className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg"><option value="">Select Vehicle Type</option>{sampleVehicleTypes.map(vt => <option key={vt.id} value={vt.name}>{vt.name} (Default: ₹{vt.defaultRate}/km)</option>)}</select></div>
-                  <div><label className="block text-xs font-medium text-gray-700 mb-1">Rate Per KM (₹) *</label><input type="number" name="ratePerKm" value={newRate.ratePerKm} onChange={handleInputChange} required min="0" step="0.5" placeholder="e.g., 4, 10" className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg" /><p className="text-xs text-gray-400 mt-1">Default: Two Wheeler ₹4/km, Four Wheeler ₹10/km</p></div>
-                  <div className="grid grid-cols-2 gap-2"><div><label className="block text-xs font-medium text-gray-700 mb-1">Effective From *</label><input type="date" name="effectiveFrom" value={newRate.effectiveFrom} onChange={handleInputChange} required className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg" /></div><div><label className="block text-xs font-medium text-gray-700 mb-1">Effective To *</label><input type="date" name="effectiveTo" value={newRate.effectiveTo} onChange={handleInputChange} required className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg" /></div></div>
-                  <div><label className="block text-xs font-medium text-gray-700 mb-1">Status</label><select name="status" value={newRate.status} onChange={handleInputChange} className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg"><option value="active">Active</option><option value="inactive">Inactive</option></select></div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">Vehicle Type *</label>
+                    <select 
+                      name="vehicleTypeId" 
+                      value={newRate.vehicleTypeId} 
+                      onChange={handleInputChange} 
+                      required 
+                      className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg"
+                    >
+                      <option value="0">Select Vehicle Type</option>
+                      {vehicleTypes.map(vt => (
+                        <option key={vt.id} value={vt.id}>{vt.vehicleName}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">Rate Per KM (₹) *</label>
+                    <input 
+                      type="number" 
+                      name="ratePerKm" 
+                      value={newRate.ratePerKm} 
+                      onChange={handleInputChange} 
+                      required 
+                      min="0" 
+                      step="0.5" 
+                      placeholder="e.g., 4, 10" 
+                      className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg" 
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">Effective From *</label>
+                      <input 
+                        type="date" 
+                        name="effectiveFrom" 
+                        value={newRate.effectiveFrom} 
+                        onChange={handleInputChange} 
+                        required 
+                        className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg" 
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">Effective To *</label>
+                      <input 
+                        type="date" 
+                        name="effectiveTo" 
+                        value={newRate.effectiveTo} 
+                        onChange={handleInputChange} 
+                        required 
+                        className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg" 
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">Status</label>
+                    <select 
+                      name="status" 
+                      value={newRate.status} 
+                      onChange={handleInputChange} 
+                      className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg"
+                    >
+                      <option value="active">Active</option>
+                      <option value="inactive">Inactive</option>
+                    </select>
+                  </div>
                 </div>
                 <div className="sticky bottom-0 bg-white border-t px-4 py-3 flex justify-end gap-2">
-                  <button type="button" onClick={() => setShowInsertModal(false)} className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg hover:bg-gray-50">Cancel</button>
-                  <button type="submit" className="px-3 py-1.5 text-sm bg-purple-600 text-white rounded-lg hover:bg-purple-700">Add Rate</button>
+                  <button 
+                    type="button" 
+                    onClick={() => setShowInsertModal(false)} 
+                    className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg hover:bg-gray-50"
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    type="submit" 
+                    disabled={isSubmitting}
+                    className="px-3 py-1.5 text-sm bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        Creating...
+                      </>
+                    ) : (
+                      'Add Rate'
+                    )}
+                  </button>
                 </div>
               </form>
             </div>
@@ -393,7 +637,7 @@ const ExpenseRateMaster = () => {
                 </div>
                 <h3 className="text-base sm:text-lg font-bold text-center text-gray-800 mb-2">Confirm Delete</h3>
                 <p className="text-xs sm:text-sm text-gray-600 text-center mb-4">
-                  Are you sure you want to delete the expense rate for <strong className="text-gray-800">{rateToDelete.vehicleType}</strong>?
+                  Are you sure you want to delete the expense rate for <strong className="text-gray-800">{rateToDelete.vehicleTypeName}</strong>?
                   <br />
                   This action cannot be undone.
                 </p>
@@ -409,9 +653,17 @@ const ExpenseRateMaster = () => {
                   </button>
                   <button
                     onClick={handleDeleteRate}
-                    className="flex-1 px-3 py-1.5 sm:px-4 sm:py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition duration-200 text-sm"
+                    disabled={loading}
+                    className="flex-1 px-3 py-1.5 sm:px-4 sm:py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition duration-200 text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   >
-                    Delete
+                    {loading ? (
+                      <>
+                        <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        Deleting...
+                      </>
+                    ) : (
+                      'Delete'
+                    )}
                   </button>
                 </div>
               </div>
@@ -420,14 +672,16 @@ const ExpenseRateMaster = () => {
         )}
 
         {/* No Results */}
-        {filteredRates.length === 0 && (
+        {filteredRates.length === 0 && !loading && (
           <div className="text-center py-8 sm:py-10 bg-white rounded-lg shadow-sm">
             <div className="inline-flex items-center justify-center w-12 h-12 bg-gray-100 rounded-full mb-3">
               <DollarSign className="w-6 h-6 text-gray-400" />
             </div>
             <p className="text-sm text-gray-500">No expense rates found</p>
             <p className="text-xs text-gray-400 mt-1">Try adjusting your search or filters</p>
-            <button onClick={() => { setSearchTerm(''); setFilterStatus('all'); setFilterVehicleType('all'); }} className="mt-3 px-3 py-1.5 text-purple-600 bg-purple-50 rounded-lg text-xs font-medium hover:bg-purple-100">Clear all filters</button>
+            <button onClick={() => { setSearchTerm(''); setFilterStatus('all'); setFilterVehicleType('all'); }} className="mt-3 px-3 py-1.5 text-purple-600 bg-purple-50 rounded-lg text-xs font-medium hover:bg-purple-100">
+              Clear all filters
+            </button>
           </div>
         )}
       </div>
