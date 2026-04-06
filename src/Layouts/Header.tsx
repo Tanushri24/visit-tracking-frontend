@@ -99,8 +99,8 @@ const Header: React.FC<HeaderProps> = ({
   const handleLogout = () => {
     // Clear auth data
     localStorage.removeItem('auth');
-    // Redirect to welcome page
-    navigate('/');
+    localStorage.removeItem('authToken');
+    navigate('/login');
   };
 
   const filterOptions = [

@@ -1,7 +1,7 @@
 import { Navigate, Outlet } from "react-router-dom";
 
 const PrivateRoute = () => {
-  const token = localStorage.getItem("authToken");
+  const token = localStorage.getItem("authToken") || localStorage.getItem("auth");
 
   // ✅ CHECK CORRECT KEY
   if (!token) {

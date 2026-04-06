@@ -1,5 +1,3 @@
-// src/modules/super-admin/pages/master-management/UserManagement.tsx
-
 import React, { useState, useRef, useEffect } from 'react';
 import { 
   Users, 
@@ -9,7 +7,8 @@ import {
   Download,
   Filter as FilterIcon,
   Search,
-  Plus
+  Plus,
+  Loader
 } from 'lucide-react';
 import StatsCard from './Components/StatsCards';
 import FilterMenu from './Components/FilterMenu';
@@ -18,66 +17,15 @@ import UserTable from './Components/UserTable';
 import UserCard from './Components/UserCard';
 import UserFormModal from './Components/UserFormModal';
 import DeleteConfirmModal from './Components/DeleteConfirmModal';
-
-// Mock data for dropdowns
-const designations = [
-  { id: 1, name: 'Sales Executive' },
-  { id: 2, name: 'Team Lead' },
-  { id: 3, name: 'Regional Manager' },
-  { id: 4, name: 'Software Developer' },
-  { id: 5, name: 'HR Manager' },
-  { id: 6, name: 'Marketing Executive' },
-  { id: 7, name: 'Finance Manager' }
-];
-
-const departments = [
-  { id: 1, name: 'Sales' },
-  { id: 2, name: 'Marketing' },
-  { id: 3, name: 'IT' },
-  { id: 4, name: 'HR' },
-  { id: 5, name: 'Finance' },
-  { id: 6, name: 'Operations' }
-];
-
-const managers = [
-  { id: 1, name: 'Amit Verma' },
-  { id: 2, name: 'Neha Kapoor' },
-  { id: 3, name: 'Rajesh Kumar' },
-  { id: 4, name: 'Priya Singh' },
-  { id: 5, name: 'Super Admin' },
-  { id: 6, name: 'Vikram Sharma' }
-];
-
-const locations = [
-  { id: 1, name: 'Mumbai' },
-  { id: 2, name: 'Delhi' },
-  { id: 3, name: 'Bangalore' },
-  { id: 4, name: 'Pune' },
-  { id: 5, name: 'Hyderabad' },
-  { id: 6, name: 'Chennai' },
-  { id: 7, name: 'Kolkata' }
-];
-
-const userRoles = [
-  { id: 1, name: 'Admin' },
-  { id: 2, name: 'Manager' },
-  { id: 3, name: 'User' }
-];
-
-interface User {
-  id: number;
-  employeeCode: string;
-  fullName: string;
-  email: string;
-  mobile: string;
-  designation: string;
-  department: string;
-  role: string;
-  reportingManager: string;
-  location: string;
-  isActive: boolean;
-  password?: string;
-}
+import { fetchUsers, fetchUserById, createUser, updateUser, deleteUser, type User, type ApiUser } from '../../services/Userlist';
+import { 
+  fetchDepartments, 
+  fetchDesignations, 
+  fetchManagers, 
+  fetchLocations, 
+  fetchUserRoles 
+} from '../../services/userDropdownService';
+import { useNavigate } from 'react-router-dom';
 
 const UserManagement: React.FC = () => {
   const [showFilterMenu, setShowFilterMenu] = useState(false);
@@ -90,80 +38,87 @@ const UserManagement: React.FC = () => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<number | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [loadingDropdowns, setLoadingDropdowns] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+   const navigate = useNavigate();
+  // Dropdown data from API
+  const [designations, setDesignations] = useState<Array<{ id: number; name: string }>>([]);
+  const [departments, setDepartments] = useState<Array<{ id: number; name: string }>>([]);
+  const [managers, setManagers] = useState<Array<{ id: number; name: string }>>([]);
+  const [locations, setLocations] = useState<Array<{ id: number; name: string }>>([]);
+  const [userRoles, setUserRoles] = useState<Array<{ id: number; name: string }>>([]);
   
-  // Form state with all registration fields
   const [formData, setFormData] = useState({
     employeeCode: '',
     fullName: '',
     email: '',
     mobile: '',
-    designation: '',
-    department: '',
-    role: '',
-    reportingManager: '',
-    location: '',
+    designationId: '',
+    departmentId: '',
+    roleId: '',
+    managerId: '',
+    locationId: '',
     password: '',
     confirmPassword: '',
     isActive: true
   });
 
-  // Form errors
   const [errors, setErrors] = useState<Record<string, string>>({});
-
-  // Ref for outside click detection
   const filterRef = useRef<HTMLDivElement>(null);
   const modalRef = useRef<HTMLDivElement>(null);
+  const [users, setUsers] = useState<User[]>([]);
 
-  const [users, setUsers] = useState<User[]>([
-    {
-      id: 1,
-      employeeCode: "USR001",
-      fullName: "Rahul Sharma",
-      email: "rahul@company.com",
-      mobile: "9876543210",
-      designation: "Sales Executive",
-      department: "Sales",
-      role: "Employee",
-      reportingManager: "Amit Verma",
-      location: "Mumbai",
-      isActive: true,
-    },
-    {
-      id: 2,
-      employeeCode: "USR002",
-      fullName: "Priya Singh",
-      email: "priya@company.com",
-      mobile: "9123456780",
-      designation: "Team Lead",
-      department: "Marketing",
-      role: "Manager",
-      reportingManager: "Neha Kapoor",
-      location: "Delhi",
-      isActive: true,
-    },
-    {
-      id: 3,
-      employeeCode: "USR003",
-      fullName: "Amit Verma",
-      email: "amit@company.com",
-      mobile: "9988776655",
-      designation: "Regional Manager",
-      department: "Sales",
-      role: "Admin",
-      reportingManager: "Super Admin",
-      location: "Bangalore",
-      isActive: false,
-    },
-  ]);
+  // Fetch all data on component mount
+  useEffect(() => {
+    loadAllData();
+  }, []);
 
-  // Calculate KPI metrics
+  const loadAllData = async () => {
+    setLoading(true);
+    setLoadingDropdowns(true);
+    try {
+      // Load users and dropdowns in parallel
+      const [usersData, depts, desigs, mgrs, locs, roles] = await Promise.all([
+        fetchUsers(),
+        fetchDepartments(),
+        fetchDesignations(),
+        fetchManagers(),
+        fetchLocations(),
+        fetchUserRoles()
+      ]);
+      
+      setUsers(usersData);
+      setDepartments(depts);
+      setDesignations(desigs);
+      setManagers(mgrs);
+      setLocations(locs);
+      setUserRoles(roles);
+    } catch (err) {
+      console.error('Failed to load data:', err);
+      setError('Failed to load data. Please try again later.');
+    } finally {
+      setLoading(false);
+      setLoadingDropdowns(false);
+    }
+  };
+
+  const loadUsers = async () => {
+    try {
+      const fetchedUsers = await fetchUsers();
+      setUsers(fetchedUsers);
+    } catch (err) {
+      console.error('Failed to load users:', err);
+      setError('Failed to load users. Please try again later.');
+    }
+  };
+
   const totalUsers = users.length;
   const activeUsers = users.filter(user => user.isActive).length;
   const inactiveUsers = users.filter(user => !user.isActive).length;
   const activePercentage = totalUsers > 0 ? ((activeUsers / totalUsers) * 100).toFixed(1) : 0;
   const uniqueDepartments = new Set(users.map(user => user.department)).size;
 
-  // Get unique departments for filter
   const departmentOptions = [
     { value: 'all', label: 'All Departments' },
     ...Array.from(new Set(users.map(user => user.department))).map(dept => ({
@@ -172,12 +127,11 @@ const UserManagement: React.FC = () => {
     }))
   ];
 
-  // Filter options
   const roleOptions = [
     { value: 'all', label: 'All Roles' },
     { value: 'Admin', label: 'Admin' },
     { value: 'Manager', label: 'Manager' },
-    { value: 'Employee', label: 'Employee' }
+    { value: 'User', label: 'User' }
   ];
 
   const statusOptions = [
@@ -186,7 +140,6 @@ const UserManagement: React.FC = () => {
     { value: 'inactive', label: 'Inactive' }
   ];
 
-  // Handle outside clicks
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (filterRef.current && !filterRef.current.contains(event.target as Node)) {
@@ -205,7 +158,6 @@ const UserManagement: React.FC = () => {
     };
   }, [showAddModal]);
 
-  // Clear all filters
   const clearFilters = () => {
     setSearchQuery('');
     setSelectedRole('all');
@@ -213,24 +165,19 @@ const UserManagement: React.FC = () => {
     setSelectedDepartment('all');
   };
 
-  // Check if any filter is active
   const hasActiveFilters = searchQuery !== '' || selectedRole !== 'all' || selectedStatus !== 'all' || selectedDepartment !== 'all';
 
-  // Validate form
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
     
-    if (!formData.employeeCode) newErrors.employeeCode = 'User code is required';
     if (!formData.fullName) newErrors.fullName = 'Full name is required';
     if (!formData.email) newErrors.email = 'Email is required';
     else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = 'Email is invalid';
     if (!formData.mobile) newErrors.mobile = 'Mobile number is required';
     else if (!/^\d{10}$/.test(formData.mobile)) newErrors.mobile = 'Mobile number must be 10 digits';
-    if (!formData.designation) newErrors.designation = 'Designation is required';
-    if (!formData.department) newErrors.department = 'Department is required';
-    if (!formData.role) newErrors.role = 'Role is required';
-    if (!formData.reportingManager) newErrors.reportingManager = 'Reporting manager is required';
-    if (!formData.location) newErrors.location = 'Location is required';
+    if (!formData.designationId) newErrors.designationId = 'Designation is required';
+    if (!formData.departmentId) newErrors.departmentId = 'Department is required';
+    if (!formData.roleId) newErrors.roleId = 'Role is required';
     
     if (!editingUser) {
       if (!formData.password) newErrors.password = 'Password is required';
@@ -243,109 +190,122 @@ const UserManagement: React.FC = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  // Handle form input change
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
     setFormData(prev => ({
       ...prev,
       [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value
     }));
-    // Clear error for this field
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
     }
   };
 
-  // Add new user
-  const handleAddUser = () => {
+  const handleAddUser = async () => {
     if (!validateForm()) return;
     
-    const newId = Math.max(...users.map(u => u.id), 0) + 1;
-    const newUser: User = {
-      id: newId,
-      employeeCode: formData.employeeCode,
-      fullName: formData.fullName,
-      email: formData.email,
-      mobile: formData.mobile,
-      designation: formData.designation,
-      department: formData.department,
-      role: formData.role,
-      reportingManager: formData.reportingManager,
-      location: formData.location,
-      isActive: formData.isActive,
-      password: formData.password
-    };
-    setUsers([...users, newUser]);
-    setShowAddModal(false);
-    resetForm();
-  };
-
-  // Update user
-  const handleUpdateUser = () => {
-    if (!validateForm()) return;
-    
-    if (editingUser) {
-      setUsers(users.map(user => 
-        user.id === editingUser.id ? { 
-          ...user, 
-          employeeCode: formData.employeeCode,
-          fullName: formData.fullName,
-          email: formData.email,
-          mobile: formData.mobile,
-          designation: formData.designation,
-          department: formData.department,
-          role: formData.role,
-          reportingManager: formData.reportingManager,
-          location: formData.location,
-          isActive: formData.isActive,
-          ...(formData.password && { password: formData.password })
-        } : user
-      ));
+    try {
+      const newUserData: Partial<ApiUser> = {
+        employeeCode: formData.employeeCode || null,
+        fullName: formData.fullName,
+        email: formData.email,
+        mobile: formData.mobile,
+        roleId: parseInt(formData.roleId),
+        designationId: parseInt(formData.designationId),
+        departmentId: parseInt(formData.departmentId),
+        managerId: formData.managerId ? parseInt(formData.managerId) : null,
+        locationId: formData.locationId ? parseInt(formData.locationId) : null,
+        isActive: formData.isActive
+      };
+      
+      await createUser(newUserData);
+      await loadUsers();
       setShowAddModal(false);
-      setEditingUser(null);
       resetForm();
+    } catch (err) {
+      console.error('Failed to create user:', err);
+      setErrors({ submit: 'Failed to create user. Please try again.' });
     }
   };
 
-  // Delete user
-  const handleDeleteUser = (id: number) => {
-    setUsers(users.filter(user => user.id !== id));
-    setShowDeleteConfirm(null);
+  const handleUpdateUser = async () => {
+    if (!validateForm() || !editingUser) return;
+    
+    try {
+      const updateUserData: Partial<ApiUser> = {
+        id: editingUser.id,
+        employeeCode: formData.employeeCode || null,
+        fullName: formData.fullName,
+        email: formData.email,
+        mobile: formData.mobile,
+        roleId: parseInt(formData.roleId),
+        designationId: parseInt(formData.designationId),
+        departmentId: parseInt(formData.departmentId),
+        managerId: formData.managerId ? parseInt(formData.managerId) : null,
+        locationId: formData.locationId ? parseInt(formData.locationId) : null,
+        isActive: formData.isActive
+      };
+      
+      await updateUser(editingUser.id, updateUserData);
+      await loadUsers();
+      setShowAddModal(false);
+      setEditingUser(null);
+      resetForm();
+    } catch (err) {
+      console.error('Failed to update user:', err);
+      setErrors({ submit: 'Failed to update user. Please try again.' });
+    }
   };
 
-  // Edit user
-  const handleEditUser = (user: User) => {
-    setEditingUser(user);
-    setFormData({
-      employeeCode: user.employeeCode,
-      fullName: user.fullName,
-      email: user.email,
-      mobile: user.mobile,
-      designation: user.designation,
-      department: user.department,
-      role: user.role,
-      reportingManager: user.reportingManager,
-      location: user.location,
-      password: '',
-      confirmPassword: '',
-      isActive: user.isActive
-    });
-    setErrors({});
-    setShowAddModal(true);
+  const handleDeleteUser = async (id: number) => {
+    try {
+      await deleteUser(id);
+      await loadUsers();
+      setShowDeleteConfirm(null);
+    } catch (err) {
+      console.error('Failed to delete user:', err);
+      setError('Failed to delete user. Please try again.');
+    }
   };
 
-  // Reset form
+  const handleEditUser = async (user: User) => {
+    try {
+      const apiUser = await fetchUserById(user.id);
+      
+      setEditingUser(user);
+      setFormData({
+        employeeCode: apiUser.employeeCode || '',
+        fullName: apiUser.fullName || '',
+        email: apiUser.email || '',
+        mobile: apiUser.mobile || '',
+        designationId: apiUser.designationId ? apiUser.designationId.toString() : '',
+        departmentId: apiUser.departmentId ? apiUser.departmentId.toString() : '',
+        roleId: apiUser.roleId ? apiUser.roleId.toString() : '',
+        managerId: apiUser.managerId ? apiUser.managerId.toString() : '',
+        locationId: apiUser.locationId ? apiUser.locationId.toString() : '',
+        password: '',
+        confirmPassword: '',
+        isActive: apiUser.isActive ?? true
+      });
+      setErrors({});
+      setShowAddModal(true);
+    } catch (err) {
+      console.error('Failed to fetch user details:', err);
+      setError('Failed to load user details. Please try again.');
+    }
+  };
+
   const resetForm = () => {
     setFormData({
       employeeCode: '',
       fullName: '',
       email: '',
       mobile: '',
-      designation: '',
-      department: '',
-      role: '',
-      reportingManager: '',
-      location: '',
+      designationId: '',
+      departmentId: '',
+      roleId: '',
+      managerId: '',
+      locationId: '',
       password: '',
       confirmPassword: '',
       isActive: true
@@ -355,7 +315,6 @@ const UserManagement: React.FC = () => {
     setShowConfirmPassword(false);
   };
 
-  // Filter users based on search, role, status, and department
   const filteredUsers = users.filter(user => {
     const matchesSearch = searchQuery === '' || 
       user.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -371,7 +330,6 @@ const UserManagement: React.FC = () => {
     return matchesSearch && matchesRole && matchesStatus && matchesDepartment;
   });
 
-  // Export to CSV function similar to AllVisits
   const exportToCSV = () => {
     const headers = [
       'User Code', 'Full Name', 'Email', 'Mobile', 'Designation',
@@ -444,6 +402,36 @@ const UserManagement: React.FC = () => {
     }
   ];
 
+  if (loading && loadingDropdowns) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+        <div className="text-center">
+          <Loader className="w-12 h-12 animate-spin text-blue-600 mx-auto mb-4" />
+          <p className="text-gray-600">Loading users...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+        <div className="text-center">
+          <div className="text-red-600 mb-4">
+            <UserX className="w-12 h-12 mx-auto mb-2" />
+            <p>{error}</p>
+          </div>
+          <button
+            onClick={loadAllData}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 md:py-6 space-y-3 sm:space-y-4 md:space-y-5 bg-gray-50 min-h-screen">
       {/* Header */}
@@ -458,12 +446,9 @@ const UserManagement: React.FC = () => {
           </div>
         </div>
         
-        {/* Add User Button */}
-        <button
+         <button
           onClick={() => {
-            resetForm();
-            setEditingUser(null);
-            setShowAddModal(true);
+            navigate('/super-admin/employee-registration');
           }}
           className="inline-flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all text-xs sm:text-sm font-medium shadow-md hover:shadow-lg"
         >
@@ -481,7 +466,6 @@ const UserManagement: React.FC = () => {
 
       {/* Search, Export & Filter Buttons Row */}
       <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
-        {/* Search Input */}
         <div className="relative flex-1 max-w-xs">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
           <input
@@ -493,9 +477,7 @@ const UserManagement: React.FC = () => {
           />
         </div>
 
-        {/* Action Buttons */}
         <div className="flex items-center gap-2">
-          {/* Export Button - Similar to AllVisits */}
           <button 
             onClick={exportToCSV}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-xs font-medium text-gray-700"
@@ -504,7 +486,6 @@ const UserManagement: React.FC = () => {
             Export
           </button>
           
-          {/* Filter Button */}
           <div className="relative" ref={filterRef}>
             <button 
               onClick={() => setShowFilterMenu(!showFilterMenu)}
@@ -577,7 +558,7 @@ const UserManagement: React.FC = () => {
         )}
       </div>
 
-      {/* Add/Edit User Modal */}
+      {/* Add/Edit User Modal with API dropdowns */}
       <UserFormModal
         isOpen={showAddModal}
         editingUser={editingUser}

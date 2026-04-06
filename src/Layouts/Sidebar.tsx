@@ -59,7 +59,8 @@ const Sidebar: React.FC<SidebarProps> = ({
 
   const handleLogout = () => {
     localStorage.removeItem('auth');
-    navigate('/');
+    localStorage.removeItem('authToken');
+    navigate('/login');
   };
 
   // Check if any child is active

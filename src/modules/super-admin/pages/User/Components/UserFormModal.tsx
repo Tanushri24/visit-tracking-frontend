@@ -1,5 +1,3 @@
-// src/modules/super-admin/pages/master-management/components/UserFormModal.tsx
-
 import { X, Save, Award, User, Mail, Phone, Briefcase, Building2, Shield, MapPin, Lock, Eye, EyeOff, ChevronDown, UserCog } from 'lucide-react';
 
 interface UserFormModalProps {
@@ -46,7 +44,7 @@ const UserFormModal: React.FC<UserFormModalProps> = ({
       <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         <div className="sticky top-0 bg-white border-b border-gray-200 px-5 py-4 flex justify-between items-center">
           <h2 className="text-lg font-semibold text-gray-800">
-            {editingUser ? 'Edit Employee' : 'Add New User'}
+            {editingUser ? 'Edit User' : 'Add New User'}
           </h2>
           <button
             onClick={onClose}
@@ -61,12 +59,12 @@ const UserFormModal: React.FC<UserFormModalProps> = ({
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
               <Award className="w-4 h-4 text-purple-500" />
-              Employee Code <span className="text-red-500">*</span>
+              Employee Code
             </label>
             <input
               type="text"
               name="employeeCode"
-              value={formData.employeeCode}
+              value={formData.employeeCode || ''}
               onChange={onInputChange}
               className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm
                 ${errors.employeeCode ? 'border-red-500 bg-red-50' : 'border-gray-300'}`}
@@ -133,7 +131,7 @@ const UserFormModal: React.FC<UserFormModalProps> = ({
             {errors.mobile && <p className="text-xs text-red-500 mt-1">{errors.mobile}</p>}
           </div>
           
-          {/* Designation */}
+          {/* Designation - Using ID */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
               <Briefcase className="w-4 h-4 text-purple-500" />
@@ -141,23 +139,23 @@ const UserFormModal: React.FC<UserFormModalProps> = ({
             </label>
             <div className="relative">
               <select
-                name="designation"
-                value={formData.designation}
+                name="designationId"
+                value={formData.designationId || ''}
                 onChange={onInputChange}
                 className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm appearance-none
-                  ${errors.designation ? 'border-red-500 bg-red-50' : 'border-gray-300'}`}
+                  ${errors.designationId ? 'border-red-500 bg-red-50' : 'border-gray-300'}`}
               >
                 <option value="">Select designation</option>
                 {designations.map(des => (
-                  <option key={des.id} value={des.name}>{des.name}</option>
+                  <option key={des.id} value={des.id}>{des.name}</option>
                 ))}
               </select>
               <ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" />
             </div>
-            {errors.designation && <p className="text-xs text-red-500 mt-1">{errors.designation}</p>}
+            {errors.designationId && <p className="text-xs text-red-500 mt-1">{errors.designationId}</p>}
           </div>
           
-          {/* Department */}
+          {/* Department - Using ID */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
               <Building2 className="w-4 h-4 text-purple-500" />
@@ -165,23 +163,23 @@ const UserFormModal: React.FC<UserFormModalProps> = ({
             </label>
             <div className="relative">
               <select
-                name="department"
-                value={formData.department}
+                name="departmentId"
+                value={formData.departmentId || ''}
                 onChange={onInputChange}
                 className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm appearance-none
-                  ${errors.department ? 'border-red-500 bg-red-50' : 'border-gray-300'}`}
+                  ${errors.departmentId ? 'border-red-500 bg-red-50' : 'border-gray-300'}`}
               >
                 <option value="">Select department</option>
                 {departments.map(dept => (
-                  <option key={dept.id} value={dept.name}>{dept.name}</option>
+                  <option key={dept.id} value={dept.id}>{dept.name}</option>
                 ))}
               </select>
               <ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" />
             </div>
-            {errors.department && <p className="text-xs text-red-500 mt-1">{errors.department}</p>}
+            {errors.departmentId && <p className="text-xs text-red-500 mt-1">{errors.departmentId}</p>}
           </div>
           
-          {/* Role */}
+          {/* Role - Using ID */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
               <Shield className="w-4 h-4 text-purple-500" />
@@ -189,68 +187,64 @@ const UserFormModal: React.FC<UserFormModalProps> = ({
             </label>
             <div className="relative">
               <select
-                name="role"
-                value={formData.role}
+                name="roleId"
+                value={formData.roleId || ''}
                 onChange={onInputChange}
                 className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm appearance-none
-                  ${errors.role ? 'border-red-500 bg-red-50' : 'border-gray-300'}`}
+                  ${errors.roleId ? 'border-red-500 bg-red-50' : 'border-gray-300'}`}
               >
                 <option value="">Select role</option>
                 {userRoles.map(role => (
-                  <option key={role.id} value={role.name}>{role.name}</option>
+                  <option key={role.id} value={role.id}>{role.name}</option>
                 ))}
               </select>
               <ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" />
             </div>
-            {errors.role && <p className="text-xs text-red-500 mt-1">{errors.role}</p>}
+            {errors.roleId && <p className="text-xs text-red-500 mt-1">{errors.roleId}</p>}
           </div>
           
-          {/* Reporting Manager */}
+          {/* Reporting Manager - Using ID */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
               <UserCog className="w-4 h-4 text-purple-500" />
-              Reporting Manager <span className="text-red-500">*</span>
+              Reporting Manager
             </label>
             <div className="relative">
               <select
-                name="reportingManager"
-                value={formData.reportingManager}
+                name="managerId"
+                value={formData.managerId || ''}
                 onChange={onInputChange}
-                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm appearance-none
-                  ${errors.reportingManager ? 'border-red-500 bg-red-50' : 'border-gray-300'}`}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm appearance-none"
               >
                 <option value="">Select manager</option>
                 {managers.map(mgr => (
-                  <option key={mgr.id} value={mgr.name}>{mgr.name}</option>
+                  <option key={mgr.id} value={mgr.id}>{mgr.name}</option>
                 ))}
               </select>
               <ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" />
             </div>
-            {errors.reportingManager && <p className="text-xs text-red-500 mt-1">{errors.reportingManager}</p>}
           </div>
           
-          {/* Work Location */}
+          {/* Work Location - Using ID */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
               <MapPin className="w-4 h-4 text-purple-500" />
-              Work Location <span className="text-red-500">*</span>
+              Work Location
             </label>
             <div className="relative">
               <select
-                name="location"
-                value={formData.location}
+                name="locationId"
+                value={formData.locationId || ''}
                 onChange={onInputChange}
-                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm appearance-none
-                  ${errors.location ? 'border-red-500 bg-red-50' : 'border-gray-300'}`}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm appearance-none"
               >
                 <option value="">Select location</option>
                 {locations.map(loc => (
-                  <option key={loc.id} value={loc.name}>{loc.name}</option>
+                  <option key={loc.id} value={loc.id}>{loc.name}</option>
                 ))}
               </select>
               <ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" />
             </div>
-            {errors.location && <p className="text-xs text-red-500 mt-1">{errors.location}</p>}
           </div>
           
           {/* Password - Only for new users */}
@@ -338,7 +332,7 @@ const UserFormModal: React.FC<UserFormModalProps> = ({
             className="flex-1 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-colors text-sm font-medium"
           >
             <Save className="w-4 h-4 inline mr-1" />
-            {editingUser ? 'Update Employee' : 'Add Employee'}
+            {editingUser ? 'Update User' : 'Add User'}
           </button>
         </div>
       </div>
