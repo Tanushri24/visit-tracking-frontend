@@ -27,41 +27,17 @@ interface Company {
 
 const CompanyMaster = () => {
   const [companies, setCompanies] = useState<Company[]>([]);
-
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [filterIndustry, setFilterIndustry] = useState<string>('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
   const [showFilters, setShowFilters] = useState(false);
-  const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
   const [showViewModal, setShowViewModal] = useState(false);
   const [showInsertModal, setShowInsertModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
   const [companyToDelete, setCompanyToDelete] = useState<Company | null>(null);
-
-  useEffect(() => {
-    const fetchCompanies = async () => {
-      try {
-        const data = await companyApi.getCompanies();
-        setCompanies(data.map(c => ({
-          id: c.id,
-          companyName: c.companyName,
-          companyType: c.companyType,
-          industryType: c.industryType,
-          address: c.address,
-          city: c.city,
-          state: c.state,
-          pincode: c.pincode,
-          isActive: c.isActive
-        })));
-      } catch (error) {
-        console.error('Failed to load companies from API', error);
-      }
-    };
-
-    fetchCompanies();
-  }, []);
 
   // Form state for new company (API-only fields)
   const [newCompany, setNewCompany] = useState({
@@ -75,20 +51,47 @@ const CompanyMaster = () => {
     status: 'active' as 'active' | 'inactive'
   });
 
+  // Fetch companies on component mount
+  useEffect(() => {
+    fetchCompanies();
+  }, []);
+
+  const fetchCompanies = async () => {
+    try {
+      const data = await companyApi.getCompanies();
+      
+      const formatted = data.map((c: any) => ({
+        id: c.id,
+        companyName: c.companyName,
+        companyType: c.companyType,
+        industryType: c.industryType,
+        address: c.address,
+        city: c.city,
+        state: c.state,
+        pincode: c.pincode,
+        isActive: c.isActive
+      }));
+      
+      setCompanies(formatted);
+    } catch (error) {
+      console.error("Error fetching companies:", error);
+    }
+  };
+
   // Get unique industry types for filter
   const industryTypes = ['all', ...new Set(companies.map(c => c.industryType))];
 
   // Filter companies based on search and filters
- const filteredCompanies = companies.filter(company => {
-  const matchesSearch =
-    (company.companyName || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (company.companyType || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (company.city || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (company.industryType || "").toLowerCase().includes(searchTerm.toLowerCase());
-    
+  const filteredCompanies = companies.filter(company => {
+    const matchesSearch =
+      (company.companyName || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (company.companyType || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (company.city || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (company.industryType || "").toLowerCase().includes(searchTerm.toLowerCase());
+      
     const matchesStatus = filterStatus === 'all' || (company.isActive ? 'active' : 'inactive') === filterStatus;
     const matchesIndustry = filterIndustry === 'all' || company.industryType === filterIndustry;
-    
+      
     return matchesSearch && matchesStatus && matchesIndustry;
   });
 
@@ -100,10 +103,12 @@ const CompanyMaster = () => {
 
   // Export to CSV
   const exportToCSV = () => {
-    const headers = ['Company Name', 'Industry', 'City', 'State', 'Pincode', 'Status'];
+    const headers = ['Company Name', 'Company Type', 'Industry', 'Address', 'City', 'State', 'Pincode', 'Status'];
     const csvData = filteredCompanies.map(c => [
       c.companyName,
+      c.companyType,
       c.industryType,
+      c.address,
       c.city,
       c.state,
       c.pincode,
@@ -111,7 +116,7 @@ const CompanyMaster = () => {
     ]);
     
     const csvContent = [headers, ...csvData]
-      .map(row => row.join(','))
+      .map(row => row.map(cell => `"${cell}"`).join(','))
       .join('\n');
     
     const blob = new Blob([csvContent], { type: 'text/csv' });
@@ -129,9 +134,10 @@ const CompanyMaster = () => {
     setShowViewModal(true);
   };
 
-  // Delete company
-  const handleDeleteCompany = () => {
+  // Delete company - Local delete only (no API call)
+  const handleDeleteCompany = (): void => {
     if (companyToDelete) {
+      // Remove company from local state only
       setCompanies(companies.filter(c => c.id !== companyToDelete.id));
       setShowDeleteModal(false);
       setCompanyToDelete(null);
@@ -164,20 +170,9 @@ const CompanyMaster = () => {
     };
 
     try {
-      const created = await companyApi.createCompany(createPayload);
-      const companyToAdd: Company = {
-        id: created.id,
-        companyName: created.companyName,
-        companyType: created.companyType,
-        industryType: created.industryType,
-        address: created.address,
-        city: created.city,
-        state: created.state,
-        pincode: created.pincode,
-        isActive: created.isActive
-      };
+      await companyApi.createCompany(createPayload);
+      await fetchCompanies(); // Refresh the table
 
-      setCompanies(prev => [...prev, companyToAdd]);
       setShowInsertModal(false);
       setNewCompany({
         companyName: '',
@@ -190,8 +185,8 @@ const CompanyMaster = () => {
         status: 'active'
       });
     } catch (error) {
-      console.error('Company creation failed', error);
-      alert('Failed to create company. Please check server and try again.');
+      console.error("Company creation failed", error);
+      alert("Failed to create company. Please try again.");
     }
   };
 
@@ -322,6 +317,7 @@ const CompanyMaster = () => {
               <tr>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">S.No</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Company Name</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Company Type</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Industry</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">City</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">State</th>
@@ -341,6 +337,7 @@ const CompanyMaster = () => {
                       <p className="font-medium text-gray-900">{company.companyName}</p>
                     </div>
                   </td>
+                  <td className="px-4 py-3 text-sm text-gray-600">{company.companyType}</td>
                   <td className="px-4 py-3 text-sm text-gray-600">{company.industryType}</td>
                   <td className="px-4 py-3 text-sm text-gray-600">{company.city}</td>
                   <td className="px-4 py-3 text-sm text-gray-600">{company.state}</td>
@@ -374,6 +371,13 @@ const CompanyMaster = () => {
                   </td>
                 </tr>
               ))}
+              {currentItems.length === 0 && (
+                <tr>
+                  <td colSpan={9} className="text-center py-8 text-gray-500">
+                    No companies found
+                  </td>
+                 </tr>
+              )}
             </tbody>
           </table>
         </div>
@@ -614,7 +618,6 @@ const CompanyMaster = () => {
                       </div>
                     </div>
                   </div>
-
                 </div>
 
                 <div className="flex justify-end gap-3 mt-6">
@@ -685,13 +688,6 @@ const CompanyMaster = () => {
               </div>
             </div>
           </div>
-        </div>
-      )}
-
-      {/* No Results Message */}
-      {filteredCompanies.length === 0 && (
-        <div className="text-center py-12 bg-white rounded-lg shadow mt-6">
-          <p className="text-gray-500">No companies found matching your criteria.</p>
         </div>
       )}
     </div>

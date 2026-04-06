@@ -1,5 +1,5 @@
 // src/modules/super-admin/pages/Master/FunnelStageMaster.tsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Search, 
   ChevronLeft,
@@ -7,7 +7,6 @@ import {
   Filter,
   Download,
   RefreshCw,
-  Eye,
   Layers,
   Plus,
   TrendingUp,
@@ -16,51 +15,74 @@ import {
   Activity,
   Award,
   Target,
-  Trash2
+  Trash2,
+  Edit
 } from 'lucide-react';
+import { getFunnelStages, createFunnelStage } from "../../../services/funnelStage.service";
 
+// Updated interface to match API parameters
 interface FunnelStage {
   id: number;
   stageName: string;
   stageOrder: number;
-  status: 'active' | 'inactive';
-  createdAt: string;
-  updatedAt: string;
+  isClosedStage: boolean;
+  isWonStage: boolean;
+  isLostStage: boolean;
+  isActive: boolean;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 const FunnelStageMaster = () => {
-  const [stages, setStages] = useState<FunnelStage[]>([
-    { id: 1, stageName: 'Lead Identified', stageOrder: 1, status: 'active', createdAt: '2024-01-01', updatedAt: '2024-01-01' },
-    { id: 2, stageName: 'Initial Visit', stageOrder: 2, status: 'active', createdAt: '2024-01-01', updatedAt: '2024-01-01' },
-    { id: 3, stageName: 'Requirement Discussion', stageOrder: 3, status: 'active', createdAt: '2024-01-01', updatedAt: '2024-01-01' },
-    { id: 4, stageName: 'Proposal Shared', stageOrder: 4, status: 'active', createdAt: '2024-01-01', updatedAt: '2024-01-01' },
-    { id: 5, stageName: 'Demo Conducted', stageOrder: 5, status: 'active', createdAt: '2024-01-01', updatedAt: '2024-01-01' },
-    { id: 6, stageName: 'Commercial Negotiation', stageOrder: 6, status: 'active', createdAt: '2024-01-01', updatedAt: '2024-01-01' },
-    { id: 7, stageName: 'Order Expected', stageOrder: 7, status: 'active', createdAt: '2024-01-01', updatedAt: '2024-01-01' },
-    { id: 8, stageName: 'Won', stageOrder: 8, status: 'active', createdAt: '2024-01-01', updatedAt: '2024-01-01' },
-    { id: 9, stageName: 'Lost', stageOrder: 9, status: 'active', createdAt: '2024-01-01', updatedAt: '2024-01-01' }
-  ]);
-
+  const [stages, setStages] = useState<FunnelStage[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
   const [showFilters, setShowFilters] = useState(false);
-  const [selectedStage, setSelectedStage] = useState<FunnelStage | null>(null);
-  const [showViewModal, setShowViewModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [showInsertModal, setShowInsertModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [stageToDelete, setStageToDelete] = useState<FunnelStage | null>(null);
   
+  // Updated newStage state to match API structure
   const [newStage, setNewStage] = useState({
     stageName: '',
     stageOrder: 0,
-    status: 'active' as 'active' | 'inactive'
+    isClosedStage: false,
+    isWonStage: false,
+    isLostStage: false,
+    isActive: true
   });
+
+  // Edit stage state
+  const [editStage, setEditStage] = useState({
+    id: 0,
+    stageName: '',
+    stageOrder: 0,
+    isClosedStage: false,
+    isWonStage: false,
+    isLostStage: false,
+    isActive: true
+  });
+
+  // Fetch stages on component mount
+  useEffect(() => {
+    fetchStages();
+  }, []);
+
+  const fetchStages = async () => {
+    try {
+      const data = await getFunnelStages();
+      setStages(data);
+    } catch (error) {
+      console.error("Error fetching stages:", error);
+    }
+  };
 
   const filteredStages = stages.filter(stage => {
     const matchesSearch = stage.stageName.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = filterStatus === 'all' || stage.status === filterStatus;
+    const matchesStatus = filterStatus === 'all' || (filterStatus === 'active' ? stage.isActive : !stage.isActive);
     return matchesSearch && matchesStatus;
   });
 
@@ -70,16 +92,37 @@ const FunnelStageMaster = () => {
   const totalPages = Math.ceil(filteredStages.length / itemsPerPage);
 
   const exportToCSV = () => {
-    const headers = ['Stage Name', 'Stage Order', 'Status', 'Created At', 'Updated At'];
-    const csvData = filteredStages.map(s => [s.stageName, s.stageOrder.toString(), s.status, s.createdAt, s.updatedAt]);
+    const headers = ['Stage Name', 'Stage Order', 'Closed Stage', 'Won Stage', 'Lost Stage', 'Status', 'Created At', 'Updated At'];
+    const csvData = filteredStages.map(s => [
+      s.stageName, 
+      s.stageOrder.toString(), 
+      s.isClosedStage ? 'Yes' : 'No',
+      s.isWonStage ? 'Yes' : 'No',
+      s.isLostStage ? 'Yes' : 'No',
+      s.isActive ? 'active' : 'inactive', 
+      s.createdAt || '', 
+      s.updatedAt || ''
+    ]);
     const blob = new Blob([[headers, ...csvData].map(row => row.join(',')).join('\n')], { type: 'text/csv' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
     a.download = `funnel_stages_${new Date().toISOString().split('T')[0]}.csv`;
     a.click();
   };
-
-  const viewStageDetails = (stage: FunnelStage) => { setSelectedStage(stage); setShowViewModal(true); };
+  
+  // Open edit modal
+  const openEditModal = (stage: FunnelStage) => {
+    setEditStage({
+      id: stage.id,
+      stageName: stage.stageName,
+      stageOrder: stage.stageOrder,
+      isClosedStage: stage.isClosedStage,
+      isWonStage: stage.isWonStage,
+      isLostStage: stage.isLostStage,
+      isActive: stage.isActive
+    });
+    setShowEditModal(true);
+  };
   
   // Delete stage
   const handleDeleteStage = () => {
@@ -97,16 +140,69 @@ const FunnelStageMaster = () => {
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setNewStage(prev => ({ ...prev, [name]: name === 'stageOrder' ? parseInt(value) || 0 : value }));
+    const { name, value, type } = e.target;
+    if (type === 'checkbox') {
+      const checked = (e.target as HTMLInputElement).checked;
+      setNewStage(prev => ({ ...prev, [name]: checked }));
+    } else {
+      setNewStage(prev => ({ ...prev, [name]: name === 'stageOrder' ? parseInt(value) || 0 : value }));
+    }
   };
 
-  const handleInsertStage = () => {
-    const newId = Math.max(...stages.map(s => s.id), 0) + 1;
-    const currentDate = new Date().toISOString().split('T')[0];
-    setStages([...stages, { id: newId, ...newStage, createdAt: currentDate, updatedAt: currentDate }]);
-    setShowInsertModal(false);
-    setNewStage({ stageName: '', stageOrder: 0, status: 'active' });
+  const handleEditInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value, type } = e.target;
+    if (type === 'checkbox') {
+      const checked = (e.target as HTMLInputElement).checked;
+      setEditStage(prev => ({ ...prev, [name]: checked }));
+    } else {
+      setEditStage(prev => ({ ...prev, [name]: name === 'stageOrder' ? parseInt(value) || 0 : value }));
+    }
+  };
+
+  const handleInsertStage = async () => {
+    try {
+      const payload = {
+        stageName: newStage.stageName,
+        stageOrder: newStage.stageOrder,
+        isClosedStage: newStage.isClosedStage,
+        isWonStage: newStage.isWonStage,
+        isLostStage: newStage.isLostStage,
+        isActive: newStage.isActive
+      };
+
+      await createFunnelStage(payload);
+      fetchStages(); // table refresh
+
+      setShowInsertModal(false);
+      setNewStage({
+        stageName: "",
+        stageOrder: 0,
+        isClosedStage: false,
+        isWonStage: false,
+        isLostStage: false,
+        isActive: true
+      });
+    } catch (error) {
+      console.error("Error creating stage:", error);
+    }
+  };
+
+  const handleUpdateStage = () => {
+    setStages(stages.map(stage => 
+      stage.id === editStage.id 
+        ? { 
+            ...stage, 
+            stageName: editStage.stageName,
+            stageOrder: editStage.stageOrder,
+            isClosedStage: editStage.isClosedStage,
+            isWonStage: editStage.isWonStage,
+            isLostStage: editStage.isLostStage,
+            isActive: editStage.isActive,
+            updatedAt: new Date().toISOString().split('T')[0]
+          }
+        : stage
+    ));
+    setShowEditModal(false);
   };
 
   return (
@@ -138,7 +234,7 @@ const FunnelStageMaster = () => {
                 <CheckCircle size={14} className="text-green-600 sm:w-4 sm:h-4" />
               </div>
             </div>
-            <p className="text-lg sm:text-xl md:text-2xl font-bold text-green-600">{stages.filter(s => s.status === 'active').length}</p>
+            <p className="text-lg sm:text-xl md:text-2xl font-bold text-green-600">{stages.filter(s => s.isActive).length}</p>
             <p className="text-[9px] sm:text-[10px] text-gray-400 mt-0.5 sm:mt-1">Currently in use</p>
           </div>
           
@@ -149,7 +245,7 @@ const FunnelStageMaster = () => {
                 <XCircle size={14} className="text-red-600 sm:w-4 sm:h-4" />
               </div>
             </div>
-            <p className="text-lg sm:text-xl md:text-2xl font-bold text-red-600">{stages.filter(s => s.status === 'inactive').length}</p>
+            <p className="text-lg sm:text-xl md:text-2xl font-bold text-red-600">{stages.filter(s => !s.isActive).length}</p>
             <p className="text-[9px] sm:text-[10px] text-gray-400 mt-0.5 sm:mt-1">Temporarily disabled</p>
           </div>
           
@@ -160,7 +256,7 @@ const FunnelStageMaster = () => {
                 <Award size={14} className="text-blue-600 sm:w-4 sm:h-4" />
               </div>
             </div>
-            <p className="text-lg sm:text-xl md:text-2xl font-bold text-blue-600">2</p>
+            <p className="text-lg sm:text-xl md:text-2xl font-bold text-blue-600">{stages.filter(s => s.isWonStage || s.isLostStage).length}</p>
             <p className="text-[9px] sm:text-[10px] text-gray-400 mt-0.5 sm:mt-1">Won & Lost stages</p>
           </div>
         </div>
@@ -216,10 +312,10 @@ const FunnelStageMaster = () => {
             <table className="w-full min-w-[600px]">
               <thead>
                 <tr className="bg-gray-50 border-b border-gray-100">
-                  {['#', 'Stage ID', 'Stage Name', 'Order', 'Status', 'Actions'].map((h, i) => (
+                  {['#', 'Stage ID', 'Stage Name', 'Order', 'Closed', 'Won', 'Lost', 'Status', 'Actions'].map((h, i) => (
                     <th key={i} className="px-3 sm:px-4 py-2.5 sm:py-3 text-left text-[10px] sm:text-xs font-semibold text-gray-500 uppercase tracking-wider">{h}</th>
                   ))}
-                   </tr>
+                </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
                 {currentItems.map((stage, index) => (
@@ -232,7 +328,7 @@ const FunnelStageMaster = () => {
                     </td>
                     <td className="px-3 sm:px-4 py-2.5 sm:py-3">
                       <div className="flex items-center gap-2">
-                        <div className={`w-1.5 h-1.5 rounded-full ${stage.status === 'active' ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                        <div className={`w-1.5 h-1.5 rounded-full ${stage.isActive ? 'bg-green-500' : 'bg-red-500'}`}></div>
                         <span className="text-xs sm:text-sm font-medium text-gray-800">{stage.stageName}</span>
                       </div>
                     </td>
@@ -242,14 +338,47 @@ const FunnelStageMaster = () => {
                       </div>
                     </td>
                     <td className="px-3 sm:px-4 py-2.5 sm:py-3">
-                      <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-medium ${stage.status === 'active' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
-                        {stage.status === 'active' ? 'Active' : 'Inactive'}
+                      {stage.isClosedStage ? (
+                        <span className="inline-flex px-2 py-0.5 rounded-full text-[10px] font-medium bg-blue-50 text-blue-700 border border-blue-200">
+                          Yes
+                        </span>
+                      ) : (
+                        <span className="inline-flex px-2 py-0.5 rounded-full text-[10px] font-medium bg-gray-50 text-gray-500 border border-gray-200">
+                          No
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-3 sm:px-4 py-2.5 sm:py-3">
+                      {stage.isWonStage ? (
+                        <span className="inline-flex px-2 py-0.5 rounded-full text-[10px] font-medium bg-green-50 text-green-700 border border-green-200">
+                          Won
+                        </span>
+                      ) : (
+                        <span className="inline-flex px-2 py-0.5 rounded-full text-[10px] font-medium bg-gray-50 text-gray-500 border border-gray-200">
+                          -
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-3 sm:px-4 py-2.5 sm:py-3">
+                      {stage.isLostStage ? (
+                        <span className="inline-flex px-2 py-0.5 rounded-full text-[10px] font-medium bg-red-50 text-red-700 border border-red-200">
+                          Lost
+                        </span>
+                      ) : (
+                        <span className="inline-flex px-2 py-0.5 rounded-full text-[10px] font-medium bg-gray-50 text-gray-500 border border-gray-200">
+                          -
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-3 sm:px-4 py-2.5 sm:py-3">
+                      <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-medium ${stage.isActive ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
+                        {stage.isActive ? 'Active' : 'Inactive'}
                       </span>
                     </td>
                     <td className="px-3 sm:px-4 py-2.5 sm:py-3">
                       <div className="flex gap-1">
-                        <button onClick={() => viewStageDetails(stage)} className="p-1 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded transition-all" title="View Details">
-                          <Eye size={13} />
+                        <button onClick={() => openEditModal(stage)} className="p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-all" title="Edit Stage">
+                          <Edit size={13} />
                         </button>
                         <button onClick={() => openDeleteModal(stage)} className="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-all" title="Delete Stage">
                           <Trash2 size={13} />
@@ -297,55 +426,57 @@ const FunnelStageMaster = () => {
           </div>
         )}
 
-        {/* View Modal - Optimized */}
-        {showViewModal && selectedStage && (
+        {/* Edit Modal */}
+        {showEditModal && editStage && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-3">
             <div className="bg-white rounded-lg shadow-xl w-full max-w-sm max-h-[85vh] overflow-y-auto">
               <div className="sticky top-0 bg-white border-b px-4 py-3 flex justify-between items-center">
-                <h2 className="text-base font-bold text-gray-900">Stage Details</h2>
-                <button onClick={() => { setShowViewModal(false); setSelectedStage(null); }} className="p-1 hover:bg-gray-100 rounded">
+                <h2 className="text-base font-bold">Edit Stage</h2>
+                <button onClick={() => { setShowEditModal(false); }} className="p-1 hover:bg-gray-100 rounded">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                 </button>
               </div>
-              <div className="p-4 space-y-3">
-                <div className="bg-purple-50 rounded-lg p-3">
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
-                      <Target size={16} className="text-purple-600" />
-                    </div>
-                    <div>
-                      <p className="text-[10px] text-gray-500">Stage ID</p>
-                      <p className="text-xs font-mono font-semibold">STG-{selectedStage.id.toString().padStart(3, '0')}</p>
-                    </div>
+              <form onSubmit={(e) => { e.preventDefault(); handleUpdateStage(); }}>
+                <div className="p-4 space-y-3">
+                  <div><label className="block text-xs font-medium text-gray-700 mb-1">Stage Name *</label><input type="text" name="stageName" value={editStage.stageName} onChange={handleEditInputChange} required placeholder="e.g., Lead Identified" className="w-full px-3 py-1.5 text-sm border rounded-lg" /></div>
+                  <div><label className="block text-xs font-medium text-gray-700 mb-1">Stage Order *</label><input type="number" name="stageOrder" value={editStage.stageOrder} onChange={handleEditInputChange} required min="1" className="w-full px-3 py-1.5 text-sm border rounded-lg" /></div>
+                  <div className="flex items-center gap-4">
+                    <label className="flex items-center gap-2 text-xs text-gray-700">
+                      <input type="checkbox" name="isClosedStage" checked={editStage.isClosedStage} onChange={handleEditInputChange} className="rounded" />
+                      Closed Stage
+                    </label>
+                    <label className="flex items-center gap-2 text-xs text-gray-700">
+                      <input type="checkbox" name="isWonStage" checked={editStage.isWonStage} onChange={handleEditInputChange} className="rounded" />
+                      Won Stage
+                    </label>
+                    <label className="flex items-center gap-2 text-xs text-gray-700">
+                      <input type="checkbox" name="isLostStage" checked={editStage.isLostStage} onChange={handleEditInputChange} className="rounded" />
+                      Lost Stage
+                    </label>
                   </div>
-                  <div className="grid grid-cols-2 gap-3 text-xs">
-                    <div><p className="text-gray-500">Stage Name</p><p className="font-medium">{selectedStage.stageName}</p></div>
-                    <div><p className="text-gray-500">Stage Order</p><p className="font-medium">{selectedStage.stageOrder}</p></div>
-                    <div><p className="text-gray-500">Status</p><span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-medium ${selectedStage.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>{selectedStage.status}</span></div>
+                  <div><label className="block text-xs font-medium text-gray-700 mb-1">Status</label>
+                    <select name="isActive" value={String(editStage.isActive)} onChange={handleEditInputChange} className="w-full px-3 py-1.5 text-sm border rounded-lg">
+                      <option value="true">Active</option>
+                      <option value="false">Inactive</option>
+                    </select>
                   </div>
                 </div>
-                <div>
-                  <h3 className="text-xs font-semibold text-gray-700 mb-2 flex items-center gap-1"><Activity size={12} /> System Info</h3>
-                  <div className="space-y-1.5 text-xs">
-                    <div className="flex justify-between"><span className="text-gray-500">Created</span><span>{new Date(selectedStage.createdAt).toLocaleDateString()}</span></div>
-                    <div className="flex justify-between"><span className="text-gray-500">Updated</span><span>{new Date(selectedStage.updatedAt).toLocaleDateString()}</span></div>
-                  </div>
+                <div className="sticky bottom-0 bg-white border-t px-4 py-3 flex justify-end gap-2">
+                  <button type="button" onClick={() => setShowEditModal(false)} className="px-3 py-1.5 text-xs border rounded-lg hover:bg-gray-50">Cancel</button>
+                  <button type="submit" className="px-3 py-1.5 text-xs bg-purple-600 text-white rounded-lg hover:bg-purple-700">Update Stage</button>
                 </div>
-              </div>
-              <div className="sticky bottom-0 bg-white border-t px-4 py-3 flex justify-end">
-                <button onClick={() => { setShowViewModal(false); setSelectedStage(null); }} className="px-3 py-1.5 bg-purple-600 text-white rounded-lg text-xs hover:bg-purple-700">Close</button>
-              </div>
+              </form>
             </div>
           </div>
         )}
 
-        {/* Insert Modal - Optimized */}
+        {/* Insert Modal */}
         {showInsertModal && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-3">
             <div className="bg-white rounded-lg shadow-xl w-full max-w-sm max-h-[85vh] overflow-y-auto">
               <div className="sticky top-0 bg-white border-b px-4 py-3 flex justify-between items-center">
                 <h2 className="text-base font-bold">Add New Stage</h2>
-                <button onClick={() => { setShowInsertModal(false); setNewStage({ stageName: '', stageOrder: 0, status: 'active' }); }} className="p-1 hover:bg-gray-100 rounded">
+                <button onClick={() => { setShowInsertModal(false); setNewStage({ stageName: '', stageOrder: 0, isClosedStage: false, isWonStage: false, isLostStage: false, isActive: true }); }} className="p-1 hover:bg-gray-100 rounded">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                 </button>
               </div>
@@ -353,7 +484,26 @@ const FunnelStageMaster = () => {
                 <div className="p-4 space-y-3">
                   <div><label className="block text-xs font-medium text-gray-700 mb-1">Stage Name *</label><input type="text" name="stageName" value={newStage.stageName} onChange={handleInputChange} required placeholder="e.g., Lead Identified" className="w-full px-3 py-1.5 text-sm border rounded-lg" /></div>
                   <div><label className="block text-xs font-medium text-gray-700 mb-1">Stage Order *</label><input type="number" name="stageOrder" value={newStage.stageOrder} onChange={handleInputChange} required min="1" placeholder="e.g., 1, 2, 3" className="w-full px-3 py-1.5 text-sm border rounded-lg" /><p className="text-[10px] text-gray-400 mt-1">Sequence in funnel</p></div>
-                  <div><label className="block text-xs font-medium text-gray-700 mb-1">Status</label><select name="status" value={newStage.status} onChange={handleInputChange} className="w-full px-3 py-1.5 text-sm border rounded-lg"><option value="active">Active</option><option value="inactive">Inactive</option></select></div>
+                  <div className="flex items-center gap-4">
+                    <label className="flex items-center gap-2 text-xs text-gray-700">
+                      <input type="checkbox" name="isClosedStage" checked={newStage.isClosedStage} onChange={handleInputChange} className="rounded" />
+                      Closed Stage
+                    </label>
+                    <label className="flex items-center gap-2 text-xs text-gray-700">
+                      <input type="checkbox" name="isWonStage" checked={newStage.isWonStage} onChange={handleInputChange} className="rounded" />
+                      Won Stage
+                    </label>
+                    <label className="flex items-center gap-2 text-xs text-gray-700">
+                      <input type="checkbox" name="isLostStage" checked={newStage.isLostStage} onChange={handleInputChange} className="rounded" />
+                      Lost Stage
+                    </label>
+                  </div>
+                  <div><label className="block text-xs font-medium text-gray-700 mb-1">Status</label>
+                    <select name="isActive" value={String(newStage.isActive)} onChange={handleInputChange} className="w-full px-3 py-1.5 text-sm border rounded-lg">
+                      <option value="true">Active</option>
+                      <option value="false">Inactive</option>
+                    </select>
+                  </div>
                 </div>
                 <div className="sticky bottom-0 bg-white border-t px-4 py-3 flex justify-end gap-2">
                   <button type="button" onClick={() => setShowInsertModal(false)} className="px-3 py-1.5 text-xs border rounded-lg hover:bg-gray-50">Cancel</button>

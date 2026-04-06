@@ -12,7 +12,7 @@ import {
   Trash2,
   Edit
 } from 'lucide-react';
-import { createDepartment } from '../../../services/department.service';
+import { createDepartment, getDepartments } from '../../../services/department.service';
 
 interface Department {
   id: number;
@@ -145,7 +145,7 @@ const DepartmentMaster = () => {
     setLoading(true);
     try {
       // In real implementation, fetch from API
-      // const res = await getDepartments();
+       const res = await getDepartments();
       // setDepartments(res.data);
     } catch (err) {
       console.error("Error fetching departments", err);

@@ -1,5 +1,5 @@
 // src/modules/super-admin/pages/Master/VisitPurposeMaster.tsx
-import React, { useState } from 'react';
+import React, { useState, useEffect  } from 'react';
 import { 
   Search, 
   ChevronLeft,
@@ -15,29 +15,18 @@ import {
   Trash2,
   Edit
 } from 'lucide-react';
-import { createVisitPurpose } from "../../../services/visitPurpose.service";
+import { createVisitPurpose, getVisitPurposes } from "../../../services/visitPurpose.service";
 
 interface VisitPurpose {
   id: number;
   purposeName: string;
-  status: 'active' | 'inactive';
+  isActive: boolean;  // Changed from status to isActive boolean
   createdAt: string;
   updatedAt: string;
 }
 
 const VisitPurposeMaster = () => {
-  const [purposes, setPurposes] = useState<VisitPurpose[]>([
-    { id: 1, purposeName: 'Product Demo', status: 'active', createdAt: '2024-01-15', updatedAt: '2024-02-20' },
-    { id: 2, purposeName: 'Proposal Discussion', status: 'active', createdAt: '2024-01-20', updatedAt: '2024-02-18' },
-    { id: 3, purposeName: 'Requirement Collection', status: 'active', createdAt: '2024-01-25', updatedAt: '2024-02-15' },
-    { id: 4, purposeName: 'Tender Discussion', status: 'active', createdAt: '2024-02-01', updatedAt: '2024-02-10' },
-    { id: 5, purposeName: 'Relationship Meeting', status: 'active', createdAt: '2024-02-05', updatedAt: '2024-02-12' },
-    { id: 6, purposeName: 'Technical Support', status: 'inactive', createdAt: '2024-02-08', updatedAt: '2024-02-14' },
-    { id: 7, purposeName: 'Training Session', status: 'active', createdAt: '2024-02-10', updatedAt: '2024-02-16' },
-    { id: 8, purposeName: 'Payment Follow-up', status: 'active', createdAt: '2024-02-12', updatedAt: '2024-02-18' },
-    { id: 9, purposeName: 'Contract Renewal', status: 'inactive', createdAt: '2024-02-15', updatedAt: '2024-02-20' },
-    { id: 10, purposeName: 'Feedback Session', status: 'active', createdAt: '2024-02-18', updatedAt: '2024-02-22' }
-  ]);
+ const [purposes, setPurposes] = useState<VisitPurpose[]>([]);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
@@ -51,22 +40,28 @@ const VisitPurposeMaster = () => {
   
   const [newPurpose, setNewPurpose] = useState({
     purposeName: '',
-    status: 'active' as 'active' | 'inactive'
+    isActive: true  // Changed to boolean
   });
 
   const [editPurpose, setEditPurpose] = useState({
     id: 0,
     purposeName: '',
-    status: 'active' as 'active' | 'inactive',
+    isActive: true,  // Changed to boolean
     createdAt: '',
     updatedAt: ''
   });
 
   const filteredPurposes = purposes.filter((purpose) => {
-  return purpose?.purposeName
-    ?.toLowerCase()
-    ?.includes(searchTerm.toLowerCase());
-});
+    const matchesSearch = purpose?.purposeName
+      ?.toLowerCase()
+      ?.includes(searchTerm.toLowerCase());
+    
+    const matchesStatus = filterStatus === 'all' || 
+      (filterStatus === 'active' && purpose.isActive === true) ||
+      (filterStatus === 'inactive' && purpose.isActive === false);
+    
+    return matchesSearch && matchesStatus;
+  });
 
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
@@ -75,7 +70,12 @@ const VisitPurposeMaster = () => {
 
   const exportToCSV = () => {
     const headers = ['Purpose Name', 'Status', 'Created At', 'Updated At'];
-    const csvData = filteredPurposes.map(p => [p.purposeName, p.status, p.createdAt, p.updatedAt]);
+    const csvData = filteredPurposes.map(p => [
+      p.purposeName, 
+      p.isActive ? 'active' : 'inactive', 
+      p.createdAt, 
+      p.updatedAt
+    ]);
     const csvContent = [headers, ...csvData].map(row => row.join(',')).join('\n');
     const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
@@ -90,7 +90,7 @@ const VisitPurposeMaster = () => {
     setEditPurpose({
       id: purpose.id,
       purposeName: purpose.purposeName,
-      status: purpose.status,
+      isActive: purpose.isActive,
       createdAt: purpose.createdAt,
       updatedAt: purpose.updatedAt
     });
@@ -114,25 +114,34 @@ const VisitPurposeMaster = () => {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setNewPurpose(prev => ({ ...prev, [name]: value }));
+    if (name === 'isActive') {
+      setNewPurpose(prev => ({ ...prev, [name]: value === 'true' }));
+    } else {
+      setNewPurpose(prev => ({ ...prev, [name]: value }));
+    }
   };
 
   const handleEditInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setEditPurpose(prev => ({ ...prev, [name]: value }));
+    if (name === 'isActive') {
+      setEditPurpose(prev => ({ ...prev, [name]: value === 'true' }));
+    } else {
+      setEditPurpose(prev => ({ ...prev, [name]: value }));
+    }
   };
 
   const handleInsertPurpose = async () => {
     const payload = {
       id: 0,
       purposeName: newPurpose.purposeName,
-      status: newPurpose.status === "active" ? 1 : 0,
+      isActive: newPurpose.isActive,  // Changed to boolean
       updatedBy: "admin",
       updatedDate: new Date().toISOString(),
     };
     
     try {
-      const data = await createVisitPurpose(payload); // Fixed: was "payloa" instead of "payload"
+      const data = await createVisitPurpose(payload); 
+      await fetchVisitPurposes();
 
       setPurposes((prev) => [...prev, data]);
 
@@ -140,7 +149,7 @@ const VisitPurposeMaster = () => {
 
       setNewPurpose({
         purposeName: "",
-        status: "active",
+        isActive: true,
       });
 
     } catch (error) {
@@ -154,7 +163,7 @@ const VisitPurposeMaster = () => {
         ? {
             ...purpose,
             purposeName: editPurpose.purposeName,
-            status: editPurpose.status,
+            isActive: editPurpose.isActive,
             updatedAt: new Date().toISOString().split('T')[0]
           }
         : purpose
@@ -163,11 +172,36 @@ const VisitPurposeMaster = () => {
     setEditPurpose({
       id: 0,
       purposeName: '',
-      status: 'active',
+      isActive: true,
       createdAt: '',
       updatedAt: ''
     });
   };
+
+  const fetchVisitPurposes = async () => {
+    try {
+      const res = await getVisitPurposes();
+
+      const apiData = res?.data || res || [];
+
+      const mappedData: VisitPurpose[] = apiData.map((item: any) => ({
+        id: item.id,
+        purposeName: item.purposeName,
+        isActive: item.isActive === true || item.isActive === 1 || item.status === 1 || item.status === 'active', // Handle both boolean and number
+        createdAt: item.createdDate || item.createdAt || "",
+        updatedAt: item.updatedDate || item.updatedAt || ""
+      }));
+
+      setPurposes(mappedData);
+
+    } catch (error) {
+      console.error("Error fetching visit purposes:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchVisitPurposes();
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -196,7 +230,7 @@ const VisitPurposeMaster = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs sm:text-sm text-gray-500">Active Purposes</p>
-                <p className="text-xl sm:text-2xl font-bold text-green-600">{purposes.filter(p => p.status === 'active').length}</p>
+                <p className="text-xl sm:text-2xl font-bold text-green-600">{purposes.filter(p => p.isActive === true).length}</p>
               </div>
               <div className="bg-green-100 rounded-xl p-2 sm:p-2.5">
                 <CheckCircle size={20} className="text-green-600 sm:w-6 sm:h-6" />
@@ -208,7 +242,7 @@ const VisitPurposeMaster = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs sm:text-sm text-gray-500">Inactive Purposes</p>
-                <p className="text-xl sm:text-2xl font-bold text-red-600">{purposes.filter(p => p.status === 'inactive').length}</p>
+                <p className="text-xl sm:text-2xl font-bold text-red-600">{purposes.filter(p => p.isActive === false).length}</p>
               </div>
               <div className="bg-red-100 rounded-xl p-2 sm:p-2.5">
                 <XCircle size={20} className="text-red-600 sm:w-6 sm:h-6" />
@@ -310,7 +344,7 @@ const VisitPurposeMaster = () => {
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Purpose Name</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                 </tr>
+                </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {currentItems.map((purpose, index) => (
@@ -321,9 +355,9 @@ const VisitPurposeMaster = () => {
                     </td>
                     <td className="px-4 py-3">
                       <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium ${
-                        purpose.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                        purpose.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                       }`}>
-                        {purpose.status}
+                        {purpose.isActive ? 'active' : 'inactive'}
                       </span>
                     </td>
                     <td className="px-4 py-3">
@@ -410,13 +444,13 @@ const VisitPurposeMaster = () => {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
                     <select
-                      name="status"
-                      value={newPurpose.status}
+                      name="isActive"
+                      value={newPurpose.isActive.toString()}
                       onChange={handleInputChange}
                       className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                     >
-                      <option value="active">Active</option>
-                      <option value="inactive">Inactive</option>
+                      <option value="true">Active</option>
+                      <option value="false">Inactive</option>
                     </select>
                   </div>
                 </div>
@@ -458,13 +492,13 @@ const VisitPurposeMaster = () => {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
                     <select
-                      name="status"
-                      value={editPurpose.status}
+                      name="isActive"
+                      value={editPurpose.isActive.toString()}
                       onChange={handleEditInputChange}
                       className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                     >
-                      <option value="active">Active</option>
-                      <option value="inactive">Inactive</option>
+                      <option value="true">Active</option>
+                      <option value="false">Inactive</option>
                     </select>
                   </div>
                 </div>

@@ -1,6 +1,6 @@
 // src/modules/super-admin/pages/Master/OrganizationMaster.tsx
 
-import React, { useState } from "react";
+import React, { useState,useEffect } from "react";
 import {
   Search,
   ChevronLeft,
@@ -19,9 +19,9 @@ import {
   Briefcase,
 } from "lucide-react";
 
-import {createOrganization } from '../../../services/organization.service';
+import { createOrganisation, getOrganisations } from '../../../services/organization.service';
 
-interface Organization {
+interface Organisation {
   id: number;
   organisationName: string;
   companyId: number;
@@ -38,9 +38,9 @@ const sampleCompanies = [
   { id: 3, name: "ITI Limited" },
 ];
 
-const OrganizationMaster = () => {
+const OrganisationMaster = () => {
 
-  const [organizations, setOrganizations] = useState<Organization[]>([
+  const [organisations, setOrganisations] = useState<Organisation[]>([
     {
       id: 1,
       organisationName: "Exam Wing MP Board",
@@ -81,7 +81,7 @@ const OrganizationMaster = () => {
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
 
-  const [newOrganization, setNewOrganization] = useState({
+  const [newOrganisation, setNewOrganisation] = useState({
     organisationName: "",
     companyId: 0,
     address: "",
@@ -90,7 +90,7 @@ const OrganizationMaster = () => {
     updatedBy: "Super Admin"
   });
 
-  const [editOrganization, setEditOrganization] = useState({
+  const [editOrganisation, setEditOrganisation] = useState({
     id: 0,
     organisationName: "",
     companyId: 0,
@@ -102,12 +102,38 @@ const OrganizationMaster = () => {
 
   const itemsPerPage = 10;
 
+const fetchOrganisations = async () => {
+  try {
+    const data = await getOrganisations();
+
+    const formatted = data.map((org: any) => ({
+      id: org.id,
+      organisationName: org.organisationName,
+      companyId: org.companyId,
+      address: org.address,
+      city: org.city,
+      state: org.state,
+      updatedBy: org.updatedBy,
+      updatedDate: org.updatedDate
+    }));
+
+    setOrganisations(formatted);
+
+  } catch (error) {
+    console.error("Error fetching organisations:", error);
+  }
+};
+
+useEffect(() => {
+  fetchOrganisations();
+}, []);
+
   const getCompanyName = (companyId: number) => {
     const company = sampleCompanies.find(c => c.id === companyId);
     return company ? company.name : "N/A";
   };
 
-  const filteredOrganizations = organizations.filter((org) =>
+  const filteredOrganisations = organisations.filter((org) =>
     org.organisationName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     org.city.toLowerCase().includes(searchTerm.toLowerCase()) ||
     getCompanyName(org.companyId).toLowerCase().includes(searchTerm.toLowerCase())
@@ -116,49 +142,49 @@ const OrganizationMaster = () => {
   const indexOfLast = currentPage * itemsPerPage;
   const indexOfFirst = indexOfLast - itemsPerPage;
 
-  const currentItems = filteredOrganizations.slice(indexOfFirst, indexOfLast);
+  const currentItems = filteredOrganisations.slice(indexOfFirst, indexOfLast);
 
-  const totalPages = Math.ceil(filteredOrganizations.length / itemsPerPage);
+  const totalPages = Math.ceil(filteredOrganisations.length / itemsPerPage);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setNewOrganization({ ...newOrganization, [name]: value });
+    setNewOrganisation({ ...newOrganisation, [name]: value });
   };
 
   const handleEditInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setEditOrganization({ ...editOrganization, [name]: value });
+    setEditOrganisation({ ...editOrganisation, [name]: value });
   };
 
-  const handleInsertOrganization = async () => {
+  const handleInsertOrganisation = async () => {
     const payload = {
       id: 0,
-      organisationName: newOrganization.organisationName,
-      companyId: Number(newOrganization.companyId),
-      address: newOrganization.address,
-      city: newOrganization.city,
-      state: newOrganization.state,
-      updatedBy: newOrganization.updatedBy,
+      organisationName: newOrganisation.organisationName,
+      companyId: Number(newOrganisation.companyId),
+      address: newOrganisation.address,
+      city: newOrganisation.city,
+      state: newOrganisation.state,
+      updatedBy: newOrganisation.updatedBy,
       updatedDate: new Date().toISOString()
     };
 
     try {
-      const response = await createOrganization(payload);
-
-      const newOrg: Organization = {
+      const response = await createOrganisation(payload);
+      
+      const newOrg: Organisation = {
         ...payload,
         id: response?.id || Date.now(),
         updatedDate: new Date().toISOString().split('T')[0]
       };
 
-      setOrganizations([...organizations, newOrg]);
+      setOrganisations([...organisations, newOrg]);
       setShowInsertModal(false);
-      setSuccessMessage("Organization added successfully!");
+      setSuccessMessage("Organisation added successfully!");
       setShowSuccessMessage(true);
 
       setTimeout(() => setShowSuccessMessage(false), 3000);
 
-      setNewOrganization({
+      setNewOrganisation({
         organisationName: "",
         companyId: 0,
         address: "",
@@ -169,41 +195,41 @@ const OrganizationMaster = () => {
 
     } catch (error) {
       console.error(error);
-      alert("Failed to create organization");
+      alert("Failed to create organisation");
     }
   };
 
-  const handleUpdateOrganization = () => {
-    setOrganizations(organizations.map(org => 
-      org.id === editOrganization.id 
+  const handleUpdateOrganisation = () => {
+    setOrganisations(organisations.map(org => 
+      org.id === editOrganisation.id 
         ? {
             ...org,
-            organisationName: editOrganization.organisationName,
-            companyId: editOrganization.companyId,
-            address: editOrganization.address,
-            city: editOrganization.city,
-            state: editOrganization.state,
-            updatedBy: editOrganization.updatedBy,
+            organisationName: editOrganisation.organisationName,
+            companyId: editOrganisation.companyId,
+            address: editOrganisation.address,
+            city: editOrganisation.city,
+            state: editOrganisation.state,
+            updatedBy: editOrganisation.updatedBy,
             updatedDate: new Date().toISOString().split('T')[0]
           }
         : org
     ));
     setShowEditModal(false);
-    setSuccessMessage("Organization updated successfully!");
+    setSuccessMessage("Organisation updated successfully!");
     setShowSuccessMessage(true);
     setTimeout(() => setShowSuccessMessage(false), 3000);
   };
 
-  const handleDeleteOrganization = (id: number) => {
-    setOrganizations(organizations.filter(o => o.id !== id));
+  const handleDeleteOrganisation = (id: number) => {
+    setOrganisations(organisations.filter(o => o.id !== id));
     setShowDeleteConfirm(null);
-    setSuccessMessage("Organization deleted successfully!");
+    setSuccessMessage("Organisation deleted successfully!");
     setShowSuccessMessage(true);
     setTimeout(() => setShowSuccessMessage(false), 3000);
   };
 
-  const openEditModal = (org: Organization) => {
-    setEditOrganization({
+  const openEditModal = (org: Organisation) => {
+    setEditOrganisation({
       id: org.id,
       organisationName: org.organisationName,
       companyId: org.companyId,
@@ -216,8 +242,8 @@ const OrganizationMaster = () => {
   };
 
   const exportToCSV = () => {
-    const headers = ['ID', 'Organization Name', 'Company ID', 'Address', 'City', 'State', 'Updated By', 'Updated Date'];
-    const csvData = filteredOrganizations.map((org) => [
+    const headers = ['ID', 'Organisation Name', 'Company ID', 'Address', 'City', 'State', 'Updated By', 'Updated Date'];
+    const csvData = filteredOrganisations.map((org) => [
       org.id,
       org.organisationName,
       org.companyId,
@@ -233,7 +259,7 @@ const OrganizationMaster = () => {
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `organizations_${new Date().toISOString().split('T')[0]}.csv`;
+    a.download = `organisations_${new Date().toISOString().split('T')[0]}.csv`;
     a.click();
     window.URL.revokeObjectURL(url);
     
@@ -243,11 +269,11 @@ const OrganizationMaster = () => {
   };
 
   // Calculate statistics
-  const totalOrganizations = organizations.length;
+  const totalOrganisations = organisations.length;
   const totalCompanies = sampleCompanies.length;
-  const lastUpdated = organizations.reduce((latest, org) => {
+  const lastUpdated = organisations.reduce((latest, org) => {
     return org.updatedDate > latest ? org.updatedDate : latest;
-  }, organizations[0]?.updatedDate || "");
+  }, organisations[0]?.updatedDate || "");
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
@@ -257,9 +283,9 @@ const OrganizationMaster = () => {
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-2">
             <Building2 className="text-purple-600" size={28} />
-            <h1 className="text-3xl font-bold text-gray-900">Organization Master</h1>
+            <h1 className="text-3xl font-bold text-gray-900">Organisation Master</h1>
           </div>
-          <p className="text-gray-600">Manage and organize all organizational entities in the system</p>
+          <p className="text-gray-600">Manage and organise all organisational entities in the system</p>
         </div>
 
         {/* Success Message */}
@@ -283,9 +309,9 @@ const OrganizationMaster = () => {
                 <TrendingUp className="text-green-500 opacity-0 group-hover:opacity-100 transition-opacity" size={12} />
               </div>
               <div>
-                <p className="text-[10px] font-medium text-gray-500 uppercase tracking-wider mb-0.5">Total Organizations</p>
-                <p className="text-xl font-bold text-gray-900">{totalOrganizations}</p>
-                <p className="text-[10px] text-gray-400 mt-0.5">+{totalOrganizations} total entries</p>
+                <p className="text-[10px] font-medium text-gray-500 uppercase tracking-wider mb-0.5">Total Organisations</p>
+                <p className="text-xl font-bold text-gray-900">{totalOrganisations}</p>
+                <p className="text-[10px] text-gray-400 mt-0.5">+{totalOrganisations} total entries</p>
               </div>
             </div>
             <div className="h-0.5 bg-gradient-to-r from-purple-500 to-purple-600 transform scale-x-0 group-hover:scale-x-100 transition-transform"></div>
@@ -300,8 +326,8 @@ const OrganizationMaster = () => {
                 <TrendingUp className="text-green-500 opacity-0 group-hover:opacity-100 transition-opacity" size={12} />
               </div>
               <div>
-                <p className="text-[10px] font-medium text-gray-500 uppercase tracking-wider mb-0.5">Active Organizations</p>
-                <p className="text-xl font-bold text-gray-900">{organizations.length}</p>
+                <p className="text-[10px] font-medium text-gray-500 uppercase tracking-wider mb-0.5">Active Organisations</p>
+                <p className="text-xl font-bold text-gray-900">{organisations.length}</p>
                 <p className="text-[10px] text-green-600 mt-0.5">All active</p>
               </div>
             </div>
@@ -348,7 +374,7 @@ const OrganizationMaster = () => {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
               <input
                 type="text"
-                placeholder="Search by organization name, company ID, or city..."
+                placeholder="Search by organisation name, company ID, or city..."
                 className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -366,7 +392,7 @@ const OrganizationMaster = () => {
                 onClick={() => setShowInsertModal(true)}
                 className="px-4 py-2 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-lg flex items-center gap-2 hover:shadow-lg transition-all hover:scale-105"
               >
-                <Plus size={18} /> Add Organization
+                <Plus size={18} /> Add Organisation
               </button>
             </div>
           </div>
@@ -379,7 +405,7 @@ const OrganizationMaster = () => {
               <thead className="bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200">
                 <tr>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">ID</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Organization Name</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Organisation Name</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Company ID</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Address</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">City</th>
@@ -422,14 +448,14 @@ const OrganizationMaster = () => {
                           <button
                             onClick={() => openEditModal(org)}
                             className="p-1.5 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-                            title="Edit Organization"
+                            title="Edit Organisation"
                           >
                             <Edit size={18} />
                           </button>
                           <button
                             onClick={() => setShowDeleteConfirm(org.id)}
                             className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                            title="Delete Organization"
+                            title="Delete Organisation"
                           >
                             <Trash2 size={18} />
                           </button>
@@ -442,12 +468,12 @@ const OrganizationMaster = () => {
                     <td colSpan={9} className="px-4 py-12 text-center">
                       <div className="flex flex-col items-center gap-2">
                         <Building2 size={48} className="text-gray-300" />
-                        <p className="text-gray-500">No organizations found</p>
+                        <p className="text-gray-500">No organisations found</p>
                         <button
                           onClick={() => setShowInsertModal(true)}
                           className="mt-2 text-purple-600 hover:text-purple-700 font-medium"
                         >
-                          Add your first organization
+                          Add your first organisation
                         </button>
                       </div>
                     </td>
@@ -459,10 +485,10 @@ const OrganizationMaster = () => {
         </div>
         
         {/* Pagination */}
-        {filteredOrganizations.length > 0 && (
+        {filteredOrganisations.length > 0 && (
           <div className="flex justify-between items-center mt-6">
             <div className="text-sm text-gray-600">
-              Showing {indexOfFirst + 1} to {Math.min(indexOfLast, filteredOrganizations.length)} of {filteredOrganizations.length} entries
+              Showing {indexOfFirst + 1} to {Math.min(indexOfLast, filteredOrganisations.length)} of {filteredOrganisations.length} entries
             </div>
             <div className="flex gap-2 items-center">
               <button
@@ -518,7 +544,7 @@ const OrganizationMaster = () => {
               <div className="sticky top-0 bg-white border-b border-gray-200 p-6 flex justify-between items-center">
                 <div className="flex items-center gap-2">
                   <Plus size={24} className="text-purple-600" />
-                  <h2 className="text-xl font-bold text-gray-900">Add New Organization</h2>
+                  <h2 className="text-xl font-bold text-gray-900">Add New Organisation</h2>
                 </div>
                 <button
                   onClick={() => setShowInsertModal(false)}
@@ -531,11 +557,11 @@ const OrganizationMaster = () => {
               <div className="p-6">
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Organization Name *</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Organisation Name *</label>
                     <input
                       name="organisationName"
-                      placeholder="Enter organization name"
-                      value={newOrganization.organisationName}
+                      placeholder="Enter organisation name"
+                      value={newOrganisation.organisationName}
                       onChange={handleInputChange}
                       className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                     />
@@ -545,7 +571,7 @@ const OrganizationMaster = () => {
                     <label className="block text-sm font-medium text-gray-700 mb-1">Company *</label>
                     <select
                       name="companyId"
-                      value={newOrganization.companyId}
+                      value={newOrganisation.companyId}
                       onChange={handleInputChange}
                       className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                     >
@@ -561,7 +587,7 @@ const OrganizationMaster = () => {
                     <textarea
                       name="address"
                       placeholder="Enter full address"
-                      value={newOrganization.address}
+                      value={newOrganisation.address}
                       onChange={handleInputChange}
                       rows={3}
                       className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
@@ -574,7 +600,7 @@ const OrganizationMaster = () => {
                       <input
                         name="city"
                         placeholder="Enter city"
-                        value={newOrganization.city}
+                        value={newOrganisation.city}
                         onChange={handleInputChange}
                         className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                       />
@@ -585,7 +611,7 @@ const OrganizationMaster = () => {
                       <input
                         name="state"
                         placeholder="Enter state"
-                        value={newOrganization.state}
+                        value={newOrganisation.state}
                         onChange={handleInputChange}
                         className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                       />
@@ -602,10 +628,10 @@ const OrganizationMaster = () => {
                   Cancel
                 </button>
                 <button
-                  onClick={handleInsertOrganization}
+                  onClick={handleInsertOrganisation}
                   className="px-4 py-2 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-lg hover:shadow-lg transition-all"
                 >
-                  Save Organization
+                  Save Organisation
                 </button>
               </div>
             </div>
@@ -619,7 +645,7 @@ const OrganizationMaster = () => {
               <div className="sticky top-0 bg-white border-b border-gray-200 p-6 flex justify-between items-center">
                 <div className="flex items-center gap-2">
                   <Edit size={24} className="text-green-600" />
-                  <h2 className="text-xl font-bold text-gray-900">Edit Organization</h2>
+                  <h2 className="text-xl font-bold text-gray-900">Edit Organisation</h2>
                 </div>
                 <button
                   onClick={() => setShowEditModal(false)}
@@ -632,11 +658,11 @@ const OrganizationMaster = () => {
               <div className="p-6">
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Organization Name *</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Organisation Name *</label>
                     <input
                       name="organisationName"
-                      placeholder="Enter organization name"
-                      value={editOrganization.organisationName}
+                      placeholder="Enter organisation name"
+                      value={editOrganisation.organisationName}
                       onChange={handleEditInputChange}
                       className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                     />
@@ -646,7 +672,7 @@ const OrganizationMaster = () => {
                     <label className="block text-sm font-medium text-gray-700 mb-1">Company *</label>
                     <select
                       name="companyId"
-                      value={editOrganization.companyId}
+                      value={editOrganisation.companyId}
                       onChange={handleEditInputChange}
                       className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                     >
@@ -662,7 +688,7 @@ const OrganizationMaster = () => {
                     <textarea
                       name="address"
                       placeholder="Enter full address"
-                      value={editOrganization.address}
+                      value={editOrganisation.address}
                       onChange={handleEditInputChange}
                       rows={3}
                       className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
@@ -675,7 +701,7 @@ const OrganizationMaster = () => {
                       <input
                         name="city"
                         placeholder="Enter city"
-                        value={editOrganization.city}
+                        value={editOrganisation.city}
                         onChange={handleEditInputChange}
                         className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                       />
@@ -686,7 +712,7 @@ const OrganizationMaster = () => {
                       <input
                         name="state"
                         placeholder="Enter state"
-                        value={editOrganization.state}
+                        value={editOrganisation.state}
                         onChange={handleEditInputChange}
                         className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                       />
@@ -698,7 +724,7 @@ const OrganizationMaster = () => {
                     <input
                       name="updatedBy"
                       placeholder="Enter updater name"
-                      value={editOrganization.updatedBy}
+                      value={editOrganisation.updatedBy}
                       onChange={handleEditInputChange}
                       className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                     />
@@ -714,10 +740,10 @@ const OrganizationMaster = () => {
                   Cancel
                 </button>
                 <button
-                  onClick={handleUpdateOrganization}
+                  onClick={handleUpdateOrganisation}
                   className="px-4 py-2 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg hover:shadow-lg transition-all"
                 >
-                  Update Organization
+                  Update Organisation
                 </button>
               </div>
             </div>
@@ -736,7 +762,7 @@ const OrganizationMaster = () => {
                 </div>
                 <h3 className="text-lg font-bold text-gray-900 text-center mb-2">Confirm Delete</h3>
                 <p className="text-gray-600 text-center mb-6">
-                  Are you sure you want to delete this organization? This action cannot be undone.
+                  Are you sure you want to delete this organisation? This action cannot be undone.
                 </p>
                 <div className="flex gap-3 justify-center">
                   <button
@@ -746,7 +772,7 @@ const OrganizationMaster = () => {
                     Cancel
                   </button>
                   <button
-                    onClick={() => handleDeleteOrganization(showDeleteConfirm)}
+                    onClick={() => handleDeleteOrganisation(showDeleteConfirm)}
                     className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
                   >
                     Delete
@@ -794,4 +820,4 @@ const OrganizationMaster = () => {
   );
 };
 
-export default OrganizationMaster;
+export default OrganisationMaster;
