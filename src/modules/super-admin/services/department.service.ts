@@ -15,6 +15,12 @@ export interface Department {
   createdAt: string;
   updatedAt: string;
 }
+
+export const getDepartments = async () => {
+  const response = await axios.get(API_BASE_URL);
+  return response.data;
+};
+
 export const createDepartment = async (
   data: DepartmentPayload
 ): Promise<Department> => {

@@ -86,6 +86,7 @@ const ContactPersonMaster = () => {
   const [editMode, setEditMode] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
   const [errorMessage, setErrorMessage] = useState("");
+
   const [companies, setCompanies] = useState<CompanyApiOption[]>([]);
   const [organizations, setOrganizations] = useState<OrganisationApiOption[]>([]);
   const [departments, setDepartments] = useState<DepartmentApiOption[]>([]);
@@ -152,14 +153,13 @@ const ContactPersonMaster = () => {
   const fetchLookupData = async () => {
     setLookupLoading(true);
     try {
-      const [companyData, organisationData, departmentData] = await Promise.all([
+      const [companyData, departmentData] = await Promise.all([
         contactService.getCompanies(),
-        contactService.getOrganisations(),
         contactService.getDepartments(),
+       
       ]);
 
       setCompanies((companyData ?? []).filter((company: CompanyApiOption) => company.isActive !== false));
-      setOrganizations((organisationData ?? []).filter((organisation: OrganisationApiOption) => organisation.isActive !== false));
       setDepartments((departmentData ?? []).filter((department: DepartmentApiOption) => department.isActive !== false));
     } catch (err) {
       console.error("Error fetching contact master dependencies", err);
@@ -388,16 +388,17 @@ const ContactPersonMaster = () => {
           {/* Action Buttons */}
           <div className="flex gap-2">
             <button
-              onClick={() => {
+             onClick={() => {
                 resetForm();
+               fetchLookupData();   // company dropdown fresh load
                 setShowInsertModal(true);
-              }}
+                }}
               className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-all flex items-center justify-center gap-2 shadow-sm"
-            >
-              <Plus size={18} />
-              <span className="hidden sm:inline">Add New Contact</span>
-              <span className="sm:hidden">Add</span>
-            </button>
+>
+           <Plus size={18} />
+           <span className="hidden sm:inline">Add New Contact</span>
+            <span className="sm:hidden">Add</span>
+           </button>
             <button
               onClick={() => setShowFilters(!showFilters)}
               className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center justify-center gap-2"

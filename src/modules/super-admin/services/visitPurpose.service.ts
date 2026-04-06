@@ -15,3 +15,8 @@ export const createVisitPurpose = async (data: VisitPurposePayload) => {
   const response = await axios.post(API_BASE_URL, data);
   return response.data;
 };
+
+export const getVisitPurposes = async () => {
+  const res = await axios.get(API_BASE_URL);
+  return res.data;
+};

@@ -36,9 +36,9 @@ export type CompanyOption = {
   isActive?: boolean;
 };
 
-export type OrganisationOption = {
+export type organisationOption = {
   id: number;
-  organisationName: string;
+  organizationName: string;
   companyId: number;
   isActive?: boolean;
 };
@@ -46,7 +46,7 @@ export type OrganisationOption = {
 export type DepartmentOption = {
   id: number;
   departmentName: string;
-  organisationId: number;
+  organizationId: number;
   isActive?: boolean;
 };
 
@@ -68,8 +68,8 @@ export const contactService = {
     return res.data ?? [];
   },
 
-  getOrganisations: async () => {
-    const res = await API.get<OrganisationOption[]>("/Organisation");
+  getOrganizations: async () => {
+    const res = await API.get<organisationOption[]>("/Organisation");
     return res.data ?? [];
   },
 
