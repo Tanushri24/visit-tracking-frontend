@@ -34,24 +34,8 @@ const EmployeeRegistration: React.FC = () => {
         role: ''
     });
 
-    const [departments] = useState<Department[]>([
-        { id: 123, name: 'HR' },
-        { id: 124, name: 'Finance' },
-        { id: 125, name: 'IT' },
-        { id: 126, name: 'Sales' },
-        { id: 127, name: 'Marketing' },
-        { id: 128, name: 'Operations' },
-        { id: 130, name: 'TECHNICAL' },
-        { id: 133, name: 'mangement' },
-        { id: 141, name: 'hr' },
-        { id: 143, name: 'IIT departmenet' },
-        { id: 146, name: 'Agnigate' },
-        { id: 147, name: 'Examination Department' },
-        { id: 148, name: 'Examination Department 2' },
-        { id: 153, name: 'Board Examination' },
-        { id: 154, name: 'IIT' },
-        { id: 135, name: 'test department name' }
-    ]);
+    // Department API data
+    const [departments, setDepartments] = useState<Department[]>([]);
 
     const [designations] = useState<Designation[]>([
         { id: 1, name: 'Designation 1' },
@@ -63,14 +47,17 @@ const EmployeeRegistration: React.FC = () => {
     ]);
 
     const [locations] = useState<Location[]>([
-        { id: 2, name: 'Location 2', city: '' },
-        { id: 3, name: 'Location 3', city: '' },
-        { id: 4, name: 'Location 4', city: '' },
-        { id: 5, name: 'Location 5', city: '' },
-        { id: 7, name: 'Location 7', city: '' }
+        { id: 2, name: 'Bhopal', city: '' },
+        { id: 3, name: 'Indore', city: '' },
+        { id: 4, name: 'Jabalpur', city: '' },
+        { id: 5, name: 'Sagar', city: '' },
+        { id: 7, name: 'Sehore', city: '' }
     ]);
 
-    const [userRoles] = useState<UserRole[]>([
+    // Get current user role from localStorage
+    const currentUserRole = localStorage.getItem('role');
+
+    const allUserRoles: UserRole[] = [
         { id: 1, name: 'Super Admin' },
         { id: 2, name: 'Admin' },
         { id: 3, name: 'Master Management' },
@@ -78,13 +65,33 @@ const EmployeeRegistration: React.FC = () => {
         { id: 5, name: 'Team Lead' },
         { id: 6, name: 'Employee' },
         { id: 7, name: 'HR' }
-    ]);
+    ];
+
+    // Filter out Super Admin and Admin roles if current user is not Super Admin
+    const [userRoles] = useState<UserRole[]>(
+        currentUserRole === 'super-admin' 
+            ? allUserRoles 
+            : allUserRoles.filter(role => role.name !== 'Super Admin' && role.name !== 'Admin')
+    );
 
     const [errors, setErrors] = useState<RegistrationErrors>({});
     const [isLoading, setIsLoading] = useState(false);
     const [touched, setTouched] = useState<Set<string>>(new Set());
     const [registrationSuccess, setRegistrationSuccess] = useState(false);
     const [apiError, setApiError] = useState<string | null>(null);
+
+    // Fetch departments from API
+    useEffect(() => {
+        const fetchDepartments = async () => {
+            try {
+                const depts = await registrationApi.getDepartments();
+                setDepartments(depts);
+            } catch (error) {
+                console.error('Error fetching departments:', error);
+            }
+        };
+        fetchDepartments();
+    }, []);
 
     useEffect(() => {
         if (touched.size > 0) {
@@ -153,12 +160,22 @@ const EmployeeRegistration: React.FC = () => {
             console.log('Sending data to API:', payload);
 
             const response = await registrationApi.createEmployee(payload);
+// In your handleSubmit function, replace the success part:
 
-            if (response.success) {
-                setRegistrationSuccess(true);
-                setTimeout(() => {
-                    navigate('/super-admin/employees');
-                }, 3000);
+if (response.success) {
+    setRegistrationSuccess(true);
+    
+    // Get user role from localStorage
+    const userRole = localStorage.getItem('role');
+    
+    setTimeout(() => {
+        if (userRole === 'super-admin') {
+            navigate('/super-admin/employees');
+        } else {
+            // Default to admin (for admin, hr, manager, etc.)
+            navigate('/admin/employees');
+        }
+    }, 3000);
             } else {
                 setApiError(response.message || 'Registration failed. Please try again.');
                 window.scrollTo({ top: 0, behavior: 'smooth' });

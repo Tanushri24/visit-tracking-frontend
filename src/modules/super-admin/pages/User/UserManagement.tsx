@@ -8,7 +8,9 @@ import {
   Filter as FilterIcon,
   Search,
   Plus,
-  Loader
+  Loader,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import StatsCard from './Components/StatsCards';
 import FilterMenu from './Components/FilterMenu';
@@ -17,7 +19,7 @@ import UserTable from './Components/UserTable';
 import UserCard from './Components/UserCard';
 import UserFormModal from './Components/UserFormModal';
 import DeleteConfirmModal from './Components/DeleteConfirmModal';
-import { fetchUsers, fetchUserById, createUser, updateUser, deleteUser, type User, type ApiUser } from '../../services/Userlist';
+import { fetchUsers, fetchUserById, createUser, updateUser, deleteUser, type User, type ApiUser, initializeMappings } from '../../services/Userlist';
 import { 
   fetchDepartments, 
   fetchDesignations, 
@@ -41,7 +43,12 @@ const UserManagement: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [loadingDropdowns, setLoadingDropdowns] = useState(true);
   const [error, setError] = useState<string | null>(null);
-   const navigate = useNavigate();
+  const navigate = useNavigate();
+  
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  
   // Dropdown data from API
   const [designations, setDesignations] = useState<Array<{ id: number; name: string }>>([]);
   const [departments, setDepartments] = useState<Array<{ id: number; name: string }>>([]);
@@ -78,7 +85,6 @@ const UserManagement: React.FC = () => {
     setLoading(true);
     setLoadingDropdowns(true);
     try {
-      // Load users and dropdowns in parallel
       const [usersData, depts, desigs, mgrs, locs, roles] = await Promise.all([
         fetchUsers(),
         fetchDepartments(),
@@ -88,7 +94,10 @@ const UserManagement: React.FC = () => {
         fetchUserRoles()
       ]);
       
-      setUsers(usersData);
+      initializeMappings(desigs, depts, mgrs, locs, roles);
+      const transformedUsers = await fetchUsers();
+      
+      setUsers(transformedUsers);
       setDepartments(depts);
       setDesignations(desigs);
       setManagers(mgrs);
@@ -113,25 +122,68 @@ const UserManagement: React.FC = () => {
     }
   };
 
+  // Filter users
+  const filteredUsers = users.filter(user => {
+    const matchesSearch = searchQuery === '' || 
+      user.fullName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.department?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.designation?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.employeeCode?.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    const matchesRole = selectedRole === 'all' || user.role === selectedRole;
+    const matchesStatus = selectedStatus === 'all' || 
+                         (selectedStatus === 'active' && user.isActive) ||
+                         (selectedStatus === 'inactive' && !user.isActive);
+    const matchesDepartment = selectedDepartment === 'all' || user.department === selectedDepartment;
+    
+    return matchesSearch && matchesRole && matchesStatus && matchesDepartment;
+  });
+
+  // Pagination logic
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = filteredUsers.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
+
+  // Reset to first page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, selectedRole, selectedStatus, selectedDepartment]);
+
+  const paginate = (pageNumber: number) => {
+    if (pageNumber >= 1 && pageNumber <= totalPages) {
+      setCurrentPage(pageNumber);
+    }
+  };
+
+  const handleItemsPerPageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setItemsPerPage(Number(e.target.value));
+    setCurrentPage(1);
+  };
+
   const totalUsers = users.length;
   const activeUsers = users.filter(user => user.isActive).length;
   const inactiveUsers = users.filter(user => !user.isActive).length;
   const activePercentage = totalUsers > 0 ? ((activeUsers / totalUsers) * 100).toFixed(1) : 0;
   const uniqueDepartments = new Set(users.map(user => user.department)).size;
 
+  // Dynamic department options from actual data
   const departmentOptions = [
     { value: 'all', label: 'All Departments' },
-    ...Array.from(new Set(users.map(user => user.department))).map(dept => ({
+    ...Array.from(new Set(users.map(user => user.department).filter(Boolean))).map(dept => ({
       value: dept,
       label: dept
     }))
   ];
 
+  // Dynamic role options from actual data
   const roleOptions = [
     { value: 'all', label: 'All Roles' },
-    { value: 'Admin', label: 'Admin' },
-    { value: 'Manager', label: 'Manager' },
-    { value: 'User', label: 'User' }
+    ...Array.from(new Set(users.map(user => user.role).filter(Boolean))).map(role => ({
+      value: role,
+      label: role
+    }))
   ];
 
   const statusOptions = [
@@ -315,21 +367,6 @@ const UserManagement: React.FC = () => {
     setShowConfirmPassword(false);
   };
 
-  const filteredUsers = users.filter(user => {
-    const matchesSearch = searchQuery === '' || 
-      user.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.department.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.designation.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.employeeCode.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesRole = selectedRole === 'all' || user.role === selectedRole;
-    const matchesStatus = selectedStatus === 'all' || 
-                         (selectedStatus === 'active' && user.isActive) ||
-                         (selectedStatus === 'inactive' && !user.isActive);
-    const matchesDepartment = selectedDepartment === 'all' || user.department === selectedDepartment;
-    return matchesSearch && matchesRole && matchesStatus && matchesDepartment;
-  });
-
   const exportToCSV = () => {
     const headers = [
       'User Code', 'Full Name', 'Email', 'Mobile', 'Designation',
@@ -359,6 +396,36 @@ const UserManagement: React.FC = () => {
     URL.revokeObjectURL(url);
   };
 
+  // Generate page numbers for pagination
+  const getPageNumbers = () => {
+    const pageNumbers = [];
+    const maxVisiblePages = 5;
+    
+    if (totalPages <= maxVisiblePages) {
+      for (let i = 1; i <= totalPages; i++) {
+        pageNumbers.push(i);
+      }
+    } else {
+      if (currentPage <= 3) {
+        for (let i = 1; i <= 4; i++) pageNumbers.push(i);
+        pageNumbers.push('...');
+        pageNumbers.push(totalPages);
+      } else if (currentPage >= totalPages - 2) {
+        pageNumbers.push(1);
+        pageNumbers.push('...');
+        for (let i = totalPages - 3; i <= totalPages; i++) pageNumbers.push(i);
+      } else {
+        pageNumbers.push(1);
+        pageNumbers.push('...');
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) pageNumbers.push(i);
+        pageNumbers.push('...');
+        pageNumbers.push(totalPages);
+      }
+    }
+    
+    return pageNumbers;
+  };
+
   const STATS_CARDS = [
     {
       label: "Total Users",
@@ -367,7 +434,7 @@ const UserManagement: React.FC = () => {
       iconBg: "bg-blue-100",
       iconColor: "text-blue-600",
       borderColor: "border-l-blue-500",
-      change: "+12%",
+      change: `${filteredUsers.length} shown`,
       changeType: "positive" as const
     },
     {
@@ -446,7 +513,7 @@ const UserManagement: React.FC = () => {
           </div>
         </div>
         
-         <button
+        <button
           onClick={() => {
             navigate('/super-admin/employee-registration');
           }}
@@ -533,7 +600,7 @@ const UserManagement: React.FC = () => {
       {/* Desktop Table */}
       <div className="hidden md:block bg-white rounded-lg border border-gray-200 shadow-md overflow-hidden">
         <UserTable
-          users={filteredUsers}
+          users={currentItems}
           onEdit={handleEditUser}
           onDelete={(id) => setShowDeleteConfirm(id)}
         />
@@ -541,7 +608,7 @@ const UserManagement: React.FC = () => {
 
       {/* Mobile Card View */}
       <div className="md:hidden space-y-2.5">
-        {filteredUsers.map((user) => (
+        {currentItems.map((user) => (
           <UserCard
             key={user.id}
             user={user}
@@ -549,7 +616,7 @@ const UserManagement: React.FC = () => {
             onDelete={(id) => setShowDeleteConfirm(id)}
           />
         ))}
-        {filteredUsers.length === 0 && (
+        {currentItems.length === 0 && (
           <div className="bg-white rounded-lg p-6 text-center border border-gray-200">
             <Users className="w-10 h-10 text-gray-300 mx-auto mb-2" />
             <p className="text-gray-400 text-sm font-medium">No users found</p>
@@ -558,7 +625,73 @@ const UserManagement: React.FC = () => {
         )}
       </div>
 
-      {/* Add/Edit User Modal with API dropdowns */}
+      {/* Pagination */}
+      {filteredUsers.length > 0 && (
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-gray-200">
+          <div className="flex items-center gap-2 text-xs text-gray-500">
+            <span>Show</span>
+            <select
+              value={itemsPerPage}
+              onChange={handleItemsPerPageChange}
+              className="px-2 py-1 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value={5}>5</option>
+              <option value={10}>10</option>
+              <option value={20}>20</option>
+              <option value={50}>50</option>
+            </select>
+            <span>entries</span>
+            <span className="ml-4">
+              Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, filteredUsers.length)} of {filteredUsers.length} users
+            </span>
+          </div>
+
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => paginate(currentPage - 1)}
+              disabled={currentPage === 1}
+              className={`p-2 rounded-lg border transition-colors ${
+                currentPage === 1
+                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  : 'bg-white text-gray-700 hover:bg-gray-50 border-gray-200'
+              }`}
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            
+            {getPageNumbers().map((page, index) => (
+              <button
+                key={index}
+                onClick={() => typeof page === 'number' && paginate(page)}
+                className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
+                  currentPage === page
+                    ? 'bg-blue-600 text-white'
+                    : page === '...'
+                    ? 'bg-transparent text-gray-500 cursor-default'
+                    : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
+                }`}
+                disabled={page === '...'}
+              >
+                {page}
+              </button>
+            ))}
+            
+            <button
+              onClick={() => paginate(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className={`p-2 rounded-lg border transition-colors ${
+                currentPage === totalPages
+                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  : 'bg-white text-gray-700 hover:bg-gray-50 border-gray-200'
+              }`}
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Add/Edit User Modal */}
       <UserFormModal
         isOpen={showAddModal}
         editingUser={editingUser}
@@ -588,20 +721,6 @@ const UserManagement: React.FC = () => {
         onConfirm={() => handleDeleteUser(showDeleteConfirm!)}
         onCancel={() => setShowDeleteConfirm(null)}
       />
-
-      {/* Footer Stats */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-gray-400 pt-2">
-        <div>Showing {filteredUsers.length} of {users.length} users</div>
-        <div className="flex items-center gap-1.5">
-          <button className="px-2.5 py-1 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-xs">
-            Previous
-          </button>
-          <span className="px-2.5 py-1 bg-blue-50 text-blue-600 rounded-lg text-xs font-medium">1</span>
-          <button className="px-2.5 py-1 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-xs">
-            Next
-          </button>
-        </div>
-      </div>
     </div>
   );
 };
