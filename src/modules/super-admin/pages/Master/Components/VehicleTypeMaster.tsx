@@ -20,7 +20,6 @@ import {
 import { 
   getVehicleTypes, 
   createVehicleType, 
-  deleteVehicleType,
   type VehicleTypeResponse 
 } from '../../../services/VehicleType.service';
 
@@ -47,8 +46,8 @@ const VehicleTypeMaster = () => {
   const [selectedVehicle, setSelectedVehicle] = useState<VehicleType | null>(null);
   const [showViewModal, setShowViewModal] = useState(false);
   const [showInsertModal, setShowInsertModal] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [vehicleToDelete, setVehicleToDelete] = useState<VehicleType | null>(null);
+  // const [showDeleteModal, setShowDeleteModal] = useState(false);
+  // const [vehicleToDelete, setVehicleToDelete] = useState<VehicleType | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   const [newVehicle, setNewVehicle] = useState({
@@ -123,36 +122,36 @@ const VehicleTypeMaster = () => {
     setShowViewModal(true); 
   };
   
-  // Delete vehicle
-  const handleDeleteVehicle = async () => {
-    if (vehicleToDelete) {
-      try {
-        setLoading(true);
-        const response = await deleteVehicleType(vehicleToDelete.id);
+  // // Delete vehicle
+  // const handleDeleteVehicle = async () => {
+  //   if (vehicleToDelete) {
+  //     try {
+  //       setLoading(true);
+  //       const response = await deleteVehicleType(vehicleToDelete.id);
         
-        if (response.success) {
-          // Remove from local state
-          setVehicles(vehicles.filter(v => v.id !== vehicleToDelete.id));
-          setShowDeleteModal(false);
-          setVehicleToDelete(null);
-          setSuccessMessage(`Vehicle type "${vehicleToDelete.vehicleName}" deleted successfully!`);
-        } else {
-          setError(response.message || 'Failed to delete vehicle type');
-        }
-      } catch (err) {
-        console.error('Delete failed:', err);
-        setError('An unexpected error occurred while deleting');
-      } finally {
-        setLoading(false);
-      }
-    }
-  };
+  //       if (response.success) {
+  //         // Remove from local state
+  //         setVehicles(vehicles.filter(v => v.id !== vehicleToDelete.id));
+  //         setShowDeleteModal(false);
+  //         setVehicleToDelete(null);
+  //         setSuccessMessage(`Vehicle type "${vehicleToDelete.vehicleName}" deleted successfully!`);
+  //       } else {
+  //         setError(response.message || 'Failed to delete vehicle type');
+  //       }
+  //     } catch (err) {
+  //       console.error('Delete failed:', err);
+  //       setError('An unexpected error occurred while deleting');
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   }
+  // };
 
   // Open delete confirmation modal
-  const openDeleteModal = (vehicle: VehicleType) => {
-    setVehicleToDelete(vehicle);
-    setShowDeleteModal(true);
-  };
+  // const openDeleteModal = (vehicle: VehicleType) => {
+  //   setVehicleToDelete(vehicle);
+  //   setShowDeleteModal(true);
+  // };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -408,13 +407,13 @@ const VehicleTypeMaster = () => {
                         >
                           <Eye size={14} />
                         </button>
-                        <button 
+                        {/* <button 
                           onClick={() => openDeleteModal(vehicle)} 
                           className="p-1 text-red-600 hover:bg-red-50 rounded" 
                           title="Delete Vehicle"
                         >
                           <Trash2 size={14} />
-                        </button>
+                        </button> */}
                       </div>
                     </td>
                   </tr>
@@ -604,7 +603,7 @@ const VehicleTypeMaster = () => {
           </div>
         )}
 
-        {/* Delete Confirmation Modal */}
+        {/* Delete Confirmation Modal
         {showDeleteModal && vehicleToDelete && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-3">
             <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
@@ -648,7 +647,7 @@ const VehicleTypeMaster = () => {
               </div>
             </div>
           </div>
-        )}
+        )} */}
 
         {/* No Results */}
         {filteredVehicles.length === 0 && !loading && (

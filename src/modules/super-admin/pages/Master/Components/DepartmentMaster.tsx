@@ -12,7 +12,7 @@ import {
   Trash2,
   Edit
 } from 'lucide-react';
-import { createDepartment, getDepartments } from '../../../services/department.service';
+import { createDepartment, getDepartments} from '../../../services/department.service';
 
 interface Department {
   id: number;
@@ -40,57 +40,7 @@ const sampleOrganizations = [
 ];
 
 const DepartmentMaster = () => {
-  const [departments, setDepartments] = useState<Department[]>([
-    {
-      id: 1,
-      departmentName: 'Examination Department',
-      organisationId: 1,
-      createdAt: '2024-01-20T10:30:00Z',
-      updatedAt: '2024-02-18T15:45:00Z'
-    },
-    {
-      id: 2,
-      departmentName: 'IT Department',
-      organisationId: 2,
-      createdAt: '2024-02-01T09:15:00Z',
-      updatedAt: '2024-02-10T11:20:00Z'
-    },
-    {
-      id: 3,
-      departmentName: 'Production Department',
-      organisationId: 3,
-      createdAt: '2024-01-25T14:00:00Z',
-      updatedAt: '2024-02-15T16:30:00Z'
-    },
-    {
-      id: 4,
-      departmentName: 'Software Development',
-      organisationId: 4,
-      createdAt: '2024-02-05T08:45:00Z',
-      updatedAt: '2024-02-12T10:15:00Z'
-    },
-    {
-      id: 5,
-      departmentName: 'Assembly Line',
-      organisationId: 5,
-      createdAt: '2024-02-08T07:30:00Z',
-      updatedAt: '2024-02-14T09:00:00Z'
-    },
-    {
-      id: 6,
-      departmentName: 'Retail Banking',
-      organisationId: 6,
-      createdAt: '2024-02-10T11:00:00Z',
-      updatedAt: '2024-02-16T14:20:00Z'
-    },
-    {
-      id: 7,
-      departmentName: 'Research & Development',
-      organisationId: 7,
-      createdAt: '2024-01-15T13:30:00Z',
-      updatedAt: '2024-02-20T12:00:00Z'
-    }
-  ]);
+  const [departments, setDepartments] = useState<Department[]>([]);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [filterOrganization, setFilterOrganization] = useState<string>('all');
@@ -102,6 +52,7 @@ const DepartmentMaster = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [departmentToDelete, setDepartmentToDelete] = useState<Department | null>(null);
   const [loading, setLoading] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   
   // Form state for new department
   const [newDepartment, setNewDepartment] = useState({
@@ -146,7 +97,7 @@ const DepartmentMaster = () => {
     try {
       // In real implementation, fetch from API
        const res = await getDepartments();
-      // setDepartments(res.data);
+       setDepartments(res);
     } catch (err) {
       console.error("Error fetching departments", err);
     } finally {
@@ -183,14 +134,25 @@ const DepartmentMaster = () => {
     window.URL.revokeObjectURL(url);
   };
 
-  // Delete department
-  const handleDeleteDepartment = () => {
-    if (departmentToDelete) {
-      setDepartments(departments.filter(d => d.id !== departmentToDelete.id));
-      setShowDeleteModal(false);
-      setDepartmentToDelete(null);
-    }
-  };
+  const handleDeleteDepartment = async () => {
+  if (!departmentToDelete) return;
+
+  try {
+    console.log("Deleting department:", departmentToDelete.id);
+
+    // await deleteDepartment(departmentToDelete.id);   // API removed
+
+    setDepartments(prev =>
+      prev.filter(d => d.id !== departmentToDelete.id)
+    );
+
+    setShowDeleteModal(false);
+    setDepartmentToDelete(null);
+
+  } catch (error) {
+    console.error("Delete failed:", error);
+  }
+};
 
   // Open delete confirmation modal
   const openDeleteModal = (department: Department) => {
@@ -399,13 +361,13 @@ const DepartmentMaster = () => {
                       >
                         <Edit size={18} />
                       </button>
-                      <button 
+                      {/* <button 
                         onClick={() => openDeleteModal(dept)} 
                         className="p-1 text-red-600 hover:bg-red-50 rounded" 
                         title="Delete Department"
                       >
                         <Trash2 size={18} />
-                      </button>
+                      </button> */}
                     </div>
                   </td>
                 </tr>
@@ -538,15 +500,27 @@ const DepartmentMaster = () => {
                     setShowDeleteModal(false);
                     setDepartmentToDelete(null);
                   }}
-                  className="flex-1 px-5 py-2.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition duration-200"
+                  disabled={isDeleting}
+                  className="flex-1 px-5 py-2.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleDeleteDepartment}
-                  className="flex-1 px-5 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition duration-200"
+                  disabled={isDeleting}
+                  className="flex-1 px-5 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
-                  Delete
+                  {isDeleting ? (
+                    <>
+                      <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Deleting...
+                    </>
+                  ) : (
+                    'Delete'
+                  )}
                 </button>
               </div>
             </div>

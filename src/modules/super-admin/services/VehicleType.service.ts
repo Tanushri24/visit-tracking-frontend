@@ -124,40 +124,40 @@ export const createVehicleType = async (
   }
 };
 
-// Delete vehicle type
-export const deleteVehicleType = async (id: number): Promise<ApiResponse> => {
-  try {
-    const response = await API.delete(`/VehicleType/${id}`, {
-      headers: getAuthHeaders(),
-    });
+// // Delete vehicle type
+// export const deleteVehicleType = async (id: number): Promise<ApiResponse> => {
+//   try {
+//     const response = await API.delete(`/VehicleType/${id}`, {
+//       headers: getAuthHeaders(),
+//     });
 
-    return {
-      success: true,
-      message: "Vehicle type deleted successfully",
-      data: response.data,
-      statusCode: response.status,
-    };
-  } catch (error) {
-    console.error("API Error:", error);
-    const axiosError = error as any;
-    const statusCode = axiosError?.response?.status ?? 0;
-    const responseData = axiosError?.response?.data;
+//     return {
+//       success: true,
+//       message: "Vehicle type deleted successfully",
+//       data: response.data,
+//       statusCode: response.status,
+//     };
+//   } catch (error) {
+//     console.error("API Error:", error);
+//     const axiosError = error as any;
+//     const statusCode = axiosError?.response?.status ?? 0;
+//     const responseData = axiosError?.response?.data;
 
-    const errorMessage =
-      responseData?.message ||
-      responseData?.title ||
-      (typeof responseData === "string" ? responseData : null) ||
-      axiosError?.message ||
-      "Failed to delete vehicle type";
+//     const errorMessage =
+//       responseData?.message ||
+//       responseData?.title ||
+//       (typeof responseData === "string" ? responseData : null) ||
+//       axiosError?.message ||
+//       "Failed to delete vehicle type";
 
-    return {
-      success: false,
-      message: errorMessage,
-      error: errorMessage,
-      statusCode,
-    };
-  }
-};
+//     return {
+//       success: false,
+//       message: errorMessage,
+//       error: errorMessage,
+//       statusCode,
+//     };
+//   }
+// };
 
 // Update vehicle type
 export const updateVehicleType = async (

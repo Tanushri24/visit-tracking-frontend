@@ -20,3 +20,8 @@ export const getVisitPurposes = async () => {
   const res = await axios.get(API_BASE_URL);
   return res.data;
 };
+
+// export const deleteVisitPurpose = async (id: number) => {
+//   const response = await axios.delete(`${API_BASE_URL}/${id}`);
+//   return response.data;
+// };
