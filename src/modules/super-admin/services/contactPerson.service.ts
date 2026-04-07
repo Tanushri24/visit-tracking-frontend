@@ -36,9 +36,9 @@ export type CompanyOption = {
   isActive?: boolean;
 };
 
-export type organisationOption = {
+export type OrganisationOption = {
   id: number;
-  organizationName: string;
+  organisationName: string;
   companyId: number;
   isActive?: boolean;
 };
@@ -46,7 +46,7 @@ export type organisationOption = {
 export type DepartmentOption = {
   id: number;
   departmentName: string;
-  organizationId: number;
+  organisationId: number;
   isActive?: boolean;
 };
 
@@ -63,18 +63,38 @@ export const contactService = {
     return await API.put(`/Contactperson/${id}`, data);
   },
 
-  getCompanies: async () => {
-    const res = await API.get<CompanyOption[]>("/Company");
-    return res.data ?? [];
+   getCompanies: async () => {
+    try {
+      const res = await API.get("/Company");
+      console.log("Company API:", res.data);
+      return res.data ?? [];
+    } catch (error) {
+      console.error("Error fetching companies:", error);
+      return [];
+    }
   },
 
-  getOrganizations: async () => {
-    const res = await API.get<organisationOption[]>("/Organisation");
-    return res.data ?? [];
-  },
+  getOrganisations: async () => {
+  try {
+    const res = await API.get("/Organisation");
+    console.log("Organisation API:", res.data);
+
+    return res.data?.data ?? res.data ?? [];
+  } catch (error) {
+    console.error("Error fetching organisations:", error);
+    return [];
+  }
+},
 
   getDepartments: async () => {
-    const res = await API.get<DepartmentOption[]>("/Department");
-    return res.data ?? [];
-  },
+    try {
+      const res = await API.get("/Department");
+      console.log("Department API:", res.data);
+      return res.data ?? [];
+    } catch (error) {
+      console.error("Error fetching departments:", error);
+      return [];
+    }
+  }
 };
+

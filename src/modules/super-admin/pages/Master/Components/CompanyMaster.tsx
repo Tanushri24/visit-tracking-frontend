@@ -360,13 +360,13 @@ const CompanyMaster = () => {
                       >
                         <Eye size={18} />
                       </button>
-                      <button
+                      {/* <button
                         onClick={() => openDeleteModal(company)}
                         className="p-1 text-red-600 hover:bg-red-50 rounded"
                         title="Delete Company"
                       >
                         <Trash2 size={18} />
-                      </button>
+                      </button> */}
                     </div>
                   </td>
                 </tr>

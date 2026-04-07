@@ -26,5 +26,14 @@ export const companyApi = {
   createCompany: async (data: CompanyCreateRequest): Promise<CompanyResponse> => {
     const res = await axios.post<CompanyResponse>(API_URL, data);
     return res.data;
-  }
+  },
+  //  deleteCompany: async (id: number) => {
+  //   console.log("Deleting ID:", id);
+
+  //   const res = await axios.delete(`${API_URL}/${id}`);
+
+  //   return res.data;
+  // }
+
+
 };

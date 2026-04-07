@@ -16,15 +16,15 @@ import {
   Trash2
 } from 'lucide-react';
 import axios from 'axios';
-import { contactService } from '../../../services/contactPerson.service';
+import { contactService } from "../../../services/contactPerson.service";
 import type { CompanyOption as CompanyApiOption, OrganisationOption as OrganisationApiOption, DepartmentOption as DepartmentApiOption } from '../../../services/contactPerson.service';
 
 interface ContactPerson {
   id: number;
   name: string;
   designation: string;
-  organizationId: number;
-  organizationName: string;
+  organisationId: number;
+  organisationName: string;
   departmentId: number;
   department: string;
   companyId: number;
@@ -63,10 +63,8 @@ interface ContactPersonPayload {
   isActive: boolean;
 }
 
-
 const ContactPersonMaster = () => {
   const [contacts, setContacts] = useState<ContactPerson[]>([]);
-
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [filterCompany, setFilterCompany] = useState<string>('all');
@@ -106,7 +104,7 @@ const ContactPersonMaster = () => {
 
   // Get unique values for filters
   const companiesList = ['all', ...new Set(contacts.map(c => c.companyName))];
-  const organizationsList = ['all', ...new Set(contacts.map(c => c.organizationName))];
+  const organisationsList = ['all', ...new Set(contacts.map(c => c.organisationName))];
   const departmentsList = ['all', ...new Set(contacts.map(c => c.department))];
 
   // Filter contacts based on search and filters
@@ -115,14 +113,14 @@ const ContactPersonMaster = () => {
       contact.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       contact.designation.toLowerCase().includes(searchTerm.toLowerCase()) ||
       contact.department.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      contact.organizationName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      contact.organisationName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       contact.companyName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       contact.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
       contact.mobile.includes(searchTerm);
     
     const matchesStatus = filterStatus === 'all' || contact.status === filterStatus;
     const matchesCompany = filterCompany === 'all' || contact.companyName === filterCompany;
-    const matchesOrganization = filterOrganization === 'all' || contact.organizationName === filterOrganization;
+    const matchesOrganization = filterOrganization === 'all' || contact.organisationName === filterOrganization;
     const matchesDepartment = filterDepartment === 'all' || contact.department === filterDepartment;
     const matchesDecisionMaker = filterDecisionMaker === 'all' || 
       (filterDecisionMaker === 'yes' && contact.isDecisionMaker) ||
@@ -153,17 +151,16 @@ const ContactPersonMaster = () => {
   const fetchLookupData = async () => {
     setLookupLoading(true);
     try {
-      const [companyData, departmentData] = await Promise.all([
+      const [companiesRes, organisationsRes, departmentsRes] = await Promise.all([
         contactService.getCompanies(),
+        contactService.getOrganisations(),
         contactService.getDepartments(),
-       
       ]);
-
-      setCompanies((companyData ?? []).filter((company: CompanyApiOption) => company.isActive !== false));
-      setDepartments((departmentData ?? []).filter((department: DepartmentApiOption) => department.isActive !== false));
-    } catch (err) {
-      console.error("Error fetching contact master dependencies", err);
-      setErrorMessage("Unable to load company, organisation, or department master data.");
+      setCompanies(companiesRes);
+      setOrganizations(organisationsRes);
+      setDepartments(departmentsRes);
+    } catch (error) {
+      console.error("Error fetching contact master dependencies", error);
     } finally {
       setLookupLoading(false);
     }
@@ -180,13 +177,13 @@ const ContactPersonMaster = () => {
 
     setForm({
       ...form,
-      [name]: type === "checkbox" ? checked : Number(value) || value,
+      [name]: type === "checkbox" ? checked : (name === 'companyId' || name === 'organisationId' || name === 'departmentId' ? Number(value) : value),
     });
   };
 
   const handleSubmit = async () => {
     if (!form.companyId || !form.organisationId || !form.departmentId) {
-      setErrorMessage("Please select company, organization, and department.");
+      setErrorMessage("Please select company, organisation, and department.");
       return;
     }
 
@@ -200,17 +197,17 @@ const ContactPersonMaster = () => {
     const selectedDepartment = departments.find((department) => department.id === form.departmentId);
 
     if (!selectedCompany || !selectedOrganisation || !selectedDepartment) {
-      setErrorMessage("Please select valid company, organization, and department values from master data.");
+      setErrorMessage("Please select valid company, organisation, and department values from master data.");
       return;
     }
 
     if (selectedOrganisation.companyId !== selectedCompany.id) {
-      setErrorMessage("Selected organization does not belong to the selected company.");
+      setErrorMessage("Selected organisation does not belong to the selected company.");
       return;
     }
 
     if (selectedDepartment.organisationId !== selectedOrganisation.id) {
-      setErrorMessage("Selected department does not belong to the selected organization.");
+      setErrorMessage("Selected department does not belong to the selected organisation.");
       return;
     }
 
@@ -259,7 +256,7 @@ const ContactPersonMaster = () => {
 
     setForm({
       companyId: data.companyId,
-      organisationId: data.organizationId,
+      organisationId: data.organisationId,
       departmentId: data.departmentId,
       name: data.name,
       designation: data.designation,
@@ -313,12 +310,12 @@ const ContactPersonMaster = () => {
 
   // Export to CSV
   const exportToCSV = () => {
-    const headers = ['Name', 'Designation', 'Department', 'Organization', 'Company', 'Email', 'Mobile', 'City', 'Status'];
+    const headers = ['Name', 'Designation', 'Department', 'Organisation', 'Company', 'Email', 'Mobile', 'City', 'Status'];
     const csvData = filteredContacts.map(contact => [
       contact.name,
       contact.designation,
       contact.department,
-      contact.organizationName,
+      contact.organisationName,
       contact.companyName,
       contact.email,
       contact.mobile,
@@ -388,17 +385,17 @@ const ContactPersonMaster = () => {
           {/* Action Buttons */}
           <div className="flex gap-2">
             <button
-             onClick={() => {
+              onClick={() => {
                 resetForm();
-               fetchLookupData();   // company dropdown fresh load
+                fetchLookupData();
                 setShowInsertModal(true);
-                }}
+              }}
               className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-all flex items-center justify-center gap-2 shadow-sm"
->
-           <Plus size={18} />
-           <span className="hidden sm:inline">Add New Contact</span>
-            <span className="sm:hidden">Add</span>
-           </button>
+            >
+              <Plus size={18} />
+              <span className="hidden sm:inline">Add New Contact</span>
+              <span className="sm:hidden">Add</span>
+            </button>
             <button
               onClick={() => setShowFilters(!showFilters)}
               className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center justify-center gap-2"
@@ -445,14 +442,14 @@ const ContactPersonMaster = () => {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Organization</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Organisation</label>
                 <select
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                   value={filterOrganization}
                   onChange={(e) => setFilterOrganization(e.target.value)}
                 >
-                  {organizationsList.map(org => (
-                    <option key={org} value={org}>{org === 'all' ? 'All Organizations' : org}</option>
+                  {organisationsList.map(org => (
+                    <option key={org} value={org}>{org === 'all' ? 'All Organisations' : org}</option>
                   ))}
                 </select>
               </div>
@@ -511,7 +508,7 @@ const ContactPersonMaster = () => {
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Designation</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Department</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Organization</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Organisation</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Company</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mobile</th>
@@ -531,7 +528,7 @@ const ContactPersonMaster = () => {
                   </td>
                   <td className="px-4 py-3 text-sm text-gray-600">{contact.designation}</td>
                   <td className="px-4 py-3 text-sm text-gray-600">{contact.department}</td>
-                  <td className="px-4 py-3 text-sm text-gray-600">{contact.organizationName}</td>
+                  <td className="px-4 py-3 text-sm text-gray-600">{contact.organisationName}</td>
                   <td className="px-4 py-3 text-sm text-gray-600">{contact.companyName}</td>
                   <td className="px-4 py-3 text-sm text-gray-600">
                     <a href={`mailto:${contact.email}`} className="text-blue-600 hover:underline">{contact.email}</a>
@@ -638,11 +635,11 @@ const ContactPersonMaster = () => {
                     </div>
                     <div>
                       <p className="text-sm text-gray-500">Date of Birth</p>
-                      <p className="font-medium">{new Date(selectedContact.dateOfBirth).toLocaleDateString()}</p>
+                      <p className="font-medium">{selectedContact.dateOfBirth ? new Date(selectedContact.dateOfBirth).toLocaleDateString() : 'N/A'}</p>
                     </div>
                     <div>
                       <p className="text-sm text-gray-500">Anniversary</p>
-                      <p className="font-medium">{new Date(selectedContact.anniversaryDate).toLocaleDateString()}</p>
+                      <p className="font-medium">{selectedContact.anniversaryDate ? new Date(selectedContact.anniversaryDate).toLocaleDateString() : 'N/A'}</p>
                     </div>
                   </div>
                 </div>
@@ -660,8 +657,8 @@ const ContactPersonMaster = () => {
                       <p className="font-medium">{selectedContact.department}</p>
                     </div>
                     <div>
-                      <p className="text-sm text-gray-500">Organization</p>
-                      <p className="font-medium">{selectedContact.organizationName}</p>
+                      <p className="text-sm text-gray-500">Organisation</p>
+                      <p className="font-medium">{selectedContact.organisationName}</p>
                     </div>
                     <div>
                       <p className="text-sm text-gray-500">Company</p>
@@ -669,11 +666,11 @@ const ContactPersonMaster = () => {
                     </div>
                     <div>
                       <p className="text-sm text-gray-500">Reporting To</p>
-                      <p className="font-medium">{selectedContact.reportingTo}</p>
+                      <p className="font-medium">{selectedContact.reportingTo || 'N/A'}</p>
                     </div>
                     <div>
                       <p className="text-sm text-gray-500">Remarks</p>
-                      <p className="font-medium">{selectedContact.remarks}</p>
+                      <p className="font-medium">{selectedContact.remarks || 'N/A'}</p>
                     </div>
                   </div>
                 </div>
@@ -692,15 +689,15 @@ const ContactPersonMaster = () => {
                     </div>
                     <div>
                       <p className="text-sm text-gray-500">Alternate Phone</p>
-                      <p className="font-medium">{selectedContact.alternatePhone}</p>
+                      <p className="font-medium">{selectedContact.alternatePhone || 'N/A'}</p>
                     </div>
                     <div>
                       <p className="text-sm text-gray-500">WhatsApp</p>
-                      <p className="font-medium">{selectedContact.whatsappNumber}</p>
+                      <p className="font-medium">{selectedContact.whatsappNumber || 'N/A'}</p>
                     </div>
                     <div>
                       <p className="text-sm text-gray-500">Preferred Contact Mode</p>
-                      <p className="font-medium">{selectedContact.preferredContactMode}</p>
+                      <p className="font-medium">{selectedContact.preferredContactMode || 'Any'}</p>
                     </div>
                   </div>
                 </div>
@@ -709,9 +706,9 @@ const ContactPersonMaster = () => {
                     <MapPin size={20} /> Address Information
                   </h3>
                   <div className="grid grid-cols-1 gap-2">
-                    <p className="font-medium">{selectedContact.address}</p>
-                    <p>{selectedContact.city}, {selectedContact.state} - {selectedContact.pincode}</p>
-                    <p>{selectedContact.country}</p>
+                    <p className="font-medium">{selectedContact.address || 'N/A'}</p>
+                    <p>{selectedContact.city || 'N/A'}, {selectedContact.state || 'N/A'} - {selectedContact.pincode || 'N/A'}</p>
+                    <p>{selectedContact.country || 'N/A'}</p>
                   </div>
                 </div>
                 <div>
@@ -737,7 +734,7 @@ const ContactPersonMaster = () => {
                     </div>
                     <div>
                       <p className="text-sm text-gray-500">Created At</p>
-                      <p className="text-sm">{new Date(selectedContact.createdAt).toLocaleDateString()}</p>
+                      <p className="text-sm">{selectedContact.createdAt ? new Date(selectedContact.createdAt).toLocaleDateString() : 'N/A'}</p>
                     </div>
                   </div>
                 </div>
@@ -793,7 +790,7 @@ const ContactPersonMaster = () => {
                       </select>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Organization *</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Organisation *</label>
                       <select
                         name="organisationId"
                         value={form.organisationId}
@@ -801,10 +798,12 @@ const ContactPersonMaster = () => {
                         className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500"
                         required
                       >
-                        <option value={0}>Select Organization</option>
-                        {organizations.map(org => (
-                          <option key={org.id} value={org.id}>{org.organisationName}</option>
-                        ))}
+                        <option value={0}>Select Organisation</option>
+                        {organizations
+                          .filter(org => form.companyId === 0 || org.companyId === form.companyId)
+                          .map(org => (
+                            <option key={org.id} value={org.id}>{org.organisationName}</option>
+                          ))}
                       </select>
                     </div>
                     <div>

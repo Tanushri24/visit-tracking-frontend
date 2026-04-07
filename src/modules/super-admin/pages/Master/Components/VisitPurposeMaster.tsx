@@ -98,19 +98,22 @@ const VisitPurposeMaster = () => {
   };
 
   // Delete purpose
-  const handleDeletePurpose = () => {
-    if (purposeToDelete) {
-      setPurposes(purposes.filter(p => p.id !== purposeToDelete.id));
-      setShowDeleteModal(false);
-      setPurposeToDelete(null);
-    }
-  };
+ const handleDeletePurpose = async () => {
+  if (!purposeToDelete) return;
 
-  // Open delete confirmation modal
-  const openDeleteModal = (purpose: VisitPurpose) => {
-    setPurposeToDelete(purpose);
-    setShowDeleteModal(true);
-  };
+  try {
+
+    // await deleteVisitPurpose(purposeToDelete.id);
+
+    setPurposes((prev) => prev.filter(p => p.id !== purposeToDelete.id));
+
+    setShowDeleteModal(false);
+    setPurposeToDelete(null);
+
+  } catch (error) {
+    console.error("Delete failed:", error);
+  }
+};
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -369,13 +372,13 @@ const VisitPurposeMaster = () => {
                         >
                           <Edit size={16} />
                         </button>
-                        <button
+                       {/* <button
                           onClick={() => openDeleteModal(purpose)}
                           className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                           title="Delete Purpose"
                         >
                           <Trash2 size={16} />
-                        </button>
+                        </button>  */}
                       </div>
                     </td>
                   </tr>

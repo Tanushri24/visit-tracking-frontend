@@ -12,13 +12,10 @@ import {
   TrendingUp,
   CheckCircle,
   XCircle,
-  Activity,
   Award,
-  Target,
-  Trash2,
   Edit
 } from 'lucide-react';
-import { getFunnelStages, createFunnelStage } from "../../../services/funnelStage.service";
+import { getFunnelStages, createFunnelStage} from "../../../services/funnelStage.service";
 
 // Updated interface to match API parameters
 interface FunnelStage {
@@ -44,6 +41,7 @@ const FunnelStageMaster = () => {
   const [showInsertModal, setShowInsertModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [stageToDelete, setStageToDelete] = useState<FunnelStage | null>(null);
+  // const [isDeleting, setIsDeleting] = useState(false);
   
   // Updated newStage state to match API structure
   const [newStage, setNewStage] = useState({
@@ -74,14 +72,15 @@ const FunnelStageMaster = () => {
   const fetchStages = async () => {
     try {
       const data = await getFunnelStages();
-      setStages(data);
+      setStages(data || []);
     } catch (error) {
       console.error("Error fetching stages:", error);
+      setStages([]);
     }
   };
 
   const filteredStages = stages.filter(stage => {
-    const matchesSearch = stage.stageName.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = stage.stageName?.toLowerCase().includes(searchTerm.toLowerCase()) || false;
     const matchesStatus = filterStatus === 'all' || (filterStatus === 'active' ? stage.isActive : !stage.isActive);
     return matchesSearch && matchesStatus;
   });
@@ -94,8 +93,8 @@ const FunnelStageMaster = () => {
   const exportToCSV = () => {
     const headers = ['Stage Name', 'Stage Order', 'Closed Stage', 'Won Stage', 'Lost Stage', 'Status', 'Created At', 'Updated At'];
     const csvData = filteredStages.map(s => [
-      s.stageName, 
-      s.stageOrder.toString(), 
+      s.stageName || '', 
+      s.stageOrder?.toString() || '', 
       s.isClosedStage ? 'Yes' : 'No',
       s.isWonStage ? 'Yes' : 'No',
       s.isLostStage ? 'Yes' : 'No',
@@ -103,11 +102,14 @@ const FunnelStageMaster = () => {
       s.createdAt || '', 
       s.updatedAt || ''
     ]);
-    const blob = new Blob([[headers, ...csvData].map(row => row.join(',')).join('\n')], { type: 'text/csv' });
+    const csvContent = [headers, ...csvData].map(row => row.join(',')).join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
+    a.href = url;
     a.download = `funnel_stages_${new Date().toISOString().split('T')[0]}.csv`;
     a.click();
+    URL.revokeObjectURL(url);
   };
   
   // Open edit modal
@@ -124,14 +126,24 @@ const FunnelStageMaster = () => {
     setShowEditModal(true);
   };
   
-  // Delete stage
-  const handleDeleteStage = () => {
-    if (stageToDelete) {
-      setStages(stages.filter(s => s.id !== stageToDelete.id));
-      setShowDeleteModal(false);
-      setStageToDelete(null);
-    }
-  };
+//   // Delete stage with API integration
+//   const handleDeleteStage = async () => {
+//   if (!stageToDelete) return;
+
+//   try {
+//     await deleteFunnelStage(stageToDelete.id);
+
+//     // local state update
+//     setStages(stages.filter(s => s.id !== stageToDelete.id));
+
+//     setShowDeleteModal(false);
+//     setStageToDelete(null);
+
+//   } catch (error) {
+//     console.error("Error deleting stage:", error);
+//     alert("Failed to delete stage");
+//   }
+// };
 
   // Open delete confirmation modal
   const openDeleteModal = (stage: FunnelStage) => {
@@ -139,15 +151,34 @@ const FunnelStageMaster = () => {
     setShowDeleteModal(true);
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value, type } = e.target;
-    if (type === 'checkbox') {
-      const checked = (e.target as HTMLInputElement).checked;
-      setNewStage(prev => ({ ...prev, [name]: checked }));
+ const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const { name, value, type } = e.target;
+
+  if (type === 'checkbox') {
+    const checked = (e.target as HTMLInputElement).checked;
+
+    if (checked && (name === "isClosedStage" || name === "isWonStage" || name === "isLostStage")) {
+      // Only one can be true
+      setNewStage(prev => ({
+        ...prev,
+        isClosedStage: name === "isClosedStage",
+        isWonStage: name === "isWonStage",
+        isLostStage: name === "isLostStage"
+      }));
     } else {
-      setNewStage(prev => ({ ...prev, [name]: name === 'stageOrder' ? parseInt(value) || 0 : value }));
+      setNewStage(prev => ({
+        ...prev,
+        [name]: checked
+      }));
     }
-  };
+
+  } else {
+    setNewStage(prev => ({
+      ...prev,
+      [name]: name === 'stageOrder' ? (parseInt(value) || 0) : value
+    }));
+  }
+};
 
   const handleEditInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
@@ -155,7 +186,10 @@ const FunnelStageMaster = () => {
       const checked = (e.target as HTMLInputElement).checked;
       setEditStage(prev => ({ ...prev, [name]: checked }));
     } else {
-      setEditStage(prev => ({ ...prev, [name]: name === 'stageOrder' ? parseInt(value) || 0 : value }));
+      setEditStage(prev => ({ 
+        ...prev, 
+        [name]: name === 'stageOrder' ? (parseInt(value) || 0) : value 
+      }));
     }
   };
 
@@ -171,7 +205,7 @@ const FunnelStageMaster = () => {
       };
 
       await createFunnelStage(payload);
-      fetchStages(); // table refresh
+      await fetchStages(); // Refresh the table
 
       setShowInsertModal(false);
       setNewStage({
@@ -184,11 +218,14 @@ const FunnelStageMaster = () => {
       });
     } catch (error) {
       console.error("Error creating stage:", error);
+      alert("Failed to create funnel stage. Please try again.");
     }
   };
 
-  const handleUpdateStage = () => {
-    setStages(stages.map(stage => 
+  const handleUpdateStage = async () => {
+    // Note: You might want to create an updateFunnelStage API call
+    // For now, this only updates local state
+    setStages(prevStages => prevStages.map(stage => 
       stage.id === editStage.id 
         ? { 
             ...stage, 
@@ -198,11 +235,16 @@ const FunnelStageMaster = () => {
             isWonStage: editStage.isWonStage,
             isLostStage: editStage.isLostStage,
             isActive: editStage.isActive,
-            updatedAt: new Date().toISOString().split('T')[0]
+            updatedAt: new Date().toISOString()
           }
         : stage
     ));
     setShowEditModal(false);
+  };
+
+  // Helper function to safely get value for select
+  const getSelectValue = (value: boolean) => {
+    return value ? "true" : "false";
   };
 
   return (
@@ -380,9 +422,9 @@ const FunnelStageMaster = () => {
                         <button onClick={() => openEditModal(stage)} className="p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-all" title="Edit Stage">
                           <Edit size={13} />
                         </button>
-                        <button onClick={() => openDeleteModal(stage)} className="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-all" title="Delete Stage">
+                        {/* <button onClick={() => openDeleteModal(stage)} className="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-all" title="Delete Stage">
                           <Trash2 size={13} />
-                        </button>
+                        </button> */}
                       </div>
                     </td>
                   </tr>
@@ -455,7 +497,7 @@ const FunnelStageMaster = () => {
                     </label>
                   </div>
                   <div><label className="block text-xs font-medium text-gray-700 mb-1">Status</label>
-                    <select name="isActive" value={String(editStage.isActive)} onChange={handleEditInputChange} className="w-full px-3 py-1.5 text-sm border rounded-lg">
+                    <select name="isActive" value={getSelectValue(editStage.isActive)} onChange={handleEditInputChange} className="w-full px-3 py-1.5 text-sm border rounded-lg">
                       <option value="true">Active</option>
                       <option value="false">Inactive</option>
                     </select>
@@ -499,7 +541,7 @@ const FunnelStageMaster = () => {
                     </label>
                   </div>
                   <div><label className="block text-xs font-medium text-gray-700 mb-1">Status</label>
-                    <select name="isActive" value={String(newStage.isActive)} onChange={handleInputChange} className="w-full px-3 py-1.5 text-sm border rounded-lg">
+                    <select name="isActive" value={getSelectValue(newStage.isActive)} onChange={handleInputChange} className="w-full px-3 py-1.5 text-sm border rounded-lg">
                       <option value="true">Active</option>
                       <option value="false">Inactive</option>
                     </select>
@@ -514,8 +556,8 @@ const FunnelStageMaster = () => {
           </div>
         )}
 
-        {/* Delete Confirmation Modal */}
-        {showDeleteModal && stageToDelete && (
+        {/* Delete Confirmation Modal
+        {sh owDeleteModal && stageToDelete && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-3">
             <div className="bg-white rounded-lg shadow-xl w-full max-w-sm">
               <div className="p-5 sm:p-6">
@@ -536,24 +578,36 @@ const FunnelStageMaster = () => {
                       setShowDeleteModal(false);
                       setStageToDelete(null);
                     }}
-                    className="flex-1 px-3 py-1.5 sm:px-4 sm:py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition duration-200 text-sm"
+                    disabled={isDeleting}
+                    className="flex-1 px-3 py-1.5 sm:px-4 sm:py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition duration-200 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={handleDeleteStage}
-                    className="flex-1 px-3 py-1.5 sm:px-4 sm:py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition duration-200 text-sm"
+                    disabled={isDeleting}
+                    className="flex-1 px-3 py-1.5 sm:px-4 sm:py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition duration-200 text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   >
-                    Delete
+                    {isDeleting ? (
+                      <>
+                        <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Deleting...
+                      </>
+                    ) : (
+                      'Delete'
+                    )}
                   </button>
                 </div>
               </div>
             </div>
           </div>
-        )}
+        )}  */}
 
         {/* No Results */}
-        {filteredStages.length === 0 && (
+        {filteredStages.length === 0 && stages.length > 0 && (
           <div className="text-center py-8 sm:py-10 bg-white rounded-lg shadow-sm">
             <div className="inline-flex items-center justify-center w-12 h-12 bg-gray-100 rounded-full mb-2">
               <TrendingUp className="w-6 h-6 text-gray-400" />
@@ -561,6 +615,19 @@ const FunnelStageMaster = () => {
             <p className="text-sm text-gray-500">No stages found</p>
             <p className="text-xs text-gray-400 mt-1">Try adjusting your search or filters</p>
             <button onClick={() => { setSearchTerm(''); setFilterStatus('all'); }} className="mt-2 px-3 py-1.5 text-purple-600 bg-purple-50 rounded-lg text-xs font-medium hover:bg-purple-100">Clear filters</button>
+          </div>
+        )}
+
+        {/* Loading State */}
+        {stages.length === 0 && (
+          <div className="text-center py-8 sm:py-10 bg-white rounded-lg shadow-sm">
+            <div className="inline-flex items-center justify-center w-12 h-12 bg-gray-100 rounded-full mb-2">
+              <svg className="animate-spin h-6 w-6 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+            </div>
+            <p className="text-sm text-gray-500">Loading stages...</p>
           </div>
         )}
       </div>

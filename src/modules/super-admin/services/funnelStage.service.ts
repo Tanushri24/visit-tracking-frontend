@@ -32,3 +32,8 @@ export const createFunnelStage = async (data: FunnelStagePayload) => {
 
   return response.data;
 };
+
+// export const deleteFunnelStage = async (id: number) => {
+//   const res = await axios.delete(`${API_BASE_URL}/${id}`);
+//   return res.data;
+// };
