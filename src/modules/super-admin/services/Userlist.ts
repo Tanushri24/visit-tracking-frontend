@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = ''; // Your API base URL
+const API_BASE_URL = '';
 
 export interface ApiUser {
   id: number;
@@ -30,50 +30,26 @@ export interface User {
   isActive: boolean;
 }
 
-// Mapping for IDs to names
-const roleMapping: Record<number, string> = {
-  1: 'Admin',
-  2: 'Manager',
-  3: 'User'
-};
+// Store dropdown data for mapping
+let designationsMap: Map<number, string> = new Map();
+let departmentsMap: Map<number, string> = new Map();
+let managersMap: Map<number, string> = new Map();
+let locationsMap: Map<number, string> = new Map();
+let rolesMap: Map<number, string> = new Map();
 
-const designationMapping: Record<number, string> = {
-  1: 'Sales Executive',
-  2: 'Team Lead',
-  3: 'Regional Manager',
-  4: 'Software Developer',
-  5: 'HR Manager',
-  6: 'Marketing Executive',
-  7: 'Finance Manager'
-};
-
-const departmentMapping: Record<number, string> = {
-  1: 'Sales',
-  2: 'Marketing',
-  3: 'IT',
-  4: 'HR',
-  5: 'Finance',
-  6: 'Operations',
-  12: 'Technology'
-};
-
-const managerMapping: Record<number, string> = {
-  1: 'Amit Verma',
-  2: 'Neha Kapoor',
-  3: 'Rajesh Kumar',
-  4: 'Priya Singh',
-  5: 'Super Admin',
-  6: 'Vikram Sharma'
-};
-
-const locationMapping: Record<number, string> = {
-  1: 'Mumbai',
-  2: 'Delhi',
-  3: 'Bangalore',
-  4: 'Pune',
-  5: 'Hyderabad',
-  6: 'Chennai',
-  7: 'Kolkata'
+// Initialize maps with dropdown data
+export const initializeMappings = (
+  designations: Array<{ id: number; name: string }>,
+  departments: Array<{ id: number; name: string }>,
+  managers: Array<{ id: number; name: string }>,
+  locations: Array<{ id: number; name: string }>,
+  roles: Array<{ id: number; name: string }>
+) => {
+  designationsMap = new Map(designations.map(d => [d.id, d.name]));
+  departmentsMap = new Map(departments.map(d => [d.id, d.name]));
+  managersMap = new Map(managers.map(m => [m.id, m.name]));
+  locationsMap = new Map(locations.map(l => [l.id, l.name]));
+  rolesMap = new Map(roles.map(r => [r.id, r.name]));
 };
 
 // Transform API user data to frontend user format
@@ -84,16 +60,15 @@ export const transformApiUser = (apiUser: ApiUser): User => {
     fullName: apiUser.fullName,
     email: apiUser.email,
     mobile: apiUser.mobile,
-    designation: designationMapping[apiUser.designationId] || 'Not Assigned',
-    department: departmentMapping[apiUser.departmentId] || 'Not Assigned',
-    role: roleMapping[apiUser.roleId] || 'User',
-    reportingManager: apiUser.managerId ? managerMapping[apiUser.managerId] || 'Not Assigned' : 'Not Assigned',
-    location: apiUser.locationId ? locationMapping[apiUser.locationId] || 'Not Assigned' : 'Not Assigned',
+    designation: designationsMap.get(apiUser.designationId) || 'Not Assigned',
+    department: departmentsMap.get(apiUser.departmentId) || 'Not Assigned',
+    role: rolesMap.get(apiUser.roleId) || 'User',
+    reportingManager: apiUser.managerId ? managersMap.get(apiUser.managerId) || 'Not Assigned' : 'Not Assigned',
+    location: apiUser.locationId ? locationsMap.get(apiUser.locationId) || 'Not Assigned' : 'Not Assigned',
     isActive: apiUser.isActive
   };
 };
 
-// Create axios instance
 const axiosInstance = axios.create({
   baseURL: API_BASE_URL,
   headers: {
@@ -139,7 +114,7 @@ export const createUser = async (userData: Partial<ApiUser>): Promise<ApiUser> =
   }
 };
 
-// Update user - Using PUT to /api/Admin/user/{id}
+// Update user
 export const updateUser = async (id: number, userData: Partial<ApiUser>): Promise<ApiUser> => {
   try {
     const response = await axiosInstance.put<ApiUser>(`/api/Admin/user/${id}`, userData);
@@ -150,7 +125,7 @@ export const updateUser = async (id: number, userData: Partial<ApiUser>): Promis
   }
 };
 
-// Delete user - Using DELETE to /api/Admin/user/{id}
+// Delete user
 export const deleteUser = async (id: number): Promise<void> => {
   try {
     await axiosInstance.delete(`/api/Admin/user/${id}`);

@@ -1,3 +1,5 @@
+// src/Layouts/Layout.tsx (or wherever your Layout file is)
+
 import React, { useEffect, useState } from 'react';
 import Header from './Header';
 import Sidebar from './Sidebar';
@@ -40,81 +42,65 @@ const superAdminMenu: NavItem[] = [
     label: 'Employee Registration',
     href: '/super-admin/employee-registration'
   },
-  {
-    icon: 'Receipt',
-    label: 'Expense Configuration',
-    href: '/super-admin/expense-config',
-    children: [
-      { icon: 'DollarSign', label: 'Rate Management', href: '/super-admin/expense-config/rates' },
-      { icon: 'History', label: 'Rate Change History', href: '/super-admin/expense-config/history' },
-      { icon: 'Car', label: 'Vehicle Types', href: '/super-admin/expense-config/vehicles' },
-      { icon: 'Calendar', label: 'Effective Dates', href: '/super-admin/expense-config/effective-dates' }
-    ]
-  },
-  {
-    icon: 'MapPin',
-    label: 'Visit Management',
-    href: '/super-admin/Visit-Management',
-    children: [
-      {icon: 'List', label: 'All Visits', href: '/super-admin/Visit-Management/all-visits'},
-      { icon: 'Calendar', label: 'Todays Visits', href: '/super-admin/Visit-Management/Todays-visits'},
-      { icon: 'CalendarRange', label: 'Monthly Visits', href: '/super-admin/Visit-Management/monthly-visits'},
-      { icon: 'Clock', label: 'Pending Follow-ups', href: '/super-admin/Visit-Management/pending-follow-ups'},
-      { icon: 'CheckCircle', label: 'Expense Approvals', href: '/super-admin/Visit-Management/expense-approvals' }
-    ]
-  },
-
-  // ========== FUNNEL MANAGEMENT ==========
-  {
-    icon: 'BarChart4',
-    label: 'Funnel Management',
-    href: '/super-admin/funnel-management',
-    children: [
-     { icon: 'Activity', label: 'Stage Wise Funnel', href: '/super-admin/funnel-management/stage-wise'},
-     { icon: 'Users', label: 'Employee-wise Funnel', href: '/super-admin/funnel-management/employee-wise'},
-     { icon: 'Building2', label: 'Client-wise Funnel', href: '/super-admin/funnel-management/client-wise'},
-     { icon: 'Layers', label: 'Department-wise Funnel', href: '/super-admin/funnel-management/dept-wise'},
-     { icon: 'TrendingUp', label: 'Conversion Tracking', href: '/super-admin/funnel-management/conversion'},
-     { icon: 'AlertCircle', label: 'Stalled Opportunities', href: '/super-admin/funnel-management/stalled'}
-    ]
-   },
-
-  // ========== BUSINESS OUTCOME TRACKING ==========
-  {
-    icon: 'TrendingUp',
-    label: 'Business Outcomes',
-    href: '/super-admin/outcomes',
-    children: [
-      { icon: 'Zap', label: 'Leads Generated', href: '/super-admin/business-outcomes/lead'},
-      { icon: 'FileText', label: 'Proposals Created', href: '/super-admin/business-outcomes/proposals' },
-      { icon: 'PieChart', label: 'Pipeline Value', href: '/super-admin/business-outcomes/pipeline' },
-      { icon: 'Target', label: 'Confirmed Business', href: '/super-admin/business-outcomes/confirmed' },
-      { icon: 'Calculator', label: 'Cost per Lead', href: '/super-admin/business-outcomes/cost-per-lead' },
-      { icon: 'Award', label: 'Productivity Score', href: '/super-admin/business-outcomes/productivity' }
-    ]
-  },
-
-  // ========== REPORTS (All 13 Reports from SRS) ==========
-  {
-    icon: 'BarChart3',
-    label: 'Report',
-    href: '/super-admin/Report',
-    children: [
-      // { icon: 'Calendar', label: 'Daily Visit Report', href: '/super-admin/reports/daily-visit' },
-      // { icon: 'CalendarRange', label: 'Date Range Visit', href: '/super-admin/reports/date-range' },
-      { icon: 'Users', label: 'Employee Visit Summary', href: '/super-admin/Report/employee-reports' },
-      // { icon: 'Building2', label: 'Organisation Visit', href: '/super-admin/reports/organisation' },
-      // { icon: 'Layers', label: 'Department Visit', href: '/super-admin/reports/department' },
-      { icon: 'DollarSign', label: 'Expense Report', href: '/super-admin/Reports/expense' },
-      // { icon: 'Car', label: 'Vehicle-wise Expense', href: '/super-admin/reports/vehicle-expense' },
-      { icon: 'GitMerge', label: 'Funnel Stage Report', href: '/super-admin/Reports/funnel-stage' },
-      // { icon: 'Clock', label: 'Follow-up Pending', href: '/super-admin/reports/followup-pending' },
-    //   { icon: 'Target', label: 'Business Outcome', href: '/super-admin/reports/business-outcome' },
-    //   { icon: 'TrendingUp', label: 'Conversion Analysis', href: '/super-admin/reports/conversion' },
-    //   { icon: 'Award', label: 'Monthly Productivity', href: '/super-admin/reports/productivity' },
-    //   { icon: 'PieChart', label: 'Cost vs Revenue', href: '/super-admin/reports/cost-revenue' }
-    ]
-  },
+  // {
+  //   icon: 'Receipt',
+  //   label: 'Expense Configuration',
+  //   href: '/super-admin/expense-config',
+  //   children: [
+  //     { icon: 'DollarSign', label: 'Rate Management', href: '/super-admin/expense-config/rates' },
+  //     { icon: 'History', label: 'Rate Change History', href: '/super-admin/expense-config/history' },
+  //     { icon: 'Car', label: 'Vehicle Types', href: '/super-admin/expense-config/vehicles' },
+  //     { icon: 'Calendar', label: 'Effective Dates', href: '/super-admin/expense-config/effective-dates' }
+  //   ]
+  // },
+  // {
+  //   icon: 'MapPin',
+  //   label: 'Visit Management',
+  //   href: '/super-admin/Visit-Management',
+  //   children: [
+  //     {icon: 'List', label: 'All Visits', href: '/super-admin/Visit-Management/all-visits'},
+  //     { icon: 'Calendar', label: 'Todays Visits', href: '/super-admin/Visit-Management/Todays-visits'},
+  //     { icon: 'CalendarRange', label: 'Monthly Visits', href: '/super-admin/Visit-Management/monthly-visits'},
+  //     { icon: 'Clock', label: 'Pending Follow-ups', href: '/super-admin/Visit-Management/pending-follow-ups'},
+  //     { icon: 'CheckCircle', label: 'Expense Approvals', href: '/super-admin/Visit-Management/expense-approvals' }
+  //   ]
+  // },
+  // {
+  //   icon: 'BarChart4',
+  //   label: 'Funnel Management',
+  //   href: '/super-admin/funnel-management',
+  //   children: [
+  //    { icon: 'Activity', label: 'Stage Wise Funnel', href: '/super-admin/funnel-management/stage-wise'},
+  //    { icon: 'Users', label: 'Employee-wise Funnel', href: '/super-admin/funnel-management/employee-wise'},
+  //    { icon: 'Building2', label: 'Client-wise Funnel', href: '/super-admin/funnel-management/client-wise'},
+  //    { icon: 'Layers', label: 'Department-wise Funnel', href: '/super-admin/funnel-management/dept-wise'},
+  //    { icon: 'TrendingUp', label: 'Conversion Tracking', href: '/super-admin/funnel-management/conversion'},
+  //    { icon: 'AlertCircle', label: 'Stalled Opportunities', href: '/super-admin/funnel-management/stalled'}
+  //   ]
+  //  },
+  // {
+  //   icon: 'TrendingUp',
+  //   label: 'Business Outcomes',
+  //   href: '/super-admin/outcomes',
+  //   children: [
+  //     { icon: 'Zap', label: 'Leads Generated', href: '/super-admin/business-outcomes/lead'},
+  //     { icon: 'FileText', label: 'Proposals Created', href: '/super-admin/business-outcomes/proposals' },
+  //     { icon: 'PieChart', label: 'Pipeline Value', href: '/super-admin/business-outcomes/pipeline' },
+  //     { icon: 'Target', label: 'Confirmed Business', href: '/super-admin/business-outcomes/confirmed' },
+  //     { icon: 'Calculator', label: 'Cost per Lead', href: '/super-admin/business-outcomes/cost-per-lead' },
+  //     { icon: 'Award', label: 'Productivity Score', href: '/super-admin/business-outcomes/productivity' }
+  //   ]
+  // },
+  // {
+  //   icon: 'BarChart3',
+  //   label: 'Report',
+  //   href: '/super-admin/Report',
+  //   children: [
+  //     { icon: 'Users', label: 'Employee Visit Summary', href: '/super-admin/Report/employee-reports' },
+  //     { icon: 'DollarSign', label: 'Expense Report', href: '/super-admin/Reports/expense' },
+  //     { icon: 'GitMerge', label: 'Funnel Stage Report', href: '/super-admin/Reports/funnel-stage' },
+  //   ]
+  // },
   {
     icon: 'Users',
     label: 'User Management',
@@ -122,29 +108,34 @@ const superAdminMenu: NavItem[] = [
   }
 ];
 
+// ✅ ADMIN MENU - Only showing Master Management, Employee Registration, and User Management
 const adminMenu: NavItem[] = [
   { icon: 'LayoutDashboard', label: 'Dashboard', href: '/admin/dashboard', active: true },
-  { icon: 'UserPlus', label: 'Employee Registration', href: '/admin/employee-registration' },
   {
     icon: 'Database',
-    label: 'Master Data',
-    href: '/admin/masters',
+    label: 'Master Management',
+    href: '/admin/master-management',
     children: [
-      { icon: 'Building2', label: 'Companies', href: '/admin/masters/companies' },
-      { icon: 'Building', label: 'Organisations', href: '/admin/masters/organisations' },
-      { icon: 'Layers', label: 'Departments', href: '/admin/masters/departments' },
-      { icon: 'Users2', label: 'Contact Persons', href: '/admin/masters/contacts' }
+      { icon: 'Building2', label: 'Company Master', href: '/admin/master-management/company' },
+      { icon: 'Building', label: 'Organization Master', href: '/admin/master-management/organization' },
+      { icon: 'Layers', label: 'Department Master', href: '/admin/master-management/department' },
+      { icon: 'Users', label: 'Contact Person Master', href: '/admin/master-management/contact-person' },
+      { icon: 'Target', label: 'Visit Purpose Master', href: '/admin/master-management/visit-purpose' },
+      { icon: 'Truck', label: 'Vehicle Type Master', href: '/admin/master-management/vehicle-type' }, 
+      { icon: 'DollarSign', label: 'Expense Rate Master', href: '/admin/master-management/expense-rate' }, 
+      { icon: 'Funnel', label: 'Funnel Stage Master', href: '/admin/master-management/funnel-stage' }, 
+      { icon: 'CheckCircle', label: 'Outcome Master', href: '/admin/master-management/outcome-master' }, 
     ]
   },
   {
-    icon: 'MapPin',
-    label: 'Visit Management',
-    href: '/admin/visits',
-    children: [
-      { icon: 'PlusCircle', label: 'New Visit Entry', href: '/admin/visits/new' },
-      { icon: 'List', label: 'All Visits', href: '/admin/visits/all' },
-      { icon: 'Calendar', label: "Today's Visits", href: '/admin/visits/today' }
-    ]
+    icon: 'UserPlus',
+    label: 'Employee Registration',
+    href: '/admin/employee-registration'
+  },
+  {
+    icon: 'Users',
+    label: 'User Management',
+    href: '/admin/users'
   }
 ];
 

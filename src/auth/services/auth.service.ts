@@ -9,6 +9,8 @@ export interface LoginRequest {
 }
 
 export interface LoginResponse {
+  isFirstLogin: boolean;
+  forcePasswordChange: any;
   token: string;
   message?: string;
   user?: {
@@ -16,6 +18,11 @@ export interface LoginResponse {
     email: string;
     role: string;
   };
+}
+
+export interface ChangePasswordRequest {
+  currentPassword: string;
+  newPassword: string;
 }
 
 class AuthService {
@@ -42,12 +49,43 @@ class AuthService {
     }
   }
 
+  async changePassword(data: ChangePasswordRequest): Promise<any> {
+    try {
+      const token = this.getToken();
+      
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+      
+      console.log('Sending change password request to:', `${API_URL}/change-password`);
+      
+      const response = await axios.post(
+        `${API_URL}/change-password`,
+        data,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          timeout: 10000,
+        }
+      );
+      
+      console.log('Change password response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Change password API error:', error);
+      throw error;
+    }
+  }
+
   logout(): void {
     localStorage.removeItem('auth');
     localStorage.removeItem('authToken');
     localStorage.removeItem('role');
     localStorage.removeItem('userEmail');
     localStorage.removeItem('user');
+    localStorage.removeItem('firstLogin'); // Clear first login flag
   }
 
   getToken(): string | null {

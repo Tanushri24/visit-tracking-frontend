@@ -54,132 +54,150 @@ const Login: React.FC = () => {
     setErrorMessage('');
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setErrorMessage('');
-    setIsLoading(true);
+ const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setErrorMessage('');
+  setIsLoading(true);
 
-    if (!formData.email || !formData.password) {
-      setErrorMessage('Please enter both email and password');
+  if (!formData.email || !formData.password) {
+    setErrorMessage('Please enter both email and password');
+    setIsLoading(false);
+    return;
+  }
+
+  try {
+    console.log('Attempting login with:', { email: formData.email });
+    
+    const response = await authService.login({
+      email: formData.email,
+      password: formData.password,
+    });
+
+    console.log('Login response:', response);
+    
+    const token = response.token;
+
+    if (!token) {
+      setErrorMessage('You are not registered. Please contact admin.');
       setIsLoading(false);
       return;
     }
 
+    localStorage.setItem('auth', token);
+    localStorage.setItem('authToken', token);
+    
+    let userRole = '';
+    let needsPasswordChange = false;
+    
     try {
-      console.log('Attempting login with:', { email: formData.email });
+      const base64Payload = token.split('.')[1];
+      const decodedPayload = JSON.parse(atob(base64Payload));
+      console.log('Decoded JWT payload:', decodedPayload);
       
-      const response = await authService.login({
-        email: formData.email,
-        password: formData.password,
-      });
-
-      console.log('Login response:', response);
+      userRole = 
+        decodedPayload['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] ||
+        decodedPayload.role ||
+        decodedPayload.Role ||
+        decodedPayload.userRole ||
+        decodedPayload.UserRole ||
+        '';
       
-      const token = response.token;
-
-      if (!token) {
-        setErrorMessage('You are not registered. Please contact admin.');
-        setIsLoading(false);
-        return;
-      }
-
-      localStorage.setItem('auth', token);
-      localStorage.setItem('authToken', token);
+      // Check if user needs to change password (you can add this flag in JWT or API response)
+      needsPasswordChange = decodedPayload.forcePasswordChange || 
+                           response.forcePasswordChange || 
+                           false;
       
-      let userRole = '';
-      try {
-        const base64Payload = token.split('.')[1];
-        const decodedPayload = JSON.parse(atob(base64Payload));
-        console.log('Decoded JWT payload:', decodedPayload);
-        
-        userRole = 
-          decodedPayload['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] ||
-          decodedPayload.role ||
-          decodedPayload.Role ||
-          decodedPayload.userRole ||
-          decodedPayload.UserRole ||
-          '';
-        
-        if (!userRole) {
-          console.warn('Role not found in token');
-          setErrorMessage('You are not registered. Please contact admin.');
-          setIsLoading(false);
-          return;
-        }
-        
-        userRole = normalizeUserRole(userRole);
-        console.log('Final user role:', userRole);
-        
-      } catch (decodeError) {
-        console.error('Failed to decode JWT token:', decodeError);
-        setErrorMessage('You are not registered. Please contact admin.');
-        setIsLoading(false);
-        return;
-      }
-
-      localStorage.setItem('role', userRole);
-      
-      if (formData.rememberMe) {
-        localStorage.setItem('userEmail', formData.email);
-      }
-
-      const roleRoutes: Record<string, string> = {
-        'super-admin': '/super-admin/dashboard',
-        'superadmin': '/super-admin/dashboard',
-        'admin': '/admin/dashboard',
-        'manager': '/manager/dashboard',
-        'employee': '/employee/dashboard',
-        'management': '/management/dashboard',
-      };
-
-      let redirectPath = roleRoutes[userRole];
-      
-      if (!redirectPath) {
-        console.warn('No route found for role:', userRole);
+      if (!userRole) {
+        console.warn('Role not found in token');
         setErrorMessage('You are not registered. Please contact admin.');
         setIsLoading(false);
         return;
       }
       
-      console.log('Redirecting to:', redirectPath);
-      navigate(redirectPath, { replace: true });
+      userRole = normalizeUserRole(userRole);
+      console.log('Final user role:', userRole);
       
-    } catch (error: any) {
-      console.error('Login error details:', error);
-      
-      if (error.response?.status === 401) {
-        setErrorMessage('You are not registered. Please contact admin.');
-      } else if (error.code === 'ERR_NETWORK' || error.message === 'Network Error') {
-        setErrorMessage('Cannot connect to server. Please check your connection.');
-      } else if (error.response) {
-        const status = error.response.status;
-        const apiMessage = error.response.data?.message || error.response.data?.error;
-        
-        switch (status) {
-          case 401:
-            setErrorMessage('You are not registered. Please contact admin.');
-            break;
-          case 400:
-            setErrorMessage(apiMessage || 'Invalid request. Please check your input.');
-            break;
-          case 404:
-            setErrorMessage('Login endpoint not found.');
-            break;
-          case 500:
-            setErrorMessage('Server error. Please try again later.');
-            break;
-          default:
-            setErrorMessage('You are not registered. Please contact admin.');
-        }
-      } else if (error.request) {
-        setErrorMessage('No response from server. Please try again.');
-      } else {
-        setErrorMessage('You are not registered. Please contact admin.');
-      }
-    } finally {
+    } catch (decodeError) {
+      console.error('Failed to decode JWT token:', decodeError);
+      setErrorMessage('You are not registered. Please contact admin.');
       setIsLoading(false);
+      return;
     }
-  };
+
+    localStorage.setItem('role', userRole);
+    
+    if (formData.rememberMe) {
+      localStorage.setItem('userEmail', formData.email);
+    }
+
+    // Check if user needs to change password (non-super-admin)
+    const isSuperAdmin = userRole === 'super-admin';
+    
+    if (!isSuperAdmin && needsPasswordChange) {
+      // Set flag for first login
+      localStorage.setItem('firstLogin', 'true');
+      console.log('User needs to change password, redirecting to change password page');
+      navigate('/change-password', { replace: true });
+      return;
+    }
+
+    const roleRoutes: Record<string, string> = {
+      'super-admin': '/super-admin/dashboard',
+      'superadmin': '/super-admin/dashboard',
+      'admin': '/admin/dashboard',
+      'manager': '/manager/dashboard',
+      'employee': '/employee/dashboard',
+      'management': '/management/dashboard',
+    };
+
+    let redirectPath = roleRoutes[userRole];
+    
+    if (!redirectPath) {
+      console.warn('No route found for role:', userRole);
+      setErrorMessage('You are not registered. Please contact admin.');
+      setIsLoading(false);
+      return;
+    }
+    
+    console.log('Redirecting to:', redirectPath);
+    navigate(redirectPath, { replace: true });
+    
+  } catch (error: any) {
+    console.error('Login error details:', error);
+    
+    if (error.response?.status === 401) {
+      setErrorMessage('You are not registered. Please contact admin.');
+    } else if (error.code === 'ERR_NETWORK' || error.message === 'Network Error') {
+      setErrorMessage('Cannot connect to server. Please check your connection.');
+    } else if (error.response) {
+      const status = error.response.status;
+      const apiMessage = error.response.data?.message || error.response.data?.error;
+      
+      switch (status) {
+        case 401:
+          setErrorMessage('You are not registered. Please contact admin.');
+          break;
+        case 400:
+          setErrorMessage(apiMessage || 'Invalid request. Please check your input.');
+          break;
+        case 404:
+          setErrorMessage('Login endpoint not found.');
+          break;
+        case 500:
+          setErrorMessage('Server error. Please try again later.');
+          break;
+        default:
+          setErrorMessage('You are not registered. Please contact admin.');
+      }
+    } else if (error.request) {
+      setErrorMessage('No response from server. Please try again.');
+    } else {
+      setErrorMessage('You are not registered. Please contact admin.');
+    }
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 py-6 px-4">

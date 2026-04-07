@@ -3,6 +3,7 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import PrivateRoute from './PrivateRoute';
 import Login from '../../auth/pages/Login';
+
 // import AuthRoutes from '../../auth/routes/AuthRoutes';
 // import EmployeeRegistration from '../../auth/registration/EmployeeRegistration';
 // import ForgotPassword from '../../auth/pages/ForgotPassword';
@@ -13,6 +14,7 @@ import AdminRoutes from '../../modules/admin/routes/AdminRoutes';
 import ManagerRoutes from '../../modules/manager/routes/ManagerRoutes';
 import EmployeeRoutes from '../../modules/employee/routes/EmployeeRoutes';
 import ManagementRoutes from "../../modules/management/routes/ManagementRoutes";
+import ChangePassword from '../../auth/pages/ChangePassword';
 
 const AppRoutes = () => {
   const token = localStorage.getItem('authToken') || localStorage.getItem('auth');
@@ -78,7 +80,9 @@ const AppRoutes = () => {
             : <Navigate to="/login" replace />
         }
       />
+       <Route path="/change-password" element={<ChangePassword />} />
     </Routes>
+    
   );
 };
 

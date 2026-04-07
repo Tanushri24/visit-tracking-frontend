@@ -8,8 +8,9 @@ import type { EmployeeDetailsTabProps } from './types';
 const EmployeeDetailsTab: React.FC<EmployeeDetailsTabProps> = ({
     formData,
     errors,
-    designations,
+    
     departments,
+    designations,
     managers,
     locations,
     userRoles,
@@ -171,38 +172,7 @@ const EmployeeDetailsTab: React.FC<EmployeeDetailsTabProps> = ({
                         )}
                     </div>
 
-                    <div className="space-y-1.5">
-                        <label className="text-xs font-medium text-gray-600 flex items-center gap-1.5">
-                            <Briefcase className="w-3.5 h-3.5 text-purple-500" />
-                            Designation <span className="text-red-500">*</span>
-                        </label>
-                        <div className="relative">
-                            <select
-                                name="designation"
-                                value={formData.designation}
-                                onChange={onInputChange}
-                                onBlur={onBlur}
-                                className={`w-full px-3 py-2 text-sm rounded-lg border appearance-none
-                                    focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent
-                                    ${getFieldError('designation')
-                                        ? 'border-red-500 bg-red-50'
-                                        : 'border-gray-300 hover:border-purple-400'
-                                    }`}
-                            >
-                                <option value="" disabled>Select designation</option>
-                                {designations.map(des => (
-                                    <option key={des.id} value={des.id}>{des.name}</option>
-                                ))}
-                            </select>
-                            <ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" />
-                        </div>
-                        {getFieldError('designation') && (
-                            <p className="text-xs text-red-500 flex items-center gap-1">
-                                <span className="w-1 h-1 bg-red-500 rounded-full"></span>
-                                {errors.designation}
-                            </p>
-                        )}
-                    </div>
+                   
 
                     <div className="space-y-1.5">
                         <label className="text-xs font-medium text-gray-600 flex items-center gap-1.5">
@@ -233,6 +203,38 @@ const EmployeeDetailsTab: React.FC<EmployeeDetailsTabProps> = ({
                             <p className="text-xs text-red-500 flex items-center gap-1">
                                 <span className="w-1 h-1 bg-red-500 rounded-full"></span>
                                 {errors.department}
+                            </p>
+                        )}
+                    </div>
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-medium text-gray-600 flex items-center gap-1.5">
+                            <Briefcase className="w-3.5 h-3.5 text-purple-500" />
+                            Designation <span className="text-red-500">*</span>
+                        </label>
+                        <div className="relative">
+                            <select
+                                name="designation"
+                                value={formData.designation}
+                                onChange={onInputChange}
+                                onBlur={onBlur}
+                                className={`w-full px-3 py-2 text-sm rounded-lg border appearance-none
+                                    focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent
+                                    ${getFieldError('designation')
+                                        ? 'border-red-500 bg-red-50'
+                                        : 'border-gray-300 hover:border-purple-400'
+                                    }`}
+                            >
+                                <option value="" disabled>Select designation</option>
+                                {designations.map(des => (
+                                    <option key={des.id} value={des.id}>{des.name}</option>
+                                ))}
+                            </select>
+                            <ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" />
+                        </div>
+                        {getFieldError('designation') && (
+                            <p className="text-xs text-red-500 flex items-center gap-1">
+                                <span className="w-1 h-1 bg-red-500 rounded-full"></span>
+                                {errors.designation}
                             </p>
                         )}
                     </div>
