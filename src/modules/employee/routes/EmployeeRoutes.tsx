@@ -1,6 +1,10 @@
 import { Route, Routes } from 'react-router-dom';
 import Layout from '../../../Layouts/Layout';
 import EmployeeDashboard from '../pages/EmployeeDashboard';
+import VisitEntryForm from '../pages/components/VisitsEntryForm';
+import MyVisit from '../pages/components/MyVisit';
+import VisitFollowUps from '../pages/components/VisitFollowUps';
+import VisitAttachments from '../pages/components/VisitAttachments';
 
 // Import other pages when ready
 // import MyVisits from '../pages/MyVisits';
@@ -25,15 +29,37 @@ const EmployeeRoutes = () => {
         element={<EmployeeLayout><EmployeeDashboard /></EmployeeLayout>} 
       />
       
-      {/* My Visits */}
-      {/* <Route 
-        path="visits" 
-        element={<EmployeeLayout><MyVisits /></EmployeeLayout>} 
+
+
+      {/* Visits Entry Form */}
+        <Route 
+         path="visit-entry" 
+        element={<EmployeeLayout><VisitEntryForm /></EmployeeLayout>} 
       />
+      
+       {/* My Visits */}
+       <Route
+        path="my-visits"
+        element={<EmployeeLayout><MyVisit /></EmployeeLayout>}
+      />
+
+      {/* Visit Follow-Ups */}
+      <Route
+      path="visit-followups"
+      element={<EmployeeLayout><VisitFollowUps /></EmployeeLayout>}
+      />
+
+        
       <Route 
+         path="visit-attachments" 
+        element={<EmployeeLayout><VisitAttachments /></EmployeeLayout>} 
+      />
+
+
+      {/* <Route 
         path="visits/:id" 
         element={<EmployeeLayout><VisitDetails /></EmployeeLayout>} 
-      /> */}
+      /> */} 
       
       {/* My Schedule */}
       {/* <Route 

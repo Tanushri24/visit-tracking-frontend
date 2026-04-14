@@ -84,12 +84,11 @@ const ContactPersonMaster = () => {
   const [editMode, setEditMode] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
   const [errorMessage, setErrorMessage] = useState("");
-
   const [companies, setCompanies] = useState<CompanyApiOption[]>([]);
   const [organizations, setOrganizations] = useState<OrganisationApiOption[]>([]);
   const [departments, setDepartments] = useState<DepartmentApiOption[]>([]);
   
-  // Form state for new/edit contact
+  // Form state
   const [form, setForm] = useState({
     companyId: 0,
     organisationId: 0,
@@ -99,15 +98,51 @@ const ContactPersonMaster = () => {
     mobile: "",
     email: "",
     remark: "",
-    isActive: true,
+    isActive: true
   });
 
-  // Get unique values for filters
-  const companiesList = ['all', ...new Set(contacts.map(c => c.companyName))];
-  const organisationsList = ['all', ...new Set(contacts.map(c => c.organisationName))];
-  const departmentsList = ['all', ...new Set(contacts.map(c => c.department))];
+  const filteredOrganizationsForForm =
+    form.companyId === 0
+      ? organizations
+      : organizations.filter(org => org.companyId === 0 || org.companyId === form.companyId);
 
-  // Filter contacts based on search and filters
+  const filteredDepartmentsForForm =
+    form.organisationId === 0
+      ? departments
+      : departments.filter(dept => dept.organisationId === form.organisationId);
+
+  // Get unique values for filters
+  const companiesList = ['all', ...new Set(companies.map(c => c.companyName))];
+  const organisationsList = [
+    'all',
+    ...new Set(
+      organizations
+        .filter(org => filterCompany === 'all' || companies.find(c => c.companyName === filterCompany)?.id === org.companyId)
+        .map(o => o.organisationName)
+    )
+  ];
+  const departmentsList = [
+    'all',
+    ...new Set(
+      departments
+        .filter(dept => {
+          if (filterOrganization !== 'all') {
+            const selectedOrg = organizations.find(o => o.organisationName === filterOrganization);
+            return selectedOrg ? dept.organisationId === selectedOrg.id : false;
+          }
+          if (filterCompany !== 'all') {
+            const selectedCompanyId = companies.find(c => c.companyName === filterCompany)?.id;
+            return selectedCompanyId
+              ? organizations.some(org => org.companyId === selectedCompanyId && org.id === dept.organisationId)
+              : false;
+          }
+          return true;
+        })
+        .map(d => d.departmentName)
+    )
+  ];
+
+  // Filter contacts
   const filteredContacts = contacts.filter(contact => {
     const matchesSearch = 
       contact.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -135,41 +170,61 @@ const ContactPersonMaster = () => {
   const currentItems = filteredContacts.slice(indexOfFirstItem, indexOfLastItem);
   const totalPages = Math.ceil(filteredContacts.length / itemsPerPage);
 
-  const fetchContacts = async () => {
-    setLoading(true);
-    try {
-      const res = await contactService.getAll();
-      if (res.data && res.data.length > 0) {
-        setContacts(res.data);
-      }
-    } catch (err) {
-      console.error("Error fetching contacts", err);
-    }
-    setLoading(false);
-  };
+ const fetchContacts = async () => {
+  setLoading(true);
+  try {
+    const res = await contactService.getAll();
 
+    console.log("Full API Response:", res);
+
+    const data =
+      res?.data?.data ||
+      res?.data?.items ||
+      res?.data ||
+      [];
+
+    setContacts(Array.isArray(data) ? data : []);
+  } catch (err) {
+    console.error("Error fetching contacts", err);
+    setContacts([]);
+  }
+  setLoading(false);
+};
   const fetchLookupData = async () => {
     setLookupLoading(true);
     try {
-      const [companiesRes, organisationsRes, departmentsRes] = await Promise.all([
-        contactService.getCompanies(),
-        contactService.getOrganisations(),
-        contactService.getDepartments(),
-      ]);
+      const companiesRes = await contactService.getCompanies();
+      const organisationsRes = await contactService.getOrganisations();
+      const departmentsRes = await contactService.getDepartments();
+
       setCompanies(companiesRes);
       setOrganizations(organisationsRes);
       setDepartments(departmentsRes);
     } catch (error) {
-      console.error("Error fetching contact master dependencies", error);
-    } finally {
-      setLookupLoading(false);
+      console.error("Error fetching lookup data", error);
     }
+    setLookupLoading(false);
   };
 
   useEffect(() => {
     fetchContacts();
     fetchLookupData();
   }, []);
+
+  useEffect(() => {
+    setForm(prev => ({
+      ...prev,
+      organisationId: 0,
+      departmentId: 0
+    }));
+  }, [form.companyId]);
+
+  useEffect(() => {
+    setForm(prev => ({
+      ...prev,
+      departmentId: 0
+    }));
+  }, [form.organisationId]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
@@ -201,7 +256,8 @@ const ContactPersonMaster = () => {
       return;
     }
 
-    if (selectedOrganisation.companyId !== selectedCompany.id) {
+    // ✅ FIX: Skip company-organisation validation if organisation.companyId === 0
+    if (selectedOrganisation.companyId !== 0 && selectedOrganisation.companyId !== selectedCompany.id) {
       setErrorMessage("Selected organisation does not belong to the selected company.");
       return;
     }
@@ -245,7 +301,6 @@ const ContactPersonMaster = () => {
         setErrorMessage(apiMessage);
         return;
       }
-
       setErrorMessage("Unable to save contact person. Please try again.");
     }
   };
@@ -287,7 +342,6 @@ const ContactPersonMaster = () => {
     setEditId(null);
   };
 
-  // Delete contact
   const handleDeleteContact = () => {
     if (contactToDelete) {
       setContacts(contacts.filter(c => c.id !== contactToDelete.id));
@@ -296,19 +350,16 @@ const ContactPersonMaster = () => {
     }
   };
 
-  // Open delete confirmation modal
   const openDeleteModal = (contact: ContactPerson) => {
     setContactToDelete(contact);
     setShowDeleteModal(true);
   };
 
-  // View contact details
   const viewContactDetails = (contact: ContactPerson) => {
     setSelectedContact(contact);
     setShowViewModal(true);
   };
 
-  // Export to CSV
   const exportToCSV = () => {
     const headers = ['Name', 'Designation', 'Department', 'Organisation', 'Company', 'Email', 'Mobile', 'City', 'Status'];
     const csvData = filteredContacts.map(contact => [
@@ -322,7 +373,6 @@ const ContactPersonMaster = () => {
       contact.city,
       contact.status
     ]);
-    
     const csvContent = [headers, ...csvData].map(row => row.join(',')).join('\n');
     const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
@@ -370,7 +420,6 @@ const ContactPersonMaster = () => {
       {/* Action Bar */}
       <div className="bg-white rounded-lg shadow mb-6">
         <div className="p-4 flex flex-col md:flex-row gap-4 items-stretch md:items-center justify-between">
-          {/* Search */}
           <div className="relative flex-1 max-w-full md:max-w-md">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
             <input
@@ -381,8 +430,6 @@ const ContactPersonMaster = () => {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-
-          {/* Action Buttons */}
           <div className="flex gap-2">
             <button
               onClick={() => {
@@ -606,7 +653,7 @@ const ContactPersonMaster = () => {
         </div>
       )}
 
-      {/* View Details Modal */}
+      {/* View Details Modal (unchanged) */}
       {showViewModal && selectedContact && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -625,22 +672,10 @@ const ContactPersonMaster = () => {
                     <UserCircle size={20} /> Personal Information
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                      <p className="text-sm text-gray-500">Full Name</p>
-                      <p className="font-medium">{selectedContact.name}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Gender</p>
-                      <p className="font-medium">{selectedContact.gender}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Date of Birth</p>
-                      <p className="font-medium">{selectedContact.dateOfBirth ? new Date(selectedContact.dateOfBirth).toLocaleDateString() : 'N/A'}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Anniversary</p>
-                      <p className="font-medium">{selectedContact.anniversaryDate ? new Date(selectedContact.anniversaryDate).toLocaleDateString() : 'N/A'}</p>
-                    </div>
+                    <div><p className="text-sm text-gray-500">Full Name</p><p className="font-medium">{selectedContact.name}</p></div>
+                    <div><p className="text-sm text-gray-500">Gender</p><p className="font-medium">{selectedContact.gender}</p></div>
+                    <div><p className="text-sm text-gray-500">Date of Birth</p><p className="font-medium">{selectedContact.dateOfBirth ? new Date(selectedContact.dateOfBirth).toLocaleDateString() : 'N/A'}</p></div>
+                    <div><p className="text-sm text-gray-500">Anniversary</p><p className="font-medium">{selectedContact.anniversaryDate ? new Date(selectedContact.anniversaryDate).toLocaleDateString() : 'N/A'}</p></div>
                   </div>
                 </div>
                 <div className="border-b pb-4">
@@ -648,30 +683,12 @@ const ContactPersonMaster = () => {
                     <Building2 size={20} /> Professional Information
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-sm text-gray-500">Designation</p>
-                      <p className="font-medium">{selectedContact.designation}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Department</p>
-                      <p className="font-medium">{selectedContact.department}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Organisation</p>
-                      <p className="font-medium">{selectedContact.organisationName}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Company</p>
-                      <p className="font-medium">{selectedContact.companyName}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Reporting To</p>
-                      <p className="font-medium">{selectedContact.reportingTo || 'N/A'}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Remarks</p>
-                      <p className="font-medium">{selectedContact.remarks || 'N/A'}</p>
-                    </div>
+                    <div><p className="text-sm text-gray-500">Designation</p><p className="font-medium">{selectedContact.designation}</p></div>
+                    <div><p className="text-sm text-gray-500">Department</p><p className="font-medium">{selectedContact.department}</p></div>
+                    <div><p className="text-sm text-gray-500">Organisation</p><p className="font-medium">{selectedContact.organisationName}</p></div>
+                    <div><p className="text-sm text-gray-500">Company</p><p className="font-medium">{selectedContact.companyName}</p></div>
+                    <div><p className="text-sm text-gray-500">Reporting To</p><p className="font-medium">{selectedContact.reportingTo || 'N/A'}</p></div>
+                    <div><p className="text-sm text-gray-500">Remarks</p><p className="font-medium">{selectedContact.remarks || 'N/A'}</p></div>
                   </div>
                 </div>
                 <div className="border-b pb-4">
@@ -679,26 +696,11 @@ const ContactPersonMaster = () => {
                     <Mail size={20} /> Contact Information
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-sm text-gray-500">Email</p>
-                      <p className="font-medium text-blue-600">{selectedContact.email}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Mobile</p>
-                      <p className="font-medium">{selectedContact.mobile}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Alternate Phone</p>
-                      <p className="font-medium">{selectedContact.alternatePhone || 'N/A'}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">WhatsApp</p>
-                      <p className="font-medium">{selectedContact.whatsappNumber || 'N/A'}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Preferred Contact Mode</p>
-                      <p className="font-medium">{selectedContact.preferredContactMode || 'Any'}</p>
-                    </div>
+                    <div><p className="text-sm text-gray-500">Email</p><p className="font-medium text-blue-600">{selectedContact.email}</p></div>
+                    <div><p className="text-sm text-gray-500">Mobile</p><p className="font-medium">{selectedContact.mobile}</p></div>
+                    <div><p className="text-sm text-gray-500">Alternate Phone</p><p className="font-medium">{selectedContact.alternatePhone || 'N/A'}</p></div>
+                    <div><p className="text-sm text-gray-500">WhatsApp</p><p className="font-medium">{selectedContact.whatsappNumber || 'N/A'}</p></div>
+                    <div><p className="text-sm text-gray-500">Preferred Contact Mode</p><p className="font-medium">{selectedContact.preferredContactMode || 'Any'}</p></div>
                   </div>
                 </div>
                 <div className="border-b pb-4">
@@ -714,35 +716,15 @@ const ContactPersonMaster = () => {
                 <div>
                   <h3 className="text-lg font-semibold text-purple-600 mb-3">Status & System Information</h3>
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div>
-                      <p className="text-sm text-gray-500">Status</p>
-                      <span className={`inline-flex px-2 py-1 rounded-full text-xs font-semibold ${selectedContact.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                        {selectedContact.status}
-                      </span>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Decision Maker</p>
-                      <span className={`inline-flex px-2 py-1 rounded-full text-xs font-semibold ${selectedContact.isDecisionMaker ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'}`}>
-                        {selectedContact.isDecisionMaker ? 'Yes' : 'No'}
-                      </span>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Primary Contact</p>
-                      <span className={`inline-flex px-2 py-1 rounded-full text-xs font-semibold ${selectedContact.isPrimary ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-800'}`}>
-                        {selectedContact.isPrimary ? 'Primary' : 'Secondary'}
-                      </span>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Created At</p>
-                      <p className="text-sm">{selectedContact.createdAt ? new Date(selectedContact.createdAt).toLocaleDateString() : 'N/A'}</p>
-                    </div>
+                    <div><p className="text-sm text-gray-500">Status</p><span className={`inline-flex px-2 py-1 rounded-full text-xs font-semibold ${selectedContact.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>{selectedContact.status}</span></div>
+                    <div><p className="text-sm text-gray-500">Decision Maker</p><span className={`inline-flex px-2 py-1 rounded-full text-xs font-semibold ${selectedContact.isDecisionMaker ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'}`}>{selectedContact.isDecisionMaker ? 'Yes' : 'No'}</span></div>
+                    <div><p className="text-sm text-gray-500">Primary Contact</p><span className={`inline-flex px-2 py-1 rounded-full text-xs font-semibold ${selectedContact.isPrimary ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-800'}`}>{selectedContact.isPrimary ? 'Primary' : 'Secondary'}</span></div>
+                    <div><p className="text-sm text-gray-500">Created At</p><p className="text-sm">{selectedContact.createdAt ? new Date(selectedContact.createdAt).toLocaleDateString() : 'N/A'}</p></div>
                   </div>
                 </div>
               </div>
               <div className="flex justify-end mt-6">
-                <button onClick={() => { setShowViewModal(false); setSelectedContact(null); }} className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">
-                  Close
-                </button>
+                <button onClick={() => { setShowViewModal(false); setSelectedContact(null); }} className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">Close</button>
               </div>
             </div>
           </div>
@@ -799,11 +781,11 @@ const ContactPersonMaster = () => {
                         required
                       >
                         <option value={0}>Select Organisation</option>
-                        {organizations
-                          .filter(org => form.companyId === 0 || org.companyId === form.companyId)
-                          .map(org => (
-                            <option key={org.id} value={org.id}>{org.organisationName}</option>
-                          ))}
+                        {filteredOrganizationsForForm.map(org => (
+                          <option key={org.id} value={org.id}>
+                            {org.organisationName}
+                          </option>
+                        ))}
                       </select>
                     </div>
                     <div>
@@ -816,7 +798,7 @@ const ContactPersonMaster = () => {
                         required
                       >
                         <option value={0}>Select Department</option>
-                        {departments.map(dept => (
+                        {filteredDepartmentsForForm.map(dept => (
                           <option key={dept.id} value={dept.id}>{dept.departmentName}</option>
                         ))}
                       </select>

@@ -27,6 +27,7 @@ export interface CreateEmployeeRequest {
 export interface LookupOption {
     id: number;
     name: string;
+    departmentId?: number;
 }
 
 export interface ManagerOption extends LookupOption {
@@ -131,12 +132,17 @@ export const getDesignations = async (): Promise<LookupOption[]> => {
         (item) => {
             const id = Number(item?.id ?? item?.designationId);
             const name = item?.designationName ?? item?.name;
+            const departmentId = Number(item?.departmentId ?? item?.deptId ?? item?.department?.id);
 
             if (!id || !name) {
                 return null;
             }
 
-            return { id, name: String(name) };
+            return {
+                id,
+                name: String(name),
+                ...(departmentId ? { departmentId } : {}),
+            };
         }
     );
 };

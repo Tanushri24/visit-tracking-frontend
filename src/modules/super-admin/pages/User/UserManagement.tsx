@@ -28,6 +28,7 @@ import {
   fetchUserRoles 
 } from '../../services/userDropdownService';
 import { useNavigate } from 'react-router-dom';
+import { getReporting } from '../../services/user.Service';
 
 const UserManagement: React.FC = () => {
   const [showFilterMenu, setShowFilterMenu] = useState(false);
@@ -85,23 +86,39 @@ const UserManagement: React.FC = () => {
     setLoading(true);
     setLoadingDropdowns(true);
     try {
-      const [usersData, depts, desigs, mgrs, locs, roles] = await Promise.all([
+      const [usersData, depts, desigs, mgrs, locs, roles, reportingMgrs] = await Promise.all([
         fetchUsers(),
         fetchDepartments(),
         fetchDesignations(),
         fetchManagers(),
         fetchLocations(),
-        fetchUserRoles()
+        fetchUserRoles(),
+        getReporting()
       ]);
+
+      const reportingMgrOptions = reportingMgrs.map((mgr) => ({
+        id: mgr.id,
+        name: mgr.displayName
+      }));
+
+      // Merge managers from fetchManagers and getReporting, remove duplicates by id
+      const combinedManagers = [...mgrs];
+      reportingMgrOptions.forEach(reportingMgr => {
+        if (!combinedManagers.some(mgr => mgr.id === reportingMgr.id)) {
+          combinedManagers.push(reportingMgr);
+        }
+      });
+
+      const locationsForMapping = locs.length > 0 ? locs : reportingMgrOptions;
       
-      initializeMappings(desigs, depts, mgrs, locs, roles);
+      initializeMappings(desigs, depts, mgrs, locationsForMapping, roles, reportingMgrOptions);
       const transformedUsers = await fetchUsers();
       
       setUsers(transformedUsers);
       setDepartments(depts);
       setDesignations(desigs);
-      setManagers(mgrs);
-      setLocations(locs);
+      setManagers(combinedManagers); // Use combined managers list
+      setLocations(locs.length > 0 ? locs : reportingMgrOptions);
       setUserRoles(roles);
     } catch (err) {
       console.error('Failed to load data:', err);

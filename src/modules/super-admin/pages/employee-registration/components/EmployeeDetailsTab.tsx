@@ -8,7 +8,6 @@ import type { EmployeeDetailsTabProps } from './types';
 const EmployeeDetailsTab: React.FC<EmployeeDetailsTabProps> = ({
     formData,
     errors,
-    
     departments,
     designations,
     managers,
@@ -27,6 +26,7 @@ const EmployeeDetailsTab: React.FC<EmployeeDetailsTabProps> = ({
                 </h3>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Employee Code */}
                     <div className="space-y-1.5">
                         <label className="text-xs font-medium text-gray-600 flex items-center gap-1.5">
                             <Award className="w-3.5 h-3.5 text-purple-500" />
@@ -54,6 +54,7 @@ const EmployeeDetailsTab: React.FC<EmployeeDetailsTabProps> = ({
                         )}
                     </div>
 
+                    {/* Role */}
                     <div className="space-y-1.5">
                         <label className="text-xs font-medium text-gray-600 flex items-center gap-1.5">
                             <Shield className="w-3.5 h-3.5 text-purple-500" />
@@ -87,6 +88,7 @@ const EmployeeDetailsTab: React.FC<EmployeeDetailsTabProps> = ({
                         )}
                     </div>
 
+                    {/* Full Name */}
                     <div className="space-y-1.5">
                         <label className="text-xs font-medium text-gray-600 flex items-center gap-1.5">
                             <User className="w-3.5 h-3.5 text-purple-500" />
@@ -114,6 +116,7 @@ const EmployeeDetailsTab: React.FC<EmployeeDetailsTabProps> = ({
                         )}
                     </div>
 
+                    {/* Email */}
                     <div className="space-y-1.5">
                         <label className="text-xs font-medium text-gray-600 flex items-center gap-1.5">
                             <Mail className="w-3.5 h-3.5 text-purple-500" />
@@ -141,6 +144,7 @@ const EmployeeDetailsTab: React.FC<EmployeeDetailsTabProps> = ({
                         )}
                     </div>
 
+                    {/* Mobile */}
                     <div className="space-y-1.5">
                         <label className="text-xs font-medium text-gray-600 flex items-center gap-1.5">
                             <Phone className="w-3.5 h-3.5 text-purple-500" />
@@ -172,8 +176,7 @@ const EmployeeDetailsTab: React.FC<EmployeeDetailsTabProps> = ({
                         )}
                     </div>
 
-                   
-
+                    {/* Department */}
                     <div className="space-y-1.5">
                         <label className="text-xs font-medium text-gray-600 flex items-center gap-1.5">
                             <Building className="w-3.5 h-3.5 text-purple-500" />
@@ -206,7 +209,9 @@ const EmployeeDetailsTab: React.FC<EmployeeDetailsTabProps> = ({
                             </p>
                         )}
                     </div>
-                      <div className="space-y-1.5">
+
+                    {/* Designation */}
+                    <div className="space-y-1.5">
                         <label className="text-xs font-medium text-gray-600 flex items-center gap-1.5">
                             <Briefcase className="w-3.5 h-3.5 text-purple-500" />
                             Designation <span className="text-red-500">*</span>
@@ -239,6 +244,7 @@ const EmployeeDetailsTab: React.FC<EmployeeDetailsTabProps> = ({
                         )}
                     </div>
 
+                    {/* Reporting Manager – now populated via parent using getReporting */}
                     <div className="space-y-1.5">
                         <label className="text-xs font-medium text-gray-600 flex items-center gap-1.5">
                             <User className="w-3.5 h-3.5 text-purple-500" />
@@ -258,9 +264,11 @@ const EmployeeDetailsTab: React.FC<EmployeeDetailsTabProps> = ({
                                     }`}
                             >
                                 <option value="" disabled>Select manager</option>
-                                {managers.map(mgr => (
-                                    <option key={mgr.id} value={mgr.id}>{mgr.name}</option>
-                                ))}
+                                {managers.map((mgr) => (
+                                 <option key={mgr.id} value={mgr.id}>
+                                 {mgr.id} - {mgr.name}
+                            </option>
+                                 ))}
                             </select>
                             <ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" />
                         </div>
@@ -272,6 +280,7 @@ const EmployeeDetailsTab: React.FC<EmployeeDetailsTabProps> = ({
                         )}
                     </div>
 
+                    {/* Work Location */}
                     <div className="space-y-1.5">
                         <label className="text-xs font-medium text-gray-600 flex items-center gap-1.5">
                             <MapPin className="w-3.5 h-3.5 text-purple-500" />

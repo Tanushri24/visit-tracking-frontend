@@ -18,6 +18,7 @@ import type {
 import { validateRegistrationForm } from './components/validation';
 
 import { registrationApi, type CreateEmployeeRequest } from '../../services/registrationApi';
+import { getReporting } from '../../services/user.Service';
 
 const EmployeeRegistration: React.FC = () => {
     const navigate = useNavigate();
@@ -37,22 +38,20 @@ const EmployeeRegistration: React.FC = () => {
     // Department API data
     const [departments, setDepartments] = useState<Department[]>([]);
 
-    const [designations] = useState<Designation[]>([
-        { id: 1, name: 'Designation 1' },
-        { id: 123, name: 'Designation 123' }
-    ]);
+    // Designation API data
+    const [designations, setDesignations] = useState<Designation[]>([]);
 
-    const [managers] = useState<Manager[]>([
-        { id: 12, name: 'Reporting Manager 12', email: 'manager12@agnigate.com' }
-    ]);
+    // Manager API data
+    const [managers, setManagers] = useState<Manager[]>([]);
 
-    const [locations] = useState<Location[]>([
-        { id: 2, name: 'Bhopal', city: '' },
-        { id: 3, name: 'Indore', city: '' },
-        { id: 4, name: 'Jabalpur', city: '' },
-        { id: 5, name: 'Sagar', city: '' },
-        { id: 7, name: 'Sehore', city: '' }
-    ]);
+    // Location API data
+    const [locations, setLocations] = useState<Location[]>([]);
+
+    const hasDepartmentInfo = designations.some(des => typeof des.departmentId === 'number');
+    const selectedDepartmentId = Number(formData.department);
+    const filteredDesignations = hasDepartmentInfo && selectedDepartmentId
+        ? designations.filter(des => des.departmentId === selectedDepartmentId)
+        : designations;
 
     // Get current user role from localStorage
     const currentUserRole = localStorage.getItem('role');
@@ -92,6 +91,63 @@ const EmployeeRegistration: React.FC = () => {
         };
         fetchDepartments();
     }, []);
+
+    // Fetch designations from API
+    useEffect(() => {
+        const fetchDesignations = async () => {
+            try {
+                const desigs = await registrationApi.getDesignations();
+                setDesignations(desigs);
+            } catch (error) {
+                console.error('Error fetching designations:', error);
+            }
+        };
+        fetchDesignations();
+    }, []);
+
+    useEffect(() => {
+        if (formData.designation) {
+            setFormData(prev => ({
+                ...prev,
+                designation: ''
+            }));
+        }
+    }, [formData.department]);
+
+    // Fetch locations from API
+    useEffect(() => {
+        const fetchLocations = async () => {
+            try {
+                const locs = await registrationApi.getLocations();
+                setLocations(locs);
+            } catch (error) {
+                console.error('Error fetching locations:', error);
+            }
+        };
+        fetchLocations();
+    }, []);
+
+    // Fetch managers from API
+   useEffect(() => {
+    const fetchManagers = async () => {
+        try {
+            const data = await getReporting();
+
+            console.log("Managers API Response:", data);
+
+            const mgrs: Manager[] = data.map((manager) => ({
+                id: manager.id,
+                name: manager.displayName
+            }));
+
+            setManagers(mgrs);
+        } catch (error) {
+            console.error("Error fetching managers:", error);
+        }
+    };
+
+    fetchManagers();
+}, []);
 
     useEffect(() => {
         if (touched.size > 0) {
@@ -255,7 +311,7 @@ if (response.success) {
                                 formData={formData}
                                 errors={errors}
                                 touched={touched}
-                                designations={designations}
+                                designations={filteredDesignations}
                                 departments={departments}
                                 managers={managers}
                                 locations={locations}

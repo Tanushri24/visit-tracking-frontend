@@ -131,31 +131,7 @@ const UserFormModal: React.FC<UserFormModalProps> = ({
             {errors.mobile && <p className="text-xs text-red-500 mt-1">{errors.mobile}</p>}
           </div>
           
-          {/* Designation - Using ID */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
-              <Briefcase className="w-4 h-4 text-purple-500" />
-              Designation <span className="text-red-500">*</span>
-            </label>
-            <div className="relative">
-              <select
-                name="designationId"
-                value={formData.designationId || ''}
-                onChange={onInputChange}
-                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm appearance-none
-                  ${errors.designationId ? 'border-red-500 bg-red-50' : 'border-gray-300'}`}
-              >
-                <option value="">Select designation</option>
-                {designations.map(des => (
-                  <option key={des.id} value={des.id}>{des.name}</option>
-                ))}
-              </select>
-              <ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" />
-            </div>
-            {errors.designationId && <p className="text-xs text-red-500 mt-1">{errors.designationId}</p>}
-          </div>
-          
-          {/* Department - Using ID */}
+          {/* Department - Now above Designation */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
               <Building2 className="w-4 h-4 text-purple-500" />
@@ -177,6 +153,30 @@ const UserFormModal: React.FC<UserFormModalProps> = ({
               <ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" />
             </div>
             {errors.departmentId && <p className="text-xs text-red-500 mt-1">{errors.departmentId}</p>}
+          </div>
+          
+          {/* Designation - Moved below Department */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
+              <Briefcase className="w-4 h-4 text-purple-500" />
+              Designation <span className="text-red-500">*</span>
+            </label>
+            <div className="relative">
+              <select
+                name="designationId"
+                value={formData.designationId || ''}
+                onChange={onInputChange}
+                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm appearance-none
+                  ${errors.designationId ? 'border-red-500 bg-red-50' : 'border-gray-300'}`}
+              >
+                <option value="">Select designation</option>
+                {designations.map(des => (
+                  <option key={des.id} value={des.id}>{des.name}</option>
+                ))}
+              </select>
+              <ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" />
+            </div>
+            {errors.designationId && <p className="text-xs text-red-500 mt-1">{errors.designationId}</p>}
           </div>
           
           {/* Role - Using ID */}
