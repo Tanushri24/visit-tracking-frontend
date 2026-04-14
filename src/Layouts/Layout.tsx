@@ -147,9 +147,14 @@ const managerMenu: NavItem[] = [
 ];
 
 const employeeMenu: NavItem[] = [
-  { icon: 'LayoutDashboard', label: 'My Dashboard', href: '/employee/dashboard', active: true },
-  { icon: 'MapPin', label: 'My Visits', href: '/employee/visits' },
-  { icon: 'Clock', label: 'My Follow-ups', href: '/employee/followups', badge: '3' },
+  { icon: "LayoutDashboard", label: "My Dashboard", href: "/employee/dashboard", active: true },
+  { icon: "MapPin", label: "Visit Entry Form", href: "/employee/visit-entry" },
+  { icon: "MapPin", label: "My Visits", href: "/employee/my-visits" },
+  { icon: "Clock", label: "Visit Follow-Ups", href: "/employee/visit-followups" },
+
+
+
+  { icon: 'Paperclip', label: 'Visit Attachments', href: '/employee/visit-attachments', badge: '2' },
   { icon: 'DollarSign', label: 'My Expenses', href: '/employee/expenses' }
 ];
 

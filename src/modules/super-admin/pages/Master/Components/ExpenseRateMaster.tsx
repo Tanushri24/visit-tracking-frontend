@@ -13,14 +13,12 @@ import {
   Calendar,
   TrendingUp,
   PieChart,
-  Trash2,
   AlertCircle,
   CheckCircle
 } from 'lucide-react';
 import { 
   getExpenseRates, 
   createExpenseRate, 
-  deleteExpenseRate,
   type ExpenseRateResponse 
 } from '../../../services/ExpenseRate.service';
 import { getVehicleTypes, type VehicleTypeResponse } from '../../../services/VehicleType.service';
@@ -53,8 +51,8 @@ const ExpenseRateMaster = () => {
   const [selectedRate, setSelectedRate] = useState<ExpenseRate | null>(null);
   const [showViewModal, setShowViewModal] = useState(false);
   const [showInsertModal, setShowInsertModal] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [rateToDelete, setRateToDelete] = useState<ExpenseRate | null>(null);
+  // const [showDeleteModal, setShowDeleteModal] = useState(false);
+  // const [rateToDelete, setRateToDelete] = useState<ExpenseRate | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   const [newRate, setNewRate] = useState({
@@ -118,7 +116,7 @@ const ExpenseRateMaster = () => {
     }
   };
 
-  const getVehicleTypeName = (vehicleTypeId: number): string => {
+  const getVehicleTypeN = (vehicleTypeId: number): string => {
     const vehicle = vehicleTypes.find(vt => vt.id === vehicleTypeId);
     return vehicle?.vehicleName || `Vehicle Type ${vehicleTypeId}`;
   };
@@ -152,34 +150,34 @@ const ExpenseRateMaster = () => {
   };
   
   // Delete rate
-  const handleDeleteRate = async () => {
-    if (rateToDelete) {
-      try {
-        setLoading(true);
-        const response = await deleteExpenseRate(rateToDelete.id);
+  // const handleDeleteRate = async () => {
+  //   if (rateToDelete) {
+  //     try {
+  //       setLoading(true);
+  //       const response = await deleteExpenseRate(rateToDelete.id);
         
-        if (response.success) {
-          setRates(rates.filter(r => r.id !== rateToDelete.id));
-          setShowDeleteModal(false);
-          setRateToDelete(null);
-          setSuccessMessage(`Expense rate for "${rateToDelete.vehicleTypeName}" deleted successfully!`);
-        } else {
-          setError(response.message || 'Failed to delete expense rate');
-        }
-      } catch (err) {
-        console.error('Delete failed:', err);
-        setError('An unexpected error occurred while deleting');
-      } finally {
-        setLoading(false);
-      }
-    }
-  };
+  //       if (response.success) {
+  //         setRates(rates.filter(r => r.id !== rateToDelete.id));
+  //         setShowDeleteModal(false);
+  //         setRateToDelete(null);
+  //         setSuccessMessage(`Expense rate for "${rateToDelete.vehicleTypeName}" deleted successfully!`);
+  //       } else {
+  //         setError(response.message || 'Failed to delete expense rate');
+  //       }
+  //     } catch (err) {
+  //       console.error('Delete failed:', err);
+  //       setError('An unexpected error occurred while deleting');
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   }
+  // };
 
   // Open delete confirmation modal
-  const openDeleteModal = (rate: ExpenseRate) => {
-    setRateToDelete(rate);
-    setShowDeleteModal(true);
-  };
+  // const openDeleteModal = (rate: ExpenseRate) => {
+  //   setRateToDelete(rate);
+  //   setShowDeleteModal(true);
+  // };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -448,9 +446,9 @@ const ExpenseRateMaster = () => {
                         <button onClick={() => viewRateDetails(rate)} className="p-1.5 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors" title="View Details">
                           <Eye size={14} />
                         </button>
-                        <button onClick={() => openDeleteModal(rate)} className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Delete Rate">
+                        {/* <button onClick={() => openDeleteModal(rate)} className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Delete Rate">
                           <Trash2 size={14} />
-                        </button>
+                        </button> */}
                       </div>
                     </td>
                   </tr>
@@ -625,7 +623,7 @@ const ExpenseRateMaster = () => {
           </div>
         )}
 
-        {/* Delete Confirmation Modal */}
+        {/* Delete Confirmation Modal
         {showDeleteModal && rateToDelete && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-3">
             <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
@@ -669,7 +667,7 @@ const ExpenseRateMaster = () => {
               </div>
             </div>
           </div>
-        )}
+        )} */}
 
         {/* No Results */}
         {filteredRates.length === 0 && !loading && (

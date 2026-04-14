@@ -345,13 +345,13 @@ const DepartmentMaster = () => {
                       <span className="text-sm text-gray-700">{new Date(dept.createdAt).toLocaleDateString()}</span>
                       <span className="text-xs text-gray-400">{new Date(dept.createdAt).toLocaleTimeString()}</span>
                     </div>
-                  </td>
+                   </td>
                   <td className="px-4 py-3 text-sm">
                     <div className="flex flex-col">
                       <span className="text-sm text-gray-700">{new Date(dept.updatedAt).toLocaleDateString()}</span>
                       <span className="text-xs text-gray-400">{new Date(dept.updatedAt).toLocaleTimeString()}</span>
                     </div>
-                  </td>
+                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
                       <button 
@@ -369,8 +369,8 @@ const DepartmentMaster = () => {
                         <Trash2 size={18} />
                       </button> */}
                     </div>
-                  </td>
-                </tr>
+                   </td>
+                 </tr>
               ))}
             </tbody>
           </table>
@@ -466,6 +466,20 @@ const DepartmentMaster = () => {
                     className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500" 
                     placeholder="Enter department name"
                   />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Organization *</label>
+                  <select
+                    name="organisationId"
+                    value={newDepartment.organisationId}
+                    onChange={handleInputChange}
+                    required
+                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500"
+                  >
+                    {sampleOrganizations.map(org => (
+                      <option key={org.id} value={org.id}>{org.name}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
 

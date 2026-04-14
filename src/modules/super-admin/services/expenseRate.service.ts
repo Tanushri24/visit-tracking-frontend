@@ -132,52 +132,52 @@ export const createExpenseRate = async (
   }
 };
 
-// Delete expense rate by ID (DELETE /api/Expenserate/{id})
-export const deleteExpenseRate = async (id: number): Promise<ApiResponse> => {
-  try {
-    console.log(`Deleting expense rate with ID: ${id}`);
+// // Delete expense rate by ID (DELETE /api/Expenserate/{id})
+// export const deleteExpenseRate = async (id: number): Promise<ApiResponse> => {
+//   try {
+//     console.log(`Deleting expense rate with ID: ${id}`);
     
-    const response = await API.delete(`/Expenserate/${id}`, {
-      headers: getAuthHeaders(),
-    });
+//     const response = await API.delete(`/Expenserate/${id}`, {
+//       headers: getAuthHeaders(),
+//     });
 
-    console.log("Delete expense rate response:", response.data);
+//     console.log("Delete expense rate response:", response.data);
 
-    return {
-      success: true,
-      message: response.data?.message || "Expense rate deleted successfully",
-      data: response.data,
-      statusCode: response.status,
-    };
-  } catch (error) {
-    console.error("API Error deleting expense rate:", error);
-    const axiosError = error as any;
-    const statusCode = axiosError?.response?.status ?? 0;
-    const responseData = axiosError?.response?.data;
+//     return {
+//       success: true,
+//       message: response.data?.message || "Expense rate deleted successfully",
+//       data: response.data,
+//       statusCode: response.status,
+//     };
+//   } catch (error) {
+//     console.error("API Error deleting expense rate:", error);
+//     const axiosError = error as any;
+//     const statusCode = axiosError?.response?.status ?? 0;
+//     const responseData = axiosError?.response?.data;
 
-    let errorMessage = "";
+//     let errorMessage = "";
     
-    if (statusCode === 404) {
-      errorMessage = "Expense rate not found. It may have been already deleted.";
-    } else if (statusCode === 400) {
-      errorMessage = responseData?.message || "Cannot delete expense rate. It may be referenced by other records.";
-    } else {
-      errorMessage =
-        responseData?.message ||
-        responseData?.title ||
-        (typeof responseData === "string" ? responseData : null) ||
-        axiosError?.message ||
-        "Failed to delete expense rate";
-    }
+//     if (statusCode === 404) {
+//       errorMessage = "Expense rate not found. It may have been already deleted.";
+//     } else if (statusCode === 400) {
+//       errorMessage = responseData?.message || "Cannot delete expense rate. It may be referenced by other records.";
+//     } else {
+//       errorMessage =
+//         responseData?.message ||
+//         responseData?.title ||
+//         (typeof responseData === "string" ? responseData : null) ||
+//         axiosError?.message ||
+//         "Failed to delete expense rate";
+//     }
 
-    return {
-      success: false,
-      message: errorMessage,
-      error: errorMessage,
-      statusCode,
-    };
-  }
-};
+//     return {
+//       success: false,
+//       message: errorMessage,
+//       error: errorMessage,
+//       statusCode,
+//     };
+//   }
+// };
 
 // Update expense rate by ID (PUT /api/Expenserate/{id})
 export const updateExpenseRate = async (

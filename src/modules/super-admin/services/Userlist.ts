@@ -36,6 +36,7 @@ let departmentsMap: Map<number, string> = new Map();
 let managersMap: Map<number, string> = new Map();
 let locationsMap: Map<number, string> = new Map();
 let rolesMap: Map<number, string> = new Map();
+let reportingManagersMap: Map<number, string> = new Map();
 
 // Initialize maps with dropdown data
 export const initializeMappings = (
@@ -43,17 +44,22 @@ export const initializeMappings = (
   departments: Array<{ id: number; name: string }>,
   managers: Array<{ id: number; name: string }>,
   locations: Array<{ id: number; name: string }>,
-  roles: Array<{ id: number; name: string }>
+  roles: Array<{ id: number; name: string }>,
+  reportingManagers?: Array<{ id: number; name: string }>
 ) => {
   designationsMap = new Map(designations.map(d => [d.id, d.name]));
   departmentsMap = new Map(departments.map(d => [d.id, d.name]));
   managersMap = new Map(managers.map(m => [m.id, m.name]));
   locationsMap = new Map(locations.map(l => [l.id, l.name]));
   rolesMap = new Map(roles.map(r => [r.id, r.name]));
+  reportingManagersMap = new Map((reportingManagers ?? []).map(r => [r.id, r.name]));
 };
 
 // Transform API user data to frontend user format
 export const transformApiUser = (apiUser: ApiUser): User => {
+  const reportingFallback =
+    apiUser.managerId ? reportingManagersMap.get(apiUser.managerId) : undefined;
+
   return {
     id: apiUser.id,
     employeeCode: apiUser.employeeCode || `EMP${apiUser.id}`,
@@ -63,8 +69,12 @@ export const transformApiUser = (apiUser: ApiUser): User => {
     designation: designationsMap.get(apiUser.designationId) || 'Not Assigned',
     department: departmentsMap.get(apiUser.departmentId) || 'Not Assigned',
     role: rolesMap.get(apiUser.roleId) || 'User',
-    reportingManager: apiUser.managerId ? managersMap.get(apiUser.managerId) || 'Not Assigned' : 'Not Assigned',
-    location: apiUser.locationId ? locationsMap.get(apiUser.locationId) || 'Not Assigned' : 'Not Assigned',
+    reportingManager: apiUser.managerId
+      ? managersMap.get(apiUser.managerId) || reportingManagersMap.get(apiUser.managerId) || 'Not Assigned'
+      : 'Not Assigned',
+    location: apiUser.locationId
+      ? locationsMap.get(apiUser.locationId) || 'Not Assigned'
+      : reportingFallback || 'Not Assigned',
     isActive: apiUser.isActive
   };
 };

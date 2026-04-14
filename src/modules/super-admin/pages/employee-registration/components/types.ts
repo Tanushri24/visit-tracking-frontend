@@ -25,6 +25,7 @@ export interface RegistrationErrors {
 export interface Designation {
     id: number;
     name: string;
+    departmentId?: number;
 }
 
 export interface Department {
@@ -35,7 +36,7 @@ export interface Department {
 export interface Manager {
     id: number;
     name: string;
-    email: string;
+    email?: string;
 }
 
 export interface Location {
