@@ -12,7 +12,11 @@ import {
   Trash2,
   Edit
 } from 'lucide-react';
-import { createDepartment, getDepartments} from '../../../services/department.service';
+import { 
+  createDepartment, 
+  getDepartments, 
+  updateDepartment 
+} from '../../../services/department.service';
 
 interface Department {
   id: number;
@@ -28,7 +32,7 @@ interface DepartmentPayload {
   organisationId: number;
 }
 
-// Sample data for dropdowns
+// Sample data for dropdowns (you can replace with API if needed)
 const sampleOrganizations = [
   { id: 1, name: 'Examination Wing - MP Board' },
   { id: 2, name: 'University Campus Office' },
@@ -41,7 +45,6 @@ const sampleOrganizations = [
 
 const DepartmentMaster = () => {
   const [departments, setDepartments] = useState<Department[]>([]);
-
   const [searchTerm, setSearchTerm] = useState('');
   const [filterOrganization, setFilterOrganization] = useState<string>('all');
   const [currentPage, setCurrentPage] = useState(1);
@@ -52,12 +55,12 @@ const DepartmentMaster = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [departmentToDelete, setDepartmentToDelete] = useState<Department | null>(null);
   const [loading, setLoading] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
   
   // Form state for new department
   const [newDepartment, setNewDepartment] = useState({
     departmentName: '',
-    organisationId: 1 // Default to first organization
+    organisationId: 1
   });
 
   // Form state for edit department
@@ -91,13 +94,12 @@ const DepartmentMaster = () => {
   const currentItems = filteredDepartments.slice(indexOfFirstItem, indexOfLastItem);
   const totalPages = Math.ceil(filteredDepartments.length / itemsPerPage);
 
-  // Fetch departments (mock for now)
+  // Fetch departments from API
   const fetchDepartments = async () => {
     setLoading(true);
     try {
-      // In real implementation, fetch from API
-       const res = await getDepartments();
-       setDepartments(res);
+      const res = await getDepartments();
+      setDepartments(res);
     } catch (err) {
       console.error("Error fetching departments", err);
     } finally {
@@ -134,26 +136,6 @@ const DepartmentMaster = () => {
     window.URL.revokeObjectURL(url);
   };
 
-  const handleDeleteDepartment = async () => {
-  if (!departmentToDelete) return;
-
-  try {
-    console.log("Deleting department:", departmentToDelete.id);
-
-    // await deleteDepartment(departmentToDelete.id);   // API removed
-
-    setDepartments(prev =>
-      prev.filter(d => d.id !== departmentToDelete.id)
-    );
-
-    setShowDeleteModal(false);
-    setDepartmentToDelete(null);
-
-  } catch (error) {
-    console.error("Delete failed:", error);
-  }
-};
-
   // Open delete confirmation modal
   const openDeleteModal = (department: Department) => {
     setDepartmentToDelete(department);
@@ -180,6 +162,7 @@ const DepartmentMaster = () => {
     setEditDepartment({ ...editDepartment, [name]: value });
   };
 
+  // CREATE department
   const handleInsertDepartment = async () => {
     try {
       const payload: DepartmentPayload = {
@@ -187,51 +170,45 @@ const DepartmentMaster = () => {
         departmentName: newDepartment.departmentName,
         organisationId: newDepartment.organisationId
       };
-
       await createDepartment(payload);
-
-      // Add the new department to local state with a temporary ID
-      const newId = Math.max(...departments.map(d => d.id), 0) + 1;
-      const currentDate = new Date().toISOString();
-      
-      const newDepartmentData: Department = {
-        id: newId,
-        departmentName: newDepartment.departmentName,
-        organisationId: newDepartment.organisationId,
-        createdAt: currentDate,
-        updatedAt: currentDate
-      };
-      
-      setDepartments([...departments, newDepartmentData]);
+      await fetchDepartments(); // refresh list
       setShowInsertModal(false);
-      setNewDepartment({
-        departmentName: "",
-        organisationId: 1
-      });
-
-      fetchDepartments(); // reload table
+      setNewDepartment({ departmentName: "", organisationId: 1 });
     } catch (error) {
       console.error("Error creating department", error);
     }
   };
 
-  const handleUpdateDepartment = () => {
-    setDepartments(departments.map(dept => 
-      dept.id === editDepartment.id 
-        ? {
-            ...dept,
-            departmentName: editDepartment.departmentName,
-            organisationId: editDepartment.organisationId,
-            updatedAt: new Date().toISOString()
-          }
-        : dept
-    ));
-    setShowEditModal(false);
-    setEditDepartment({
-      id: 0,
-      departmentName: '',
-      organisationId: 0
-    });
+  // ✅ UPDATE department
+  const handleUpdateDepartment = async () => {
+    setIsUpdating(true);
+    try {
+      const payload = {
+        departmentName: editDepartment.departmentName,
+        organisationId: editDepartment.organisationId
+      };
+      await updateDepartment(editDepartment.id, payload);
+      await fetchDepartments(); // refresh list
+      setShowEditModal(false);
+      setEditDepartment({ id: 0, departmentName: '', organisationId: 0 });
+    } catch (error) {
+      console.error("Error updating department", error);
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  // DELETE department (commented in UI, but function kept)
+  const handleDeleteDepartment = async () => {
+    if (!departmentToDelete) return;
+    try {
+      // await deleteDepartment(departmentToDelete.id);   // API not provided
+      setDepartments(prev => prev.filter(d => d.id !== departmentToDelete.id));
+      setShowDeleteModal(false);
+      setDepartmentToDelete(null);
+    } catch (error) {
+      console.error("Delete failed:", error);
+    }
   };
 
   const getOrganizationName = (organisationId: number) => {
@@ -361,19 +338,13 @@ const DepartmentMaster = () => {
                       >
                         <Edit size={18} />
                       </button>
-                      {/* <button 
-                        onClick={() => openDeleteModal(dept)} 
-                        className="p-1 text-red-600 hover:bg-red-50 rounded" 
-                        title="Delete Department"
-                      >
-                        <Trash2 size={18} />
-                      </button> */}
+                      {/* Delete button hidden as per original */}
                     </div>
                    </td>
-                 </tr>
+                </tr>
               ))}
             </tbody>
-          </table>
+           </table>
         </div>
       </div>
 
@@ -403,7 +374,7 @@ const DepartmentMaster = () => {
         </div>
       )}
 
-      {/* Edit Department Modal */}
+      {/* ==================== EDIT MODAL ==================== */}
       {showEditModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto p-6">
@@ -430,17 +401,34 @@ const DepartmentMaster = () => {
                     placeholder="Enter department name"
                   />
                 </div>
+                {/* Optionally add organization dropdown for edit */}
+                <div>
+                  <label className="block text-sm font-medium mb-1">Organization *</label>
+                  <select
+                    name="organisationId"
+                    value={editDepartment.organisationId}
+                    onChange={handleEditInputChange}
+                    required
+                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500"
+                  >
+                    {sampleOrganizations.map(org => (
+                      <option key={org.id} value={org.id}>{org.name}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
               <div className="flex justify-end gap-3 mt-6">
                 <button type="button" onClick={() => setShowEditModal(false)} className="px-4 py-2 border rounded-lg hover:bg-gray-50">Cancel</button>
-                <button type="submit" className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">Update Department</button>
+                <button type="submit" disabled={isUpdating} className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50">
+                  {isUpdating ? 'Updating...' : 'Update Department'}
+                </button>
               </div>
             </form>
           </div>
         </div>
       )}
 
-      {/* Insert Department Modal */}
+      {/* ==================== INSERT MODAL ==================== */}
       {showInsertModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto p-6">
@@ -482,7 +470,6 @@ const DepartmentMaster = () => {
                   </select>
                 </div>
               </div>
-
               <div className="flex justify-end gap-3 mt-6">
                 <button type="button" onClick={() => setShowInsertModal(false)} className="px-4 py-2 border rounded-lg hover:bg-gray-50">Cancel</button>
                 <button type="submit" className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">Add Department</button>
@@ -492,7 +479,7 @@ const DepartmentMaster = () => {
         </div>
       )}
 
-      {/* Delete Confirmation Modal */}
+      {/* ==================== DELETE MODAL ==================== */}
       {showDeleteModal && departmentToDelete && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
@@ -514,27 +501,15 @@ const DepartmentMaster = () => {
                     setShowDeleteModal(false);
                     setDepartmentToDelete(null);
                   }}
-                  disabled={isDeleting}
-                  className="flex-1 px-5 py-2.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 px-5 py-2.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleDeleteDepartment}
-                  disabled={isDeleting}
-                  className="flex-1 px-5 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="flex-1 px-5 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700"
                 >
-                  {isDeleting ? (
-                    <>
-                      <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                      Deleting...
-                    </>
-                  ) : (
-                    'Delete'
-                  )}
+                  Delete
                 </button>
               </div>
             </div>

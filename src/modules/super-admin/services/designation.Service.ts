@@ -36,3 +36,19 @@ export const getDesignationById = async (id: number) => {
     throw error;
   }
 };
+export const updateDesignation = async (
+  id: number,
+  data: Partial<Omit<Designation, "id">>
+) => {
+  try {
+    const response = await axios.put(`${API_URL}/Designation/${id}`, data, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error updating designation:", error);
+    throw error;
+  }
+};
