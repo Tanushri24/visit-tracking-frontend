@@ -1,10 +1,11 @@
 import { Route, Routes } from 'react-router-dom';
 import Layout from '../../../Layouts/Layout';
 import EmployeeDashboard from '../pages/EmployeeDashboard';
-import VisitEntryForm from '../pages/components/VisitsEntryForm';
+import VisitEntryForm from '../pages/Visitentryform/VisitEntryForm';
 import MyVisit from '../pages/components/MyVisit';
 import VisitFollowUps from '../pages/components/VisitFollowUps';
 import VisitAttachments from '../pages/components/VisitAttachments';
+import MyExpenses from '../pages/components/MyExpenses';
 
 // Import other pages when ready
 // import MyVisits from '../pages/MyVisits';
@@ -55,6 +56,10 @@ const EmployeeRoutes = () => {
         element={<EmployeeLayout><VisitAttachments /></EmployeeLayout>} 
       />
 
+       <Route 
+         path="my-expenses" 
+        element={<EmployeeLayout><MyExpenses/></EmployeeLayout>} 
+      />
 
       {/* <Route 
         path="visits/:id" 
