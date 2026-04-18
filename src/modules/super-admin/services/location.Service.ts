@@ -37,3 +37,20 @@ export const getLocationById = async (id: number) => {
     throw error;
   }
 };
+
+export const updateLocation = async (
+  id: number,
+  data: Partial<Omit<Location, "id">>
+) => {
+  try {
+    const response = await axios.put(`${API_URL}/Location/${id}`, data, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error updating location:", error);
+    throw error;
+  }
+};

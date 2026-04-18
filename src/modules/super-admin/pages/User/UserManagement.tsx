@@ -19,7 +19,7 @@ import UserTable from './Components/UserTable';
 import UserCard from './Components/UserCard';
 import UserFormModal from './Components/UserFormModal';
 import DeleteConfirmModal from './Components/DeleteConfirmModal';
-import { fetchUsers, fetchUserById, createUser, updateUser, deleteUser, type User, type ApiUser, initializeMappings } from '../../services/Userlist';
+import { fetchUsers, fetchUserById, createUser, deleteUser,updateUser, type User, type ApiUser, initializeMappings } from '../../services/Userlist';
 import { 
   fetchDepartments, 
   fetchDesignations, 
@@ -28,7 +28,8 @@ import {
   fetchUserRoles 
 } from '../../services/userDropdownService';
 import { useNavigate } from 'react-router-dom';
-import { getReporting } from '../../services/user.Service';
+// Import both getReporting and updateEmployeeReportingManager from the same service
+import { getReporting } from '../../services/user.Service';  // 
 
 const UserManagement: React.FC = () => {
   const [showFilterMenu, setShowFilterMenu] = useState(false);
@@ -46,17 +47,18 @@ const UserManagement: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
   
-  // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   
-  // Dropdown data from API
   const [designations, setDesignations] = useState<Array<{ id: number; name: string }>>([]);
   const [departments, setDepartments] = useState<Array<{ id: number; name: string }>>([]);
   const [managers, setManagers] = useState<Array<{ id: number; name: string }>>([]);
   const [locations, setLocations] = useState<Array<{ id: number; name: string }>>([]);
   const [userRoles, setUserRoles] = useState<Array<{ id: number; name: string }>>([]);
   
+  // Store original manager ID when editing to detect changes
+  const [originalManagerId, setOriginalManagerId] = useState<number | null>(null);
+
   const [formData, setFormData] = useState({
     employeeCode: '',
     fullName: '',
@@ -77,7 +79,6 @@ const UserManagement: React.FC = () => {
   const modalRef = useRef<HTMLDivElement>(null);
   const [users, setUsers] = useState<User[]>([]);
 
-  // Fetch all data on component mount
   useEffect(() => {
     loadAllData();
   }, []);
@@ -86,8 +87,7 @@ const UserManagement: React.FC = () => {
     setLoading(true);
     setLoadingDropdowns(true);
     try {
-      const [usersData, depts, desigs, mgrs, locs, roles, reportingMgrs] = await Promise.all([
-        fetchUsers(),
+      const [depts, desigs, mgrs, locs, roles, reportingMgrs] = await Promise.all([
         fetchDepartments(),
         fetchDesignations(),
         fetchManagers(),
@@ -101,7 +101,6 @@ const UserManagement: React.FC = () => {
         name: mgr.displayName
       }));
 
-      // Merge managers from fetchManagers and getReporting, remove duplicates by id
       const combinedManagers = [...mgrs];
       reportingMgrOptions.forEach(reportingMgr => {
         if (!combinedManagers.some(mgr => mgr.id === reportingMgr.id)) {
@@ -117,7 +116,7 @@ const UserManagement: React.FC = () => {
       setUsers(transformedUsers);
       setDepartments(depts);
       setDesignations(desigs);
-      setManagers(combinedManagers); // Use combined managers list
+      setManagers(combinedManagers);
       setLocations(locs.length > 0 ? locs : reportingMgrOptions);
       setUserRoles(roles);
     } catch (err) {
@@ -139,7 +138,6 @@ const UserManagement: React.FC = () => {
     }
   };
 
-  // Filter users
   const filteredUsers = users.filter(user => {
     const matchesSearch = searchQuery === '' || 
       user.fullName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -157,13 +155,11 @@ const UserManagement: React.FC = () => {
     return matchesSearch && matchesRole && matchesStatus && matchesDepartment;
   });
 
-  // Pagination logic
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = filteredUsers.slice(indexOfFirstItem, indexOfLastItem);
   const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
 
-  // Reset to first page when filters change
   useEffect(() => {
     setCurrentPage(1);
   }, [searchQuery, selectedRole, selectedStatus, selectedDepartment]);
@@ -185,7 +181,6 @@ const UserManagement: React.FC = () => {
   const activePercentage = totalUsers > 0 ? ((activeUsers / totalUsers) * 100).toFixed(1) : 0;
   const uniqueDepartments = new Set(users.map(user => user.department)).size;
 
-  // Dynamic department options from actual data
   const departmentOptions = [
     { value: 'all', label: 'All Departments' },
     ...Array.from(new Set(users.map(user => user.department).filter(Boolean))).map(dept => ({
@@ -194,7 +189,6 @@ const UserManagement: React.FC = () => {
     }))
   ];
 
-  // Dynamic role options from actual data
   const roleOptions = [
     { value: 'all', label: 'All Roles' },
     ...Array.from(new Set(users.map(user => user.role).filter(Boolean))).map(role => ({
@@ -297,35 +291,37 @@ const UserManagement: React.FC = () => {
     }
   };
 
-  const handleUpdateUser = async () => {
-    if (!validateForm() || !editingUser) return;
+ const handleUpdateUser = async () => {
+  if (!validateForm() || !editingUser) return;
+  
+  try {
+    // Prepare payload matching UpdateUserPayload interface
+    const updateUserData = {
+      id: editingUser.id,
+      employeeCode: formData.employeeCode || null,
+      fullName: formData.fullName,
+      email: formData.email,
+      mobile: formData.mobile,
+      roleId: parseInt(formData.roleId),
+      designationId: parseInt(formData.designationId),
+      departmentId: parseInt(formData.departmentId),
+      managerId: formData.managerId ? parseInt(formData.managerId) : null,
+      locationId: formData.locationId ? parseInt(formData.locationId) : null,
+      isActive: formData.isActive
+    };
     
-    try {
-      const updateUserData: Partial<ApiUser> = {
-        id: editingUser.id,
-        employeeCode: formData.employeeCode || null,
-        fullName: formData.fullName,
-        email: formData.email,
-        mobile: formData.mobile,
-        roleId: parseInt(formData.roleId),
-        designationId: parseInt(formData.designationId),
-        departmentId: parseInt(formData.departmentId),
-        managerId: formData.managerId ? parseInt(formData.managerId) : null,
-        locationId: formData.locationId ? parseInt(formData.locationId) : null,
-        isActive: formData.isActive
-      };
-      
-      await updateUser(editingUser.id, updateUserData);
-      await loadUsers();
-      setShowAddModal(false);
-      setEditingUser(null);
-      resetForm();
-    } catch (err) {
-      console.error('Failed to update user:', err);
-      setErrors({ submit: 'Failed to update user. Please try again.' });
-    }
-  };
-
+    // Single API call – updates all fields including reporting manager
+     await updateUser(editingUser.id, updateUserData);
+    
+    await loadUsers();
+    setShowAddModal(false);
+    setEditingUser(null);
+    resetForm();
+  } catch (err) {
+    console.error('Failed to update user:', err);
+    setErrors({ submit: 'Failed to update user. Please try again.' });
+  }
+};
   const handleDeleteUser = async (id: number) => {
     try {
       await deleteUser(id);
@@ -340,6 +336,9 @@ const UserManagement: React.FC = () => {
   const handleEditUser = async (user: User) => {
     try {
       const apiUser = await fetchUserById(user.id);
+      
+      // Store original manager ID to detect changes later
+      setOriginalManagerId(apiUser.managerId ?? null);
       
       setEditingUser(user);
       setFormData({
@@ -382,6 +381,7 @@ const UserManagement: React.FC = () => {
     setErrors({});
     setShowPassword(false);
     setShowConfirmPassword(false);
+    setOriginalManagerId(null);
   };
 
   const exportToCSV = () => {
@@ -413,7 +413,6 @@ const UserManagement: React.FC = () => {
     URL.revokeObjectURL(url);
   };
 
-  // Generate page numbers for pagination
   const getPageNumbers = () => {
     const pageNumbers = [];
     const maxVisiblePages = 5;
@@ -531,9 +530,7 @@ const UserManagement: React.FC = () => {
         </div>
         
         <button
-          onClick={() => {
-            navigate('/super-admin/employee-registration');
-          }}
+          onClick={() => navigate('/super-admin/employee-registration')}
           className="inline-flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all text-xs sm:text-sm font-medium shadow-md hover:shadow-lg"
         >
           <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
@@ -548,7 +545,7 @@ const UserManagement: React.FC = () => {
         ))}
       </div>
 
-      {/* Search, Export & Filter Buttons Row */}
+      {/* Search, Export & Filter */}
       <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
         <div className="relative flex-1 max-w-xs">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />

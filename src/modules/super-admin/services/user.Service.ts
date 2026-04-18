@@ -7,13 +7,13 @@ const API = axios.create({
   },
 });
 
-
-
+// Interface
 export interface Reporting {
   id: number;
   displayName: string;
 }
 
+// GET Reporting Managers
 export const getReporting = async (): Promise<Reporting[]> => {
   try {
     const response = await API.get("/Employee/reporting-manager-dropdown");
@@ -23,3 +23,4 @@ export const getReporting = async (): Promise<Reporting[]> => {
     throw error;
   }
 };
+

@@ -1,6 +1,7 @@
+// src/services/Userlist.ts
 import axios from 'axios';
 
-const API_BASE_URL = '';
+const API_BASE_URL = 'http://192.168.29.8:8080';
 
 export interface ApiUser {
   id: number;
@@ -30,7 +31,7 @@ export interface User {
   isActive: boolean;
 }
 
-// Store dropdown data for mapping
+// Maps for dropdown data
 let designationsMap: Map<number, string> = new Map();
 let departmentsMap: Map<number, string> = new Map();
 let managersMap: Map<number, string> = new Map();
@@ -38,7 +39,6 @@ let locationsMap: Map<number, string> = new Map();
 let rolesMap: Map<number, string> = new Map();
 let reportingManagersMap: Map<number, string> = new Map();
 
-// Initialize maps with dropdown data
 export const initializeMappings = (
   designations: Array<{ id: number; name: string }>,
   departments: Array<{ id: number; name: string }>,
@@ -55,7 +55,6 @@ export const initializeMappings = (
   reportingManagersMap = new Map((reportingManagers ?? []).map(r => [r.id, r.name]));
 };
 
-// Transform API user data to frontend user format
 export const transformApiUser = (apiUser: ApiUser): User => {
   const reportingFallback =
     apiUser.managerId ? reportingManagersMap.get(apiUser.managerId) : undefined;
@@ -81,28 +80,21 @@ export const transformApiUser = (apiUser: ApiUser): User => {
 
 const axiosInstance = axios.create({
   baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
+  headers: { 'Content-Type': 'application/json' },
 });
 
-// Fetch all users
+// GET all users
 export const fetchUsers = async (): Promise<User[]> => {
   try {
     const response = await axiosInstance.get<ApiUser[]>('/api/Admin/users');
-    
-    if (response.data && Array.isArray(response.data)) {
-      return response.data.map(transformApiUser);
-    }
-    
-    return [];
+    return response.data.map(transformApiUser);
   } catch (error) {
     console.error('Error fetching users:', error);
     throw error;
   }
 };
 
-// Fetch single user by ID for edit
+// GET single user by ID
 export const fetchUserById = async (id: number): Promise<ApiUser> => {
   try {
     const response = await axiosInstance.get<ApiUser>(`/api/Admin/user/${id}`);
@@ -113,7 +105,7 @@ export const fetchUserById = async (id: number): Promise<ApiUser> => {
   }
 };
 
-// Create new user
+// CREATE new user
 export const createUser = async (userData: Partial<ApiUser>): Promise<ApiUser> => {
   try {
     const response = await axiosInstance.post<ApiUser>('/api/Admin/users', userData);
@@ -124,7 +116,7 @@ export const createUser = async (userData: Partial<ApiUser>): Promise<ApiUser> =
   }
 };
 
-// Update user
+// ✅ UPDATE user – uses PUT /api/Admin/user/{id}
 export const updateUser = async (id: number, userData: Partial<ApiUser>): Promise<ApiUser> => {
   try {
     const response = await axiosInstance.put<ApiUser>(`/api/Admin/user/${id}`, userData);
@@ -135,7 +127,7 @@ export const updateUser = async (id: number, userData: Partial<ApiUser>): Promis
   }
 };
 
-// Delete user
+// DELETE user
 export const deleteUser = async (id: number): Promise<void> => {
   try {
     await axiosInstance.delete(`/api/Admin/user/${id}`);

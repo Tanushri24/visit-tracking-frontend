@@ -3,6 +3,7 @@ import { registrationApi } from './registrationApi';
 export interface DropdownOption {
     id: number;
     name: string;
+    departmentId?: number; // ✅ added for designations
 }
 
 export interface ManagerOption {
@@ -25,13 +26,15 @@ export const fetchDepartments = async (): Promise<DropdownOption[]> => {
     }
 };
 
-// Fetch designations from API
+// ✅ Fetch designations from API – PRESERVE departmentId
 export const fetchDesignations = async (): Promise<DropdownOption[]> => {
     try {
         const designations = await registrationApi.getDesignations();
+        // Assuming each designation has: { id, name, departmentId }
         return designations.map(des => ({
             id: des.id,
-            name: des.name
+            name: des.name,
+            departmentId: des.departmentId  // ✅ crucial for filtering
         }));
     } catch (error) {
         console.error('Error fetching designations:', error);
@@ -68,14 +71,13 @@ export const fetchLocations = async (): Promise<DropdownOption[]> => {
     }
 };
 
-// User roles (if you have API for roles, otherwise use static)
+// User roles (static or from API)
 export const fetchUserRoles = async (): Promise<DropdownOption[]> => {
     try {
-        // If you have an API for roles, use it
+        // If you have an API for roles, use it – otherwise keep static
         // const roles = await registrationApi.getRoles();
         // return roles.map(role => ({ id: role.id, name: role.name }));
         
-        // Using static roles for now
         return [
             { id: 1, name: 'Super Admin' },
             { id: 2, name: 'Admin' },

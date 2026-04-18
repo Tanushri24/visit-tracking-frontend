@@ -7,7 +7,7 @@ interface UserFormModalProps {
   errors: Record<string, string>;
   showPassword: boolean;
   showConfirmPassword: boolean;
-  designations: Array<{ id: number; name: string }>;
+  designations: Array<{ id: number; name: string; departmentId?: number }>;
   departments: Array<{ id: number; name: string }>;
   userRoles: Array<{ id: number; name: string }>;
   managers: Array<{ id: number; name: string }>;
@@ -17,6 +17,7 @@ interface UserFormModalProps {
   onTogglePassword: () => void;
   onToggleConfirmPassword: () => void;
   onSubmit: () => void;
+  isSubmitting?: boolean;
 }
 
 const UserFormModal: React.FC<UserFormModalProps> = ({
@@ -35,9 +36,34 @@ const UserFormModal: React.FC<UserFormModalProps> = ({
   onInputChange,
   onTogglePassword,
   onToggleConfirmPassword,
-  onSubmit
+  onSubmit,
+  isSubmitting = false,
 }) => {
   if (!isOpen) return null;
+
+  const currentUserRole = localStorage.getItem('role');
+  const filteredRoles = currentUserRole === 'super-admin'
+    ? userRoles
+    : userRoles.filter(role => role.name !== 'Super Admin' && role.name !== 'Admin');
+
+  // ✅ Department‑designation filtering (exactly like EmployeeRegistration)
+  const selectedDepartmentId = Number(formData.departmentId);
+  const hasDepartmentInfo = designations.some(des => typeof des.departmentId === 'number');
+  const filteredDesignations = hasDepartmentInfo && selectedDepartmentId
+    ? designations.filter(des => des.departmentId === selectedDepartmentId)
+    : designations;
+
+  const handleStatusChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const isActive = e.target.value === 'true';
+    const syntheticEvent = {
+      target: {
+        name: 'isActive',
+        type: 'checkbox',
+        checked: isActive
+      }
+    } as React.ChangeEvent<HTMLInputElement>;
+    onInputChange(syntheticEvent);
+  };
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -46,10 +72,7 @@ const UserFormModal: React.FC<UserFormModalProps> = ({
           <h2 className="text-lg font-semibold text-gray-800">
             {editingUser ? 'Edit User' : 'Add New User'}
           </h2>
-          <button
-            onClick={onClose}
-            className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
-          >
+          <button onClick={onClose} className="p-1 hover:bg-gray-100 rounded-lg transition-colors">
             <X className="w-5 h-5 text-gray-500" />
           </button>
         </div>
@@ -71,6 +94,30 @@ const UserFormModal: React.FC<UserFormModalProps> = ({
               placeholder="Enter employee code (e.g., EMP001)"
             />
             {errors.employeeCode && <p className="text-xs text-red-500 mt-1">{errors.employeeCode}</p>}
+          </div>
+
+          {/* User Role */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
+              <Shield className="w-4 h-4 text-purple-500" />
+              User Role <span className="text-red-500">*</span>
+            </label>
+            <div className="relative">
+              <select
+                name="roleId"
+                value={formData.roleId || ''}
+                onChange={onInputChange}
+                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm appearance-none
+                  ${errors.roleId ? 'border-red-500 bg-red-50' : 'border-gray-300'}`}
+              >
+                <option value="">Select role</option>
+                {filteredRoles.map(role => (
+                  <option key={role.id} value={role.id}>{role.name}</option>
+                ))}
+              </select>
+              <ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" />
+            </div>
+            {errors.roleId && <p className="text-xs text-red-500 mt-1">{errors.roleId}</p>}
           </div>
           
           {/* Full Name */}
@@ -131,7 +178,7 @@ const UserFormModal: React.FC<UserFormModalProps> = ({
             {errors.mobile && <p className="text-xs text-red-500 mt-1">{errors.mobile}</p>}
           </div>
           
-          {/* Department - Now above Designation */}
+          {/* Department */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
               <Building2 className="w-4 h-4 text-purple-500" />
@@ -155,7 +202,7 @@ const UserFormModal: React.FC<UserFormModalProps> = ({
             {errors.departmentId && <p className="text-xs text-red-500 mt-1">{errors.departmentId}</p>}
           </div>
           
-          {/* Designation - Moved below Department */}
+          {/* Designation – filtered based on selected department */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
               <Briefcase className="w-4 h-4 text-purple-500" />
@@ -170,7 +217,7 @@ const UserFormModal: React.FC<UserFormModalProps> = ({
                   ${errors.designationId ? 'border-red-500 bg-red-50' : 'border-gray-300'}`}
               >
                 <option value="">Select designation</option>
-                {designations.map(des => (
+                {filteredDesignations.map(des => (
                   <option key={des.id} value={des.id}>{des.name}</option>
                 ))}
               </select>
@@ -179,31 +226,7 @@ const UserFormModal: React.FC<UserFormModalProps> = ({
             {errors.designationId && <p className="text-xs text-red-500 mt-1">{errors.designationId}</p>}
           </div>
           
-          {/* Role - Using ID */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
-              <Shield className="w-4 h-4 text-purple-500" />
-              User Role <span className="text-red-500">*</span>
-            </label>
-            <div className="relative">
-              <select
-                name="roleId"
-                value={formData.roleId || ''}
-                onChange={onInputChange}
-                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm appearance-none
-                  ${errors.roleId ? 'border-red-500 bg-red-50' : 'border-gray-300'}`}
-              >
-                <option value="">Select role</option>
-                {userRoles.map(role => (
-                  <option key={role.id} value={role.id}>{role.name}</option>
-                ))}
-              </select>
-              <ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" />
-            </div>
-            {errors.roleId && <p className="text-xs text-red-500 mt-1">{errors.roleId}</p>}
-          </div>
-          
-          {/* Reporting Manager - Using ID */}
+          {/* Reporting Manager */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
               <UserCog className="w-4 h-4 text-purple-500" />
@@ -218,14 +241,14 @@ const UserFormModal: React.FC<UserFormModalProps> = ({
               >
                 <option value="">Select manager</option>
                 {managers.map(mgr => (
-                  <option key={mgr.id} value={mgr.id}>{mgr.name}</option>
+                  <option key={mgr.id} value={mgr.id}>{mgr.id} - {mgr.name}</option>
                 ))}
               </select>
               <ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" />
             </div>
           </div>
           
-          {/* Work Location - Using ID */}
+          {/* Work Location */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
               <MapPin className="w-4 h-4 text-purple-500" />
@@ -307,16 +330,31 @@ const UserFormModal: React.FC<UserFormModalProps> = ({
           
           {/* Active Status */}
           <div>
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                name="isActive"
-                checked={formData.isActive}
-                onChange={onInputChange}
-                className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
-              />
-              <span className="text-sm text-gray-700">Active Status</span>
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+            <div className="flex gap-6">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  name="status"
+                  value="true"
+                  checked={formData.isActive === true}
+                  onChange={handleStatusChange}
+                  className="w-4 h-4 text-green-600 focus:ring-green-500"
+                />
+                <span className="text-sm text-gray-700">Active</span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  name="status"
+                  value="false"
+                  checked={formData.isActive === false}
+                  onChange={handleStatusChange}
+                  className="w-4 h-4 text-red-600 focus:ring-red-500"
+                />
+                <span className="text-sm text-gray-700">Inactive</span>
+              </label>
+            </div>
           </div>
         </div>
         
@@ -329,10 +367,20 @@ const UserFormModal: React.FC<UserFormModalProps> = ({
           </button>
           <button
             onClick={onSubmit}
-            className="flex-1 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-colors text-sm font-medium"
+            disabled={isSubmitting}
+            className="flex-1 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <Save className="w-4 h-4 inline mr-1" />
-            {editingUser ? 'Update User' : 'Add User'}
+            {isSubmitting ? (
+              <>
+                <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin inline mr-1" />
+                {editingUser ? 'Updating...' : 'Adding...'}
+              </>
+            ) : (
+              <>
+                <Save className="w-4 h-4 inline mr-1" />
+                {editingUser ? 'Update User' : 'Add User'}
+              </>
+            )}
           </button>
         </div>
       </div>
