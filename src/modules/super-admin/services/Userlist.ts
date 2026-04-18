@@ -1,5 +1,5 @@
 // src/services/Userlist.ts
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 
 const API_BASE_URL = 'http://192.168.29.8:8080';
 
@@ -29,6 +29,31 @@ export interface User {
   reportingManager: string;
   location: string;
   isActive: boolean;
+}
+
+export interface UserSearchByIdParams {
+  id: number | string;
+}
+
+export interface UpdateUserPayload {
+  employeeCode?: string | null;
+  fullName?: string;
+  email?: string;
+  mobile?: string;
+  roleId?: number;
+  designationId?: number;
+  departmentId?: number;
+  managerId?: number | null;
+  locationId?: number | null;
+  isActive?: boolean;
+}
+
+export interface CreateUserPayload extends Partial<ApiUser> {}
+
+export interface NormalizedApiError {
+  message: string;
+  status?: number;
+  details?: unknown;
 }
 
 // Maps for dropdown data
@@ -83,56 +108,116 @@ const axiosInstance = axios.create({
   headers: { 'Content-Type': 'application/json' },
 });
 
+export const normalizeApiError = (error: unknown): NormalizedApiError => {
+  if (axios.isAxiosError(error)) {
+    const axiosError = error as AxiosError<{ message?: string }>;
+    return {
+      message:
+        axiosError.response?.data?.message ||
+        axiosError.message ||
+        'Something went wrong while communicating with the server.',
+      status: axiosError.response?.status,
+      details: axiosError.response?.data
+    };
+  }
+
+  if (error instanceof Error) {
+    return {
+      message: error.message
+    };
+  }
+
+  return {
+    message: 'An unexpected error occurred.',
+    details: error
+  };
+};
+
+const handleRequestError = (error: unknown): never => {
+  const normalizedError = normalizeApiError(error);
+  console.error(normalizedError.message, normalizedError.details ?? error);
+  throw new Error(normalizedError.message);
+};
+
+const getValidUserId = (id: number | string): number => {
+  const parsedId = typeof id === 'string' ? Number(id.trim()) : id;
+
+  if (!Number.isInteger(parsedId) || parsedId <= 0) {
+    throw new Error('A valid user ID is required.');
+  }
+
+  return parsedId;
+};
+
+const request = async <T>(config: {
+  method: 'get' | 'post' | 'put' | 'delete';
+  url: string;
+  data?: unknown;
+}): Promise<T> => {
+  try {
+    const response = await axiosInstance.request<T>({
+      method: config.method,
+      url: config.url,
+      data: config.data
+    });
+
+    return response.data;
+  } catch (error) {
+    handleRequestError(error);
+  }
+};
+
 // GET all users
 export const fetchUsers = async (): Promise<User[]> => {
-  try {
-    const response = await axiosInstance.get<ApiUser[]>('/api/Admin/users');
-    return response.data.map(transformApiUser);
-  } catch (error) {
-    console.error('Error fetching users:', error);
-    throw error;
-  }
+  const users = await request<ApiUser[]>({
+    method: 'get',
+    url: '/api/Admin/users'
+  });
+
+  return Array.isArray(users) ? users.map(transformApiUser) : [];
 };
 
 // GET single user by ID
-export const fetchUserById = async (id: number): Promise<ApiUser> => {
-  try {
-    const response = await axiosInstance.get<ApiUser>(`/api/Admin/user/${id}`);
-    return response.data;
-  } catch (error) {
-    console.error(`Error fetching user ${id}:`, error);
-    throw error;
+export const fetchUserById = async (params: UserSearchByIdParams | number): Promise<ApiUser | null> => {
+  const id = typeof params === 'number' ? params : getValidUserId(params.id);
+  const user = await request<ApiUser | null>({
+    method: 'get',
+    url: `/api/Admin/user/${id}`
+  });
+
+  if (!user || typeof user !== 'object' || Object.keys(user).length === 0) {
+    return null;
   }
+
+  return user;
 };
 
 // CREATE new user
-export const createUser = async (userData: Partial<ApiUser>): Promise<ApiUser> => {
-  try {
-    const response = await axiosInstance.post<ApiUser>('/api/Admin/users', userData);
-    return response.data;
-  } catch (error) {
-    console.error('Error creating user:', error);
-    throw error;
-  }
+export const createUser = async (userData: CreateUserPayload): Promise<ApiUser> => {
+  return request<ApiUser>({
+    method: 'post',
+    url: '/api/Admin/users',
+    data: userData
+  });
 };
 
-// ✅ UPDATE user – uses PUT /api/Admin/user/{id}
-export const updateUser = async (id: number, userData: Partial<ApiUser>): Promise<ApiUser> => {
-  try {
-    const response = await axiosInstance.put<ApiUser>(`/api/Admin/user/${id}`, userData);
-    return response.data;
-  } catch (error) {
-    console.error(`Error updating user ${id}:`, error);
-    throw error;
-  }
+// UPDATE user – uses PUT /api/Admin/user/{id}
+export const updateUser = async (id: number | string, userData: UpdateUserPayload): Promise<ApiUser> => {
+  const validId = getValidUserId(id);
+
+  return request<ApiUser>({
+    method: 'put',
+    url: `/api/Admin/user/${validId}`,
+    data: userData
+  });
 };
 
 // DELETE user
-export const deleteUser = async (id: number): Promise<void> => {
-  try {
-    await axiosInstance.delete(`/api/Admin/user/${id}`);
-  } catch (error) {
-    console.error(`Error deleting user ${id}:`, error);
-    throw error;
-  }
+export const deleteUser = async (id: number | string): Promise<void> => {
+  const validId = getValidUserId(id);
+
+  await request<void>({
+    method: 'delete',
+    url: `/api/Admin/user/${validId}`
+  });
 };

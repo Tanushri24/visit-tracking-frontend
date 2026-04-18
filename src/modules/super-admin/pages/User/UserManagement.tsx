@@ -41,10 +41,16 @@ const UserManagement: React.FC = () => {
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<number | null>(null);
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(true);
   const [loadingDropdowns, setLoadingDropdowns] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // New states for ID search
+  const [userIdSearch, setUserIdSearch] = useState('');
+  const [searchingUserId, setSearchingUserId] = useState(false);
+  const [searchUserError, setSearchUserError] = useState<string | null>(null);
+  const [isFormDataLoaded, setIsFormDataLoaded] = useState(false);
   const navigate = useNavigate();
   
   const [currentPage, setCurrentPage] = useState(1);
@@ -56,8 +62,9 @@ const UserManagement: React.FC = () => {
   const [locations, setLocations] = useState<Array<{ id: number; name: string }>>([]);
   const [userRoles, setUserRoles] = useState<Array<{ id: number; name: string }>>([]);
   
-  // Store original manager ID when editing to detect changes
-  const [originalManagerId, setOriginalManagerId] = useState<number | null>(null);
+// Removed unused originalManagerId state
+
+
 
   const [formData, setFormData] = useState({
     employeeCode: '',
@@ -264,6 +271,125 @@ const UserManagement: React.FC = () => {
     }
   };
 
+  const handleSearchUserById = async () => {
+    if (!userIdSearch.trim()) {
+      setSearchUserError('Please enter a User ID');
+      return;
+    }
+
+    const id = parseInt(userIdSearch.trim());
+    if (isNaN(id) || id <= 0) {
+      setSearchUserError('Please enter a valid User ID (positive number)');
+      return;
+    }
+
+    setSearchingUserId(true);
+    setSearchUserError(null);
+    setIsFormDataLoaded(false);
+
+    try {
+      const apiUser = await fetchUserById(id);
+      
+      if (!apiUser) {
+        setSearchUserError('User not found');
+        return;
+      }
+
+      // Populate form - same as handleEditUser
+      // setOriginalManagerId(apiUser.managerId ?? null);
+      setEditingUser({ id } as User);
+      setFormData({
+        employeeCode: apiUser.employeeCode || '',
+        fullName: apiUser.fullName || '',
+        email: apiUser.email || '',
+        mobile: apiUser.mobile || '',
+        designationId: apiUser.designationId ? apiUser.designationId.toString() : '',
+        departmentId: apiUser.departmentId ? apiUser.departmentId.toString() : '',
+        roleId: apiUser.roleId ? apiUser.roleId.toString() : '',
+        managerId: apiUser.managerId ? apiUser.managerId.toString() : '',
+        locationId: apiUser.locationId ? apiUser.locationId.toString() : '',
+        password: '',
+        confirmPassword: '',
+        isActive: apiUser.isActive ?? true
+      });
+      setErrors({});
+      setIsFormDataLoaded(true);
+      setShowAddModal(true);
+      
+    } catch (err: any) {
+      const errorMsg = err.message || 'Failed to fetch user. Please try again.';
+      setSearchUserError(errorMsg);
+      console.error('Search user error:', err);
+    } finally {
+      setSearchingUserId(false);
+    }
+  };
+
+  // Enhanced handleEditUser - fallback to User string names when API fails
+  const getIdFromName = (name: string | undefined, options: Array<{ id: number; name: string }>): string => {
+    if (!name) return '';
+    const match = options.find(opt => opt.name === name || opt.name.toLowerCase() === name.toLowerCase());
+    return match ? match.id.toString() : '';
+  };
+
+  const handleEditUser = async (user: User) => {
+    try {
+      const apiUser = await fetchUserById(user.id);
+      
+      setEditingUser(user);
+      setFormData({
+        employeeCode: user.employeeCode,
+        fullName: user.fullName,
+        email: user.email,
+        mobile: user.mobile,
+        designationId: apiUser?.designationId 
+          ? apiUser.designationId.toString()
+          : getIdFromName(user.designation, designations),
+        departmentId: apiUser?.departmentId 
+          ? apiUser.departmentId.toString()
+          : getIdFromName(user.department, departments),
+        roleId: apiUser?.roleId 
+          ? apiUser.roleId.toString()
+          : getIdFromName(user.role, userRoles),
+        managerId: apiUser?.managerId 
+          ? apiUser.managerId!.toString()
+          : getIdFromName(user.reportingManager, managers),
+        locationId: apiUser?.locationId 
+          ? apiUser.locationId!.toString()
+          : getIdFromName(user.location, locations),
+        password: '',
+        confirmPassword: '',
+        isActive: apiUser?.isActive ?? user.isActive ?? true
+      });
+      setErrors({});
+      setIsFormDataLoaded(true);
+      setShowAddModal(true);
+    } catch (err) {
+      console.error('Failed to fetch API user details, using table data:', err);
+      // Fallback to table data with name-to-ID mapping
+      setEditingUser(user);
+      setFormData({
+        employeeCode: user.employeeCode,
+        fullName: user.fullName,
+        email: user.email,
+        mobile: user.mobile,
+        designationId: getIdFromName(user.designation, designations),
+        departmentId: getIdFromName(user.department, departments),
+        roleId: getIdFromName(user.role, userRoles),
+        managerId: getIdFromName(user.reportingManager, managers),
+        locationId: getIdFromName(user.location, locations),
+        password: '',
+        confirmPassword: '',
+        isActive: user.isActive ?? true
+      });
+      setErrors({});
+      setIsFormDataLoaded(true);
+      setShowAddModal(true);
+    }
+  };
+
+
+
   const handleAddUser = async () => {
     if (!validateForm()) return;
     
@@ -333,35 +459,7 @@ const UserManagement: React.FC = () => {
     }
   };
 
-  const handleEditUser = async (user: User) => {
-    try {
-      const apiUser = await fetchUserById(user.id);
-      
-      // Store original manager ID to detect changes later
-      setOriginalManagerId(apiUser.managerId ?? null);
-      
-      setEditingUser(user);
-      setFormData({
-        employeeCode: apiUser.employeeCode || '',
-        fullName: apiUser.fullName || '',
-        email: apiUser.email || '',
-        mobile: apiUser.mobile || '',
-        designationId: apiUser.designationId ? apiUser.designationId.toString() : '',
-        departmentId: apiUser.departmentId ? apiUser.departmentId.toString() : '',
-        roleId: apiUser.roleId ? apiUser.roleId.toString() : '',
-        managerId: apiUser.managerId ? apiUser.managerId.toString() : '',
-        locationId: apiUser.locationId ? apiUser.locationId.toString() : '',
-        password: '',
-        confirmPassword: '',
-        isActive: apiUser.isActive ?? true
-      });
-      setErrors({});
-      setShowAddModal(true);
-    } catch (err) {
-      console.error('Failed to fetch user details:', err);
-      setError('Failed to load user details. Please try again.');
-    }
-  };
+
 
   const resetForm = () => {
     setFormData({
@@ -381,7 +479,7 @@ const UserManagement: React.FC = () => {
     setErrors({});
     setShowPassword(false);
     setShowConfirmPassword(false);
-    setOriginalManagerId(null);
+    // setOriginalManagerId(null);
   };
 
   const exportToCSV = () => {
@@ -558,6 +656,40 @@ const UserManagement: React.FC = () => {
           />
         </div>
 
+        {/* New User ID Search */}
+        <div className="relative flex-1 max-w-xs">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Search by User ID"
+            value={userIdSearch}
+            onChange={(e) => setUserIdSearch(e.target.value)}
+            className="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+            disabled={searchingUserId}
+          />
+          {searchUserError && (
+            <p className="mt-1 text-xs text-red-500">{searchUserError}</p>
+          )}
+        </div>
+
+        <button
+          onClick={handleSearchUserById}
+          disabled={!userIdSearch || searchingUserId}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-green-600 to-blue-600 text-white rounded-lg hover:from-green-700 hover:to-blue-700 transition-all text-xs font-medium shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+        >
+          {searchingUserId ? (
+            <>
+              <Loader className="w-3 h-3 animate-spin" />
+              Searching...
+            </>
+          ) : (
+            <>
+              <Search className="w-3 h-3" />
+              Search ID
+            </>
+          )}
+        </button>
+
         <div className="flex items-center gap-2">
           <button 
             onClick={exportToCSV}
@@ -721,13 +853,19 @@ const UserManagement: React.FC = () => {
         onClose={() => {
           setShowAddModal(false);
           setEditingUser(null);
+          setUserIdSearch('');  // Reset ID search
+          setSearchUserError(null);
+          setSearchingUserId(false);
+          setIsFormDataLoaded(false);
           resetForm();
         }}
         onInputChange={handleInputChange}
+        isFormDataLoaded={isFormDataLoaded}  // Pass to modal for submit disable
         onTogglePassword={() => setShowPassword(!showPassword)}
         onToggleConfirmPassword={() => setShowConfirmPassword(!showConfirmPassword)}
         onSubmit={editingUser ? handleUpdateUser : handleAddUser}
       />
+
 
       {/* Delete Confirmation Modal */}
       <DeleteConfirmModal
